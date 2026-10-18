@@ -292,6 +292,116 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .mini-meter{margin:10px 0}
 .mini-meter .mm-head{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--muted)}
 
+/* ---------- Trading page (EdgeFlo layout) ---------- */
+.acct-bar{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding:14px 20px}
+.acct-cell{min-width:110px}
+.acct-label{font-size:11.5px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px}
+.acct-val{font-size:16px;font-weight:800;margin-top:1px}
+.info-i{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--faint);color:var(--faint);font-size:9px;font-weight:800;font-style:normal;cursor:help;flex:0 0 14px}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line2);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;padding:0}
+.icon-btn:hover{color:var(--pine);border-color:var(--pine)}
+.premarket-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--green-bg);border:1px solid var(--line2);border-radius:12px;padding:12px 16px;margin-top:16px;font-size:13.5px}
+.premarket-banner .pm-star{color:var(--green);font-size:16px}
+.trade-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.side-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.side-card{padding:16px}
+.pos-tab{border:0;background:transparent;padding:8px 10px;font-weight:700;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent}
+.pos-tab.on{color:var(--pine);border-bottom-color:var(--pine)}
+.pnl-slider{margin-top:10px}
+.pnl-track{height:8px;border-radius:99px;background:var(--bg2);position:relative}
+.pnl-track>i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--pine);border:2.5px solid var(--card);box-shadow:var(--shadow-sm);transform:translate(-50%,-50%)}
+.pnl-scale{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:7px}
+.dot-track{display:inline-flex;gap:6px}
+.tdot{width:13px;height:13px;border-radius:50%;background:var(--bg2);border:1px solid var(--line2);display:inline-block}
+.tdot.on{background:var(--pine);border-color:var(--pine)}
+.side-count{display:flex;justify-content:space-between;align-items:center;background:var(--pine-soft);border-radius:10px;padding:9px 12px;margin-top:12px;font-size:12.5px;font-weight:700;color:var(--pine)}
+.side-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.side-tabs button{border:0;background:transparent;padding:8px 10px;font-weight:700;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.side-tabs button.on{color:var(--pine);border-bottom-color:var(--pine)}
+.twl-row{display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;cursor:pointer;font-size:13px}
+.twl-row:hover{background:var(--card2)}
+.twl-row.sel{background:var(--pine-soft)}
+.twl-sym{font-weight:800;flex:1}
+.wl-group-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:10px 4px 3px}
+.alert-row{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.alert-row:last-child{border-bottom:0}
+
+/* ---------- Journal page (EdgeFlo layout) ---------- */
+.journal-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.cal-day{cursor:pointer}
+.cal-day.sel{border-color:var(--pine);box-shadow:0 0 0 2px var(--pine)}
+.today-badge{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--pine);color:#fff;border-radius:99px;padding:2px 7px}
+.day-metric{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.dm-label{font-size:10.5px;font-weight:800;letter-spacing:.05em;color:var(--faint)}
+.dm-val{font-size:16px;font-weight:800;margin-top:2px}
+.day-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.day-row:last-child{border-bottom:0}
+.day-row>span:first-child{color:var(--muted);font-weight:600}
+
+/* ---------- Edge plans page (EdgeFlo layout) ---------- */
+.edge-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:start}
+.side-head{font-size:11px;font-weight:800;letter-spacing:.07em;color:var(--faint)}
+.plan-item{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border:1px solid transparent;background:transparent;border-radius:10px;text-align:left;margin-top:4px}
+.plan-item:hover{background:var(--card2)}
+.plan-item.sel{background:var(--pine-soft);border-color:var(--line2)}
+.pi-name{display:block;font-weight:800;font-size:13.5px;color:var(--ink)}
+.pi-sub{display:block;font-size:11.5px;color:var(--muted)}
+.num-list{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:5px;font-size:14px}
+.model-box{border:1.5px dashed var(--line2);border-radius:12px;padding:26px 16px;text-align:center;color:var(--muted);font-size:13px;background:var(--card2)}
+
+/* ---------- News page (EdgeFlo layout) ---------- */
+.news-layout{display:grid;grid-template-columns:296px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1080px){ .news-layout{grid-template-columns:1fr} }
+.news-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.news-head h2{font-size:20px;font-weight:800}
+.view-tgl{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:var(--card)}
+.view-tgl button{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:8px 14px;display:inline-flex;align-items:center;gap:7px}
+.view-tgl button.on{background:var(--pine);color:#fff}
+.lock-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--card);color:var(--muted);font-weight:700;font-size:13px;padding:8px 13px;border-radius:10px}
+.lock-btn:hover{color:var(--amber);border-color:var(--amber)}
+.lock-btn.active{color:var(--pine);border-color:var(--pine)}
+.flt-title{font-size:14px;font-weight:800;margin-bottom:12px}
+.flt-sec{margin-top:20px}
+.flt-head{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+.flt-name{font-size:13px;font-weight:800}
+.flt-status{font-size:11.5px;color:var(--faint);font-weight:600}
+.flt-link{margin-left:auto;border:0;background:transparent;color:var(--pine);font-weight:700;font-size:12px;padding:0;cursor:pointer}
+.flt-link:hover{text-decoration:underline}
+.range-links{display:flex;flex-wrap:wrap;gap:3px 14px;margin-top:10px}
+.range-links button{border:0;background:transparent;color:var(--pine);font-weight:700;font-size:13px;padding:2px 0}
+.range-links button.on{text-decoration:underline;text-underline-offset:3px}
+.date-pair{display:flex;align-items:center;gap:7px}
+.date-pair input{flex:1;min-width:0;padding:8px 9px;font-size:13px}
+.date-pair .dp-arrow{color:var(--faint);font-weight:800;flex:0 0 auto}
+.date-pair .dp-cal{color:var(--faint);display:inline-flex;flex:0 0 auto}
+.flt-check{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:13.5px;font-weight:600;cursor:pointer}
+.flt-check input{width:16px;height:16px;accent-color:var(--pine);flex:0 0 16px;margin:0}
+.imp-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px;display:inline-block}
+.cat-ico{width:15px;flex:0 0 15px;text-align:center;color:var(--pine);font-weight:800;font-size:12.5px}
+.ev-head,.ev-row{display:grid;grid-template-columns:30px 56px 104px 58px minmax(0,1fr) 82px;gap:8px;align-items:center}
+.ev-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:10px 6px 8px;border-bottom:1px solid var(--line)}
+.ev-day{font-size:12.5px;font-weight:800;color:var(--muted);padding:15px 6px 3px}
+.ev-item{border-bottom:1px solid var(--line)}
+.ev-item:last-child{border-bottom:0}
+.ev-row{padding:9px 6px;font-size:13.5px;border-radius:8px}
+.ev-row:hover{background:var(--card2)}
+.ev-row.past{opacity:.6}
+.ev-expand{width:24px;height:24px;border-radius:7px;border:1px solid var(--line2);background:var(--card);color:var(--muted);font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.ev-expand:hover{color:var(--pine);border-color:var(--pine)}
+.flag-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--pine-soft);color:var(--pine);font-size:8.5px;font-weight:800;flex:0 0 22px}
+.now-line{display:flex;align-items:center;gap:8px;margin:3px 6px}
+.now-line:before,.now-line:after{content:"";height:2px;background:var(--pine);border-radius:2px;flex:1;opacity:.5}
+.now-line span{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--pine);background:var(--pine-soft);border-radius:99px;padding:1px 8px}
+.ev-detail{margin:0 6px 11px 44px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 14px;display:flex;gap:22px;flex-wrap:wrap;font-size:13px}
+.cal-ev-dots{display:flex;gap:3px;margin-top:5px}
+.cal-ev-dots i{width:7px;height:7px;border-radius:50%;display:block}
+@media (max-width:640px){
+  .ev-head,.ev-row{grid-template-columns:26px 46px 82px 22px minmax(0,1fr) 54px;gap:6px;font-size:12.5px}
+  .ev-detail{margin-left:6px}
+}
+
+@media (max-width:1080px){ .trade-grid,.journal-layout,.edge-layout{grid-template-columns:1fr} }
+
 /* ---------- Mobile nav ---------- */
 #mobilebar{display:none}
 .more-sheet{position:fixed;inset:0;background:rgba(8,24,19,.5);z-index:140;display:none}
@@ -440,7 +550,7 @@ const PLANS = {
            features:["Everything in Basic","AI Coach (reviews your real stats)","Performance analytics deep-dive","Setup / market / weekday breakdowns","R-distribution & drawdown analysis","Priority support"] }
 };
 /* Which plan each premium module needs */
-const MODULE_PLAN = { guardrails:"basic", edge:"basic", coach:"plus", performance:"plus" };
+const MODULE_PLAN = { guardrails:"basic", coach:"plus", performance:"plus" };
 
 /* ---------------- Store (localStorage) ---------------- */
 const DB_KEY = "edgepine_db_v1";
@@ -449,6 +559,7 @@ const DEFAULTS = {
   sub:  { plan:"free", billing:"monthly", since:null, status:"none" },
   trades: [],                                   // journal + closed paper trades
   plans: [],                                    // Edge plans
+  activePlanId: null,                           // Edge plan marked Active
   notes: [], folders: ["General","Reviews","Ideas"],
   guardrails: { enabled:true, maxLoss:200, maxProfit:400, maxTrades:5, winStart:"07:00", winEnd:"17:00", newsBlock:true, hardLock:false },
   overrides: [],                                // guardrail rule-break log
@@ -616,6 +727,7 @@ function renderSessionBar(){
 setInterval(()=>{
   const c = $("#sb-count"); if(c){ const info = sessionInfo(); c.textContent = fmtCountdown(info.target - new Date()); }
   const ck = $("#sb-clock"); if(ck) ck.textContent = new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  const twc = document.getElementById("tw-count"); if(twc) twc.textContent = fmtCountdown(sessionInfo().target - new Date());
   if(new Date().getSeconds()===0) renderSessionBar();
 }, 1000);
 
@@ -632,6 +744,7 @@ function toggleRoutineStep(i, val){
 }
 function renderRoutineBanner(){
   const b = $("#routine-banner"); if(!b) return;
+  if(currentView==="trading"){ b.className=""; b.innerHTML=""; return; } // Trading page carries its own EdgeFlo-style banner
   const r = DB.routine;
   if(!r.enabled || !r.pinned || !r.steps.length){ b.className=""; b.innerHTML=""; return; }
   const done = routineDoneCount(), total = r.steps.length;
@@ -706,8 +819,8 @@ const NAV_MAIN = [
   ["news","News"],["notebook","Notebook"],["coach","AI Coach"],["sanctuary","Sanctuary"],["performance","Performance"]
 ];
 const NAV_ACCT = [["pricing","Pricing"],["account","Account"]];
-const TITLES = { dashboard:"Dashboard", journal:"Trade Journal", trading:"Paper Trading", watchlist:"Watchlist", guardrails:"Guardrails", edge:"Edge — Trade Plans",
-  news:"Economic Calendar", notebook:"Notebook", coach:"AI Coach", sanctuary:"Sanctuary",
+const TITLES = { dashboard:"Dashboard", journal:"Trade Journal", trading:"Trading", watchlist:"Watchlist", guardrails:"Guardrails", edge:"Edge — Trade Plans",
+  news:"News", notebook:"Notebook", coach:"AI Coach", sanctuary:"Sanctuary",
   performance:"Performance Analytics", pricing:"Pricing", checkout:"Checkout", account:"Account" };
 let currentView = "dashboard";
 function navItemHTML(v,label){
@@ -742,6 +855,7 @@ function go(view){
   $$("[data-nav]").forEach(b=> b.classList.toggle("active", b.getAttribute("data-nav")===view));
   $("#tb-title").textContent = TITLES[view] || "EdgePine";
   window.scrollTo({top:0});
+  renderRoutineBanner();
   if(RENDER[view]) RENDER[view]();
 }
 function lockScreenHTML(view){
@@ -878,56 +992,69 @@ function tradeTable(list, withActions){
 }
 
 /* ================= JOURNAL ================= */
-let journalTab = "log", calCursor = new Date(); calCursor.setDate(1);
-let journalMarket = "All";
+let calCursor = new Date(); calCursor.setDate(1);
+let journalDay = todayStr(), journalUnit = "$";
+function pnlInUnit(pnl, sumR){
+  if(journalUnit==="R") return fmtR(sumR);
+  if(journalUnit==="%"){ const b = DB.paper.balance; return b>0? fmtPct(pnl/b*100) : fmt$(pnl); }
+  return fmt$(pnl);
+}
+function pnlUnitClass(pnl, sumR){ const v = journalUnit==="R"? sumR : pnl; return v>0? "pos" : v<0? "neg" : ""; }
 RENDER.journal = function(){
   const el = document.querySelector('[data-view="journal"]');
-  let body = "";
-  if(journalTab==="log"){
-    const list = DB.trades.filter(t=> journalMarket==="All" || t.market===journalMarket)
-      .slice().sort((a,b)=> b.date<a.date?-1:1);
-    body = '<div class="card"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px">'
-      + '<select class="input" style="width:170px" onchange="journalMarket=this.value;RENDER.journal()"><option>All</option>'
-      + MARKETS.map(m=>'<option '+(journalMarket===m?"selected":"")+'>'+m+'</option>').join("")+'</select>'
-      + '<span class="small">'+list.length+' trades · Net <strong class="mono '+(computeStats(list).pnl>=0?"pos":"neg")+'">'+fmt$(computeStats(list).pnl)+'</strong></span>'
-      + '<span style="flex:1"></span><button class="btn primary sm" onclick="openTradeModal()">+ Log trade</button></div>'
-      + (list.length? tradeTable(list, true) : '<div class="empty"><div class="e-title">No trades here</div>Log a trade to start building your edge.</div>')
-      + '</div>'
-      + emotionSummary();
-  } else {
-    body = calendarHTML();
-  }
-  el.innerHTML = journalDailyPanelHTML()
-    + '<div class="seg mb" role="tablist"><button class="'+(journalTab==="log"?"on":"")+'" onclick="journalTab=\'log\';RENDER.journal()">Trade log</button><button class="'+(journalTab==="cal"?"on":"")+'" onclick="journalTab=\'cal\';RENDER.journal()">Calendar</button></div>' + body;
+  el.innerHTML =
+    '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">'
+    + '<div class="seg" role="group" aria-label="PnL display unit">'+["$","%","R"].map(u=>'<button class="'+(journalUnit===u?"on":"")+'" onclick="journalUnit=\''+u+'\';RENDER.journal()">'+u+'</button>').join("")+'</div>'
+    + '<span class="small">P&amp;L shown in '+(journalUnit==="$"? "dollars" : journalUnit==="R"? "R multiples" : "% of paper balance")+'</span>'
+    + '<span style="flex:1"></span>'
+    + '<button class="btn primary" onclick="openTradeModal()">+ Add Manual Trade</button></div>'
+    + '<div class="journal-layout"><div style="min-width:0">' + calendarHTML() + monthlySummaryHTML() + emotionSummary() + '</div>'
+    + '<div style="min-width:0">' + journalDailyPanelHTML() + '</div></div>';
 };
-function dailyNoteRec(){ const d=todayStr(); if(!DB.dailyNotes[d]) DB.dailyNotes[d] = { text:"", voices:[] }; return DB.dailyNotes[d]; }
+function dailyNoteRec(ds){ const d = ds || todayStr(); if(!DB.dailyNotes[d]) DB.dailyNotes[d] = { text:"", voices:[] }; return DB.dailyNotes[d]; }
 function journalDailyPanelHTML(){
-  const d = todayStr(); const rec = dailyNoteRec();
-  const st = guardrailStatus();
-  const vToday = DB.overrides.filter(o=>o.date===d);
-  return '<div class="card mb"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3>Today&rsquo;s panel — '+d+'</h3>'
-    + '<span class="chip '+(vToday.length? "red":"green")+'">Guardrail violations today: '+vToday.length+'</span></div>'
-    + '<div class="grid g2 mt" style="align-items:start">'
-    + '<div><div class="small" style="font-weight:800;margin-bottom:6px">GUARDRAIL VIOLATIONS</div>'
-    + (DB.overrides.length? '<div class="small" style="margin-bottom:6px">All-time violations logged: <strong>'+DB.overrides.length+'</strong></div>'
-        + (vToday.length? vToday.map(o=>'<div class="pos-row"><div><strong>'+esc(o.at||"")+'</strong><div class="small">'+esc((o.reasons||[]).join(" · "))+'</div></div><span class="chip red">Violation</span></div>').join("")
-          : '<div class="small">No violations today — clean sheet so far.</div>')
-        + '<button class="btn ghost sm" style="margin-top:6px" onclick="go(\'guardrails\')">See full rule-break log</button>'
-      : '<div class="empty" style="padding:18px"><div class="e-title">No violations logged</div>Every guardrail override lands here, on the record.</div>')
-    + '<div class="divider"></div><div class="small">Today so far: <strong class="mono '+(st.pnl>=0?"pos":"neg")+'">'+fmt$(st.pnl)+'</strong> · '+st.trades+'/'+DB.guardrails.maxTrades+' trades used</div></div>'
-    + '<div><div class="small" style="font-weight:800;margin-bottom:6px">DAILY NOTE</div>'
-    + '<textarea class="input" id="dn-text" rows="4" placeholder="How did today actually go? One honest paragraph beats a week of excuses…">'+esc(rec.text||"")+'</textarea>'
-    + '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn sm primary" onclick="saveDailyNote()">Save daily note</button>'
-    + '<button class="btn sm" id="vn-btn" onclick="toggleVoiceNote()">'+voiceNoteBtnLabel()+'</button></div>'
+  const d = journalDay; const rec = dailyNoteRec(d);
+  const list = DB.trades.filter(t=>t.date===d);
+  const s = computeStats(list);
+  const vDay = DB.overrides.filter(o=>o.date===d);
+  const planFollowed = list.filter(t=>t.planId).length;
+  const journaled = list.filter(t=> (t.notes && t.notes.trim()) || t.shot || t.emotion).length;
+  const rDone = (DB.routine.done[d]||[]).length, rTotal = DB.routine.steps.length;
+  const dObj = new Date(d+"T12:00:00");
+  const metric = (label, val, cls)=> '<div class="day-metric"><div class="dm-label">'+label+'</div><div class="dm-val mono '+(cls||"")+'">'+val+'</div></div>';
+  const micSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  const penSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L8 20l-5 1 1-5z"/></svg>';
+  return '<div class="card"><div class="small" style="font-weight:800">'+dObj.toLocaleDateString("en-US",{weekday:"long", month:"long", day:"numeric"})+(d===todayStr()? ' &middot; Today':"")+'</div>'
+    + '<div class="mono '+(s.pnl>0?"pos":s.pnl<0?"neg":"")+'" style="font-size:34px;font-weight:800;letter-spacing:-.02em;margin:6px 0 0">'+pnlInUnit(s.pnl, s.sumR)+'</div>'
+    + '<div class="small">Net P&amp;L for the day</div>'
+    + '<div class="grid g3 mt" style="gap:9px">'
+    + metric("NET PNL", pnlInUnit(s.pnl, s.sumR), pnlUnitClass(s.pnl, s.sumR))
+    + metric("WIN RATE", list.length? s.winRate.toFixed(0)+"%" : "—")
+    + metric("AVERAGE R", list.length? fmtR(s.avgR) : "—", s.avgR>0?"pos":s.avgR<0?"neg":"")
+    + metric("TOTAL TRADES", list.length+' <span style="color:var(--faint);font-size:12px">/ '+DB.guardrails.maxTrades+'</span>')
+    + metric("WINS", s.wins)
+    + metric("LOSSES", s.losses)
+    + '</div>'
+    + '<div class="divider" style="margin:12px 0"></div>'
+    + '<div class="day-row"><span>Plan Followed</span><strong>'+(list.length? planFollowed+' / '+list.length : "—")+'</strong></div>'
+    + '<div class="day-row"><span>Guardrail Violations</span><span class="chip '+(vDay.length? "red":"green")+'">'+vDay.length+'</span></div>'
+    + '<div class="day-row"><span>Pre-Market Routine</span>'+(rTotal? '<span class="chip '+(rDone>=rTotal? "green":"amber")+'">'+(rDone>=rTotal? "Complete" : rDone+'/'+rTotal+' steps')+'</span>' : '<span class="small">Off</span>')+'</div>'
+    + '<div class="day-row"><span>Trades Journaled</span><strong>'+journaled+' / '+list.length+'</strong></div>'
+    + (list.length? '<div class="divider" style="margin:12px 0"></div><div class="small" style="font-weight:800;margin-bottom:2px">TRADES</div>'
+        + list.map(t=>{ const p=tradePnl(t); return '<div class="pos-row"><div><strong>'+esc(t.market)+'</strong> <span class="chip '+(t.dir==="Long"?"green":"red")+'">'+t.dir+'</span><div class="small mono">'+t.entry+' &rarr; '+t.exit+' &middot; '+fmtR(tradeR(t))+'</div></div><div style="display:flex;gap:6px;align-items:center"><span class="mono '+(p>=0?"pos":"neg")+'" style="font-weight:800">'+fmt$(p)+'</span><button class="btn sm" onclick="openTradeModal(\''+t.id+'\')">Edit</button><button class="btn sm" title="Delete trade" onclick="deleteTrade(\''+t.id+'\')">&times;</button></div></div>'; }).join("") : "")
+    + '<div class="divider" style="margin:12px 0"></div><div class="small" style="font-weight:800;margin-bottom:6px">DAILY NOTE</div>'
+    + '<div style="display:flex;gap:8px;align-items:flex-start"><textarea class="input" id="dn-text" rows="3" placeholder="Add a note…" style="flex:1;min-width:0">'+esc(rec.text||"")+'</textarea>'
+    + '<div style="display:flex;flex-direction:column;gap:6px"><button class="icon-btn" title="Edit note" onclick="document.getElementById(\'dn-text\').focus()">'+penSvg+'</button><button class="icon-btn" id="vn-btn" title="Record a voice note" onclick="toggleVoiceNote()">'+micSvg+'</button></div></div>'
+    + '<div style="margin-top:8px"><button class="btn sm primary" onclick="saveDailyNote()">Save note</button></div>'
     + '<div id="vn-list">' + voiceNotesHTML(rec) + '</div>'
-    + '</div></div></div>';
+    + '</div>';
 }
 function voiceNotesHTML(rec){
   if(!rec.voices || !rec.voices.length) return '<div class="small" style="margin-top:8px">No voice notes yet — tap the mic button and talk the day out.</div>';
   return rec.voices.map(v=>'<div class="vn-row"><span class="chip pine">'+esc(v.at)+'</span><audio controls src="'+v.src+'" preload="metadata"></audio><span class="small mono">'+Math.round(v.dur||0)+'s</span><button class="btn sm" onclick="deleteVoiceNote(\''+v.id+'\')">Delete</button></div>').join("");
 }
-function saveDailyNote(){ const rec = dailyNoteRec(); rec.text = $("#dn-text").value; saveDB(); toast("Daily note saved."); }
-function deleteVoiceNote(id){ const rec = dailyNoteRec(); rec.voices = (rec.voices||[]).filter(v=>v.id!==id); saveDB(); RENDER.journal(); }
+function saveDailyNote(){ const rec = dailyNoteRec(journalDay); rec.text = $("#dn-text").value; saveDB(); toast("Daily note saved."); }
+function deleteVoiceNote(id){ const rec = dailyNoteRec(journalDay); rec.voices = (rec.voices||[]).filter(v=>v.id!==id); saveDB(); RENDER.journal(); }
 /* ---- Voice notes: recorded in-browser, stored with the daily note ---- */
 let vnRecorder = null, vnChunks = [], vnStarted = 0, vnStream = null;
 function voiceNoteBtnLabel(){
@@ -947,7 +1074,7 @@ function toggleVoiceNote(){
       const blob = new Blob(vnChunks, { type: vnRecorder.mimeType || "audio/webm" });
       const rd = new FileReader();
       rd.onload = ()=>{
-        const rec = dailyNoteRec();
+        const rec = dailyNoteRec(currentView==="journal"? journalDay : todayStr());
         rec.voices = rec.voices || [];
         rec.voices.push({ id:uid(), at:new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}), dur:(Date.now()-vnStarted)/1000, src: rd.result });
         saveDB(); vnRecorder = null;
@@ -975,29 +1102,53 @@ function calendarHTML(){
   const daysIn = new Date(y,m+1,0).getDate(); const daysPrev = new Date(y,m,0).getDate();
   const byDay = {};
   DB.trades.forEach(t=>{ (byDay[t.date]=byDay[t.date]||[]).push(t); });
-  const monthTrades = DB.trades.filter(t=>{ const d=new Date(t.date+"T12:00:00"); return d.getFullYear()===y && d.getMonth()===m; });
-  const ms = computeStats(monthTrades);
   let cells = "";
   for(let i=0;i<42;i++){
     const dayNum = i - startDay + 1; let dNum, dim=false, dObj;
     if(dayNum<1){ dNum=daysPrev+dayNum; dim=true; dObj=new Date(y,m-1,dNum); }
     else if(dayNum>daysIn){ dNum=dayNum-daysIn; dim=true; dObj=new Date(y,m+1,dNum); }
     else { dNum=dayNum; dObj=new Date(y,m,dayNum); }
-    const ds = todayStr(dObj); const list = byDay[ds]||[]; const p = computeStats(list).pnl;
-    const cls = dim?"dim":(list.length? (p>0?"win":p<0?"loss":"") : "");
-    cells += '<div class="cal-day '+cls+(ds===todayStr()?" today":"")+'"><div class="d-num">'+dNum+'</div>'
-      + (list.length? '<div class="d-pnl mono '+(p>=0?"pos":"neg")+'">'+fmt$(p)+'</div><div class="d-cnt">'+list.length+' trade'+(list.length>1?"s":"")+'</div>' : "")
+    const ds = todayStr(dObj); const list = byDay[ds]||[]; const s = computeStats(list);
+    const cls = dim?"dim":(list.length? (s.pnl>0?"win":s.pnl<0?"loss":"") : "");
+    const isToday = ds===todayStr();
+    cells += '<div class="cal-day '+cls+(isToday?" today":"")+(ds===journalDay?" sel":"")+'" onclick="selectJournalDay(\''+ds+'\')" title="View '+ds+'"><div style="display:flex;justify-content:space-between;align-items:center;gap:4px"><span class="d-num">'+dNum+'</span>'+(isToday? '<span class="today-badge">Today</span>':"")+'</div>'
+      + (list.length? '<div class="d-pnl mono '+pnlUnitClass(s.pnl, s.sumR)+'">'+pnlInUnit(s.pnl, s.sumR)+'</div><div class="d-cnt">'+list.length+' trade'+(list.length>1?"s":"")+'</div>' : "")
       + '</div>';
     if(i>=35 && dayNum>=daysIn) break;
   }
   const monthName = first.toLocaleString("en-US",{month:"long", year:"numeric"});
-  return '<div class="card"><div class="cal-head"><button class="btn sm" onclick="calMove(-1)">← Prev</button><h3 style="flex:1;text-align:center">'+monthName+'</h3><button class="btn sm" onclick="calMove(1)">Next →</button></div>'
+  const isThisMonth = y===new Date().getFullYear() && m===new Date().getMonth();
+  return '<div class="card"><div class="cal-head"><button class="btn sm" onclick="calMove(-1)" aria-label="Previous month">&larr;</button><h3 style="flex:1;text-align:center">'+monthName+'</h3>'
+    + (isThisMonth? "" : '<button class="btn sm" onclick="calThisMonth()">This Month</button>')
+    + '<button class="btn sm" onclick="calMove(1)" aria-label="Next month">&rarr;</button></div>'
+    + '<div class="small" style="text-align:right;margin-bottom:8px">Time displayed in GMT+6</div>'
     + '<div class="cal-grid" style="margin-bottom:8px">'+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>'<div class="cal-dow">'+d+'</div>').join("")+'</div>'
     + '<div class="cal-grid">'+cells+'</div>'
-    + '<div class="divider"></div><div class="small">Month: <strong class="mono '+(ms.pnl>=0?"pos":"neg")+'">'+fmt$(ms.pnl)+'</strong> · '+ms.n+' trades · '+ms.winRate.toFixed(0)+'% win rate · weekends show trades too, discipline never sleeps.</div></div>';
+    + '<div class="small" style="margin-top:10px">Click a day to load it in the daily panel.</div></div>';
+}
+function monthlySummaryHTML(){
+  const y = calCursor.getFullYear(), m = calCursor.getMonth();
+  const monthTrades = DB.trades.filter(t=>{ const d=new Date(t.date+"T12:00:00"); return d.getFullYear()===y && d.getMonth()===m; });
+  const ms = computeStats(monthTrades);
+  const byDay = {}; monthTrades.forEach(t=>{ (byDay[t.date]=byDay[t.date]||[]).push(t); });
+  let best=null, worst=null;
+  Object.keys(byDay).forEach(d=>{ const p = computeStats(byDay[d]).pnl; if(best===null||p>best.p) best={d:d,p:p}; if(worst===null||p<worst.p) worst={d:d,p:p}; });
+  const cell = (label, val, cls)=> '<div><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)">'+label+'</div><div class="mono" style="font-weight:800;font-size:16px;margin-top:2px"><span class="'+(cls||"")+'">'+val+'</span></div></div>';
+  return '<div class="card mt"><h3>Monthly Summary</h3><div class="card-sub">'+calCursor.toLocaleString("en-US",{month:"long", year:"numeric"})+'</div>'
+    + '<div class="grid g4 mt" style="gap:14px">'
+    + cell("NET PNL", pnlInUnit(ms.pnl, ms.sumR), pnlUnitClass(ms.pnl, ms.sumR))
+    + cell("TRADES", ms.n)
+    + cell("WIN RATE", ms.n? ms.winRate.toFixed(0)+"%" : "—")
+    + cell("AVERAGE R", ms.n? fmtR(ms.avgR) : "—", ms.avgR>0?"pos":ms.avgR<0?"neg":"")
+    + cell("WINS", ms.wins)
+    + cell("LOSSES", ms.losses)
+    + cell("BEST DAY", best? fmt$(best.p) : "—", best? (best.p>=0?"pos":"neg") : "")
+    + cell("WORST DAY", worst? fmt$(worst.p) : "—", worst? (worst.p<0?"neg":"pos") : "")
+    + '</div></div>';
 }
 function calMove(n){ calCursor.setMonth(calCursor.getMonth()+n); RENDER.journal(); }
-
+function calThisMonth(){ calCursor = new Date(); calCursor.setDate(1); RENDER.journal(); }
+function selectJournalDay(ds){ journalDay = ds; RENDER.journal(); }
 /* ---- Trade modal ---- */
 let shotData = "";
 function openTradeModal(id){
@@ -1075,7 +1226,7 @@ function loadSampleData(){
 "use strict";
 /* ================= PAPER TRADING ================= */
 const BASE_PRICE = { BTCUSD:101250, ETHUSD:3380, XAUUSD:2688.5, EURUSD:1.0882, GBPUSD:1.2698, GBPJPY:192.65, SOLUSD:218.4, USDJPY:154.32 };
-let simMarket = "XAUUSD", simCandles = [], simTimer = null;
+let simMarket = "EURUSD", simCandles = [], simTimer = null;
 function seedCandles(market){
   let p = BASE_PRICE[market]; const dec = p<10?4:(p<300?2:2); simCandles = [];
   for(let i=0;i<60;i++){ const o=p; const drift=(Math.random()-0.48)*p*0.0016; const c=o+drift;
@@ -1088,7 +1239,7 @@ function tickSim(){
   const drift=(Math.random()-0.49)*p*0.0011; const c=p+drift;
   simCandles.push({o:p, h:Math.max(p,c)+Math.random()*p*0.0004, l:Math.min(p,c)-Math.random()*p*0.0004, c});
   if(simCandles.length>60) simCandles.shift();
-  drawChart(); updateTicker();
+  drawChart(); updateTicker(); paintTradingLive();
   // auto SL/TP checks
   DB.paper.positions.filter(pos=>pos.market===simMarket).forEach(pos=>{
     if(pos.sl && ((pos.dir==="Long" && c<=pos.sl) || (pos.dir==="Short" && c>=pos.sl))) closePosition(pos.id, pos.sl, "Stop loss hit");
@@ -1128,68 +1279,206 @@ function updateTicker(){
   const p = curPrice(); const open = simCandles[0].o; const chg = (p-open)/open*100;
   t.innerHTML = '<span class="t-price mono">'+p.toFixed(simCandles.dec)+'</span><span class="chip '+(chg>=0?"green":"red")+'">'+fmtPct(chg)+' today (simulated feed)</span>';
 }
-RENDER.trading = function(){
-  const el = document.querySelector('[data-view="trading"]');
-  const st = guardrailStatus(); const lockedOut = DB.guardrails.enabled && st.breached && !st.overridden;
-  const equity = DB.paper.balance + DB.paper.positions.reduce((a,pos)=> a + posPnl(pos), 0);
-  el.innerHTML =
-    '<div class="grid g3 mb"><div class="stat-card"><div class="s-label">Paper balance</div><div class="s-value mono">'+fmt$(DB.paper.balance)+'</div><div class="s-sub">Virtual cash — resets any time</div></div>'
-    + '<div class="stat-card"><div class="s-label">Equity (with open)</div><div class="s-value mono '+(equity>=10000?"pos":"neg")+'">'+fmt$(equity)+'</div><div class="s-sub">Started at $10,000</div></div>'
-    + '<div class="stat-card"><div class="s-label">Open positions</div><div class="s-value mono">'+DB.paper.positions.length+'</div><div class="s-sub">Closed trades flow into your Journal</div></div></div>'
-    + '<div class="card mb"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h3>Live chart — TradingView</h3><div class="card-sub">Full drawing toolbar on the left of the chart: trendlines, Fibonacci, patterns, long/short position tool, brushes, shapes, text and measure. Studies via the Indicators button.</div></div>'
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select class="input" style="width:150px" id="tv-symbol">'+MARKETS.map(m=>'<option '+(m===simMarket?"selected":"")+'>'+m+'</option>').join("")+'</select>'
-    + '<div class="seg">'+[["15","15m"],["60","1H"],["240","4H"],["D","1D"],["W","1W"]].map(tf=>'<button class="'+(tvInterval===tf[0]?"on":"")+'" onclick="setTvInterval(\''+tf[0]+'\')">'+tf[1]+'</button>').join("")+'</div></div></div>'
-    + '<div class="tv-wrap mt"><div id="tv-chart-mount"></div></div>'
-    + '<div class="small" style="margin-top:8px">Chart &amp; market data by TradingView. Your paper positions below run on the simulated practice feed.</div></div>'
-    + (lockedOut? '<div class="alert red mb"><div><strong>Guardrails lockout is active.</strong> Paper trading is blocked '+(DB.guardrails.hardLock? '— Hard Lock is ON, so there is no override; trading unlocks tomorrow.' : 'until you override (logged) or the day resets.')+' This is the discipline working as designed.</div></div>':"")
-    + (!st.inWindow && DB.guardrails.enabled? '<div class="alert amber mb"><div><strong>Outside your trading window</strong> ('+DB.guardrails.winStart+' – '+DB.guardrails.winEnd+'). Edge decays outside your A-session — trade only if the setup is truly A+.</div></div>':"")
-    + '<div class="trade-layout"><div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">'
-    + '<select class="input" style="width:160px" id="sim-market">'+MARKETS.map(m=>'<option '+(m===simMarket?"selected":"")+'>'+m+'</option>').join("")+'</select>'
-    + '<div class="ticker" id="sim-ticker"></div><span style="flex:1"></span><span class="chip">Simulated feed · practice only</span></div>'
-    + '<canvas id="chart" height="340"></canvas>'
-    + '<div class="divider"></div><h3>Open positions</h3><div id="pos-list">'
-    + (DB.paper.positions.length? DB.paper.positions.map(pos=>{
-        const p = posPnl(pos);
-        return '<div class="pos-row"><div><strong>'+esc(pos.market)+'</strong> <span class="chip '+(pos.dir==="Long"?"green":"red")+'">'+pos.dir+'</span> <span class="mono small">'+pos.size+' units @ '+pos.entry+'</span></div>'
-        + '<div style="display:flex;gap:10px;align-items:center"><span class="mono '+(p>=0?"pos":"neg")+'" style="font-weight:800">'+fmt$(p)+'</span><button class="btn sm" onclick="closePositionUI(\''+pos.id+'\')">Close @ market</button></div></div>';
-      }).join("") : '<div class="empty"><div class="e-title">No open positions</div>Open a paper trade from the panel — it takes 10 seconds.</div>')
-    + '</div></div>'
-    + '<div><div class="card"><h3>Open paper trade</h3><div class="card-sub">1% risk is pre-filled — Brad&rsquo;s rule: never more.</div>'
-    + '<div class="field" style="margin-top:12px"><label class="f">Direction</label><div class="seg" style="display:flex"><button id="dir-long" class="on" style="flex:1" onclick="setDir(\'Long\')">Long</button><button id="dir-short" style="flex:1" onclick="setDir(\'Short\')">Short</button></div></div>'
+/* ---- Trading page state (EdgeFlo layout) ---- */
+let posTab = "open", posPanelHidden = false, tradeWide = false, sideTab = "watchlist", twlSearch = "", sidePlanId = "", tradeBannerOff = false;
+function tvSymbolFor(sym){
+  if(TV_SYMBOLS[sym]) return TV_SYMBOLS[sym];
+  const row = WL_INSTRUMENTS.find(r=>r[0]===sym); const cls = row? row[1] : "Forex";
+  if(cls==="Forex") return "FX:"+sym;
+  if(cls==="Crypto") return "BITSTAMP:"+sym;
+  if(cls==="Metals") return "OANDA:"+sym;
+  return { US30:"TVC:DJI", NAS100:"NASDAQ:NDX", SPX500:"SP:SPX" }[sym] || "FX:"+sym;
+}
+function setChartSymbol(sym){ simMarket = sym; seedCandles(simMarket); RENDER.trading(); }
+function openPnlNow(){ return DB.paper.positions.reduce((a,p)=> a + posPnl(p), 0); }
+function paintTradingLive(){
+  if(currentView!=="trading") return;
+  const openPnl = openPnlNow();
+  const op = $("#th-openpnl"); if(op){ op.textContent = (openPnl>0?"+":"")+fmt$(openPnl); op.className = openPnl>=0? "pos":"neg"; }
+  const eq = $("#th-equity"); if(eq) eq.textContent = fmt$(DB.paper.balance + openPnl);
+  DB.paper.positions.forEach(p=>{ const s = document.querySelector('[data-pospnl="'+p.id+'"]'); if(s){ const v = posPnl(p); s.textContent = fmt$(v); s.className = "mono "+(v>=0?"pos":"neg"); s.style.fontWeight = "800"; } });
+}
+function tradingHeaderHTML(lockedOut){
+  const openPnl = openPnlNow(); const equity = DB.paper.balance + openPnl;
+  const marginUsed = DB.paper.positions.reduce((a,p)=> a + Math.abs(p.size * p.entry) * 0.01, 0);
+  const mh = DB.paper.positions.length && equity>0 ? Math.max(0, Math.min(100, (equity - marginUsed) / equity * 100)).toFixed(1) + "%" : "N/A";
+  const lockSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="vertical-align:-1px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  return '<div class="card acct-bar">'
+    + '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="Paper account cash balance">i</span></div><div class="acct-val mono">'+fmt$(DB.paper.balance)+'</div></div>'
+    + '<div class="acct-cell"><div class="acct-label">Open PnL <span class="info-i" title="Unrealised P&amp;L across open paper positions">i</span></div><div class="acct-val mono"><span id="th-openpnl" class="'+(openPnl>=0?"pos":"neg")+'">'+(openPnl>0?"+":"")+fmt$(openPnl)+'</span></div></div>'
+    + '<div class="acct-cell"><div class="acct-label">Equity <span class="info-i" title="Balance plus open P&amp;L">i</span></div><div class="acct-val mono" id="th-equity">'+fmt$(equity)+'</div></div>'
+    + '<div class="acct-cell"><div class="acct-label">Margin Health <span class="info-i" title="Free margin as a share of equity (1% margin per position). N/A with no open positions.">i</span></div><div class="acct-val mono">'+mh+'</div></div>'
+    + '<span style="flex:1"></span>'
+    + '<button class="icon-btn" title="Quick trade" onclick="openTradePanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
+    + '<button class="btn '+(lockedOut?"":"primary")+'" '+(lockedOut?"disabled":"")+' onclick="openTradePanel()">'+lockSvg+' Trade</button>'
+    + '<button class="icon-btn" title="'+(tradeWide?"Show sidebar":"Expand chart")+'" onclick="tradeWide=!tradeWide;RENDER.trading()">'+(tradeWide?"&laquo;":"&raquo;")+'</button></div>';
+}
+function tradingBannerHTML(){
+  if(tradeBannerOff || !DB.routine.enabled || !DB.routine.steps.length) return "";
+  const done = routineDoneCount(); if(done >= DB.routine.steps.length) return "";
+  return '<div class="premarket-banner"><span class="pm-star">&#9733;</span>'
+    + '<div style="flex:1;min-width:200px"><strong>Ready to trade today?</strong> Complete your pre-market routine before execution <span class="chip pine">'+done+'/'+DB.routine.steps.length+' done</span></div>'
+    + '<button class="btn ghost sm" onclick="tradeBannerOff=true;RENDER.trading()">Start session anyway</button>'
+    + '<button class="btn primary sm" onclick="go(\'dashboard\')">Complete pre-market routine</button></div>';
+}
+function positionsPanelHTML(){
+  const open = DB.paper.positions, closed = DB.trades.filter(t=>t.source==="paper").slice().reverse();
+  const tabBtn = (id,label,n)=> '<button class="pos-tab '+(posTab===id?"on":"")+'" onclick="posTab=\''+id+'\';RENDER.trading()">'+label+' <span class="mono">'+n+'</span></button>';
+  let body = "";
+  if(posTab==="open"){
+    body = open.length? open.map(pos=>{ const p = posPnl(pos);
+      return '<div class="pos-row"><div><strong>'+esc(pos.market)+'</strong> <span class="chip '+(pos.dir==="Long"?"green":"red")+'">'+pos.dir+'</span> <span class="mono small">'+pos.size+' units @ '+pos.entry+(pos.sl? ' &middot; SL '+pos.sl:"")+(pos.tp? ' &middot; TP '+pos.tp:"")+'</span></div>'
+      + '<div style="display:flex;gap:10px;align-items:center"><span class="mono '+(p>=0?"pos":"neg")+'" style="font-weight:800" data-pospnl="'+pos.id+'">'+fmt$(p)+'</span><button class="btn sm" onclick="closePositionUI(\''+pos.id+'\')">Close @ market</button></div></div>'; }).join("")
+      : '<div class="empty"><div class="e-title">No open positions</div>Use the Trade button in the header bar to open a paper position.</div>';
+  } else if(posTab==="pending"){
+    body = '<div class="empty"><div class="e-title">No pending orders</div>Entries on the paper feed are market-only for now — limit &amp; stop orders are not simulated.</div>';
+  } else {
+    body = closed.length? '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Market</th><th>Dir</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>R</th></tr></thead><tbody>'
+      + closed.slice(0,20).map(t=>{ const p=tradePnl(t); return '<tr><td class="mono">'+esc(t.date)+'</td><td><strong>'+esc(t.market)+'</strong></td><td><span class="chip '+(t.dir==="Long"?"green":"red")+'">'+t.dir+'</span></td><td class="mono">'+t.entry+'</td><td class="mono">'+t.exit+'</td><td class="mono '+(p>=0?"pos":"neg")+'" style="font-weight:700">'+fmt$(p)+'</td><td class="mono">'+fmtR(tradeR(t))+'</td></tr>'; }).join("")
+      + '</tbody></table></div>'
+      : '<div class="empty"><div class="e-title">No closed positions yet</div>Closed paper trades land here — and in your Journal.</div>';
+  }
+  return '<div class="card"><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)">'
+    + tabBtn("open","Open Positions", open.length) + tabBtn("pending","Pending Orders", 0) + tabBtn("closed","Closed Positions", closed.length)
+    + '<span style="flex:1"></span>'
+    + '<button class="btn sm" '+(open.length?"":"disabled")+' onclick="exitAllPositions()">Exit All</button>'
+    + '<button class="btn sm ghost" onclick="posPanelHidden=!posPanelHidden;RENDER.trading()">'+(posPanelHidden?"Show panel":"Hide panel")+'</button></div>'
+    + (posPanelHidden? "" : body)
+    + '<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn ghost sm" onclick="resetPaper()">Reset paper account</button></div></div>';
+}
+function exitAllPositions(){
+  const ids = DB.paper.positions.map(p=>p.id);
+  if(!ids.length) return;
+  ids.forEach(id=> closePosition(id, null, "Exit all"));
+  toast("All positions closed — see Closed Positions and your Journal.");
+}
+function openTradePanel(){
+  const st = guardrailStatus();
+  if(DB.guardrails.enabled && st.breached && !st.overridden){ toast(DB.guardrails.hardLock? "Hard Lock is ON — trading is locked until tomorrow." : "Guardrails lockout — trading blocked."); return; }
+  openModal('<h3>Trade — '+esc(simMarket)+'</h3><div class="small" style="margin-bottom:12px">Paper order @ market on the simulated practice feed &middot; last <strong class="mono">'+curPrice().toFixed(simCandles.dec)+'</strong>. 1% risk is the house rule — size like it.</div>'
+    + '<div class="field"><label class="f">Direction</label><div class="seg" style="display:flex"><button id="dir-long" class="'+(simDir==="Long"?"on":"")+'" style="flex:1" onclick="setDir(\'Long\')">Long</button><button id="dir-short" class="'+(simDir==="Short"?"on":"")+'" style="flex:1" onclick="setDir(\'Short\')">Short</button></div></div>'
     + '<div class="field"><label class="f">Size (units)</label><input class="input mono" id="pt-size" type="number" step="any" value="10"></div>'
     + '<div class="row"><div class="field"><label class="f">Stop loss</label><input class="input mono" id="pt-sl" type="number" step="any" placeholder="price"></div>'
     + '<div class="field"><label class="f">Take profit</label><input class="input mono" id="pt-tp" type="number" step="any" placeholder="price"></div></div>'
     + '<div class="field"><label class="f">Trade plan</label><select class="input" id="pt-plan"><option value="">— No plan —</option>'+DB.plans.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("")+'</select></div>'
-    + '<button class="btn primary block" id="pt-open" '+(lockedOut?"disabled":"")+' onclick="openPosition()">Open position @ market</button>'
-    + (lockedOut? '<div class="small" style="margin-top:8px;color:var(--red);font-weight:700">Blocked by Guardrails lockout.</div>':"")
+    + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="openPosition()">Open position @ market</button></div>');
+}
+/* ---- Right sidebar ---- */
+function setSideTab(t){ sideTab = t; RENDER.trading(); }
+function tradingSidebarHTML(st, lockedOut){
+  const g = DB.guardrails; const info = sessionInfo();
+  const dayPnl = computeStats(todayTrades()).pnl;
+  const lo = -Math.abs(g.maxLoss), hi = Math.abs(g.maxProfit) || 1;
+  const pctPos = Math.max(0, Math.min(100, (dayPnl - lo) / (hi - lo) * 100));
+  const used = Math.min(st.trades, g.maxTrades);
+  const dots = Array.from({length: Math.max(1, g.maxTrades)}, (_,i)=> '<i class="tdot '+(i<used?"on":"")+'"></i>').join("");
+  const opensTxt = info.open? "Trading closes at "+g.winEnd
+    : (new Date() > hmToDate(g.winEnd, 0)? "Trading opens at "+g.winStart+" tomorrow" : "Trading opens at "+g.winStart);
+  const tabBtn = (id,label)=> '<button class="'+(sideTab===id?"on":"")+'" onclick="setSideTab(\''+id+'\')">'+label+'</button>';
+  return '<div class="card side-card"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    + (lockedOut? '<span class="chip red">Trading locked</span>' : '<span class="chip green">Trading unlocked</span>')
+    + (info.open? '<span class="chip green">Trading window open</span>' : '<span class="chip amber">Trading window closed</span>')
     + '</div>'
-    + '<div class="card mt"><h3>Position size calculator</h3><div class="card-sub">Risk first, size second.</div>'
-    + '<div class="field" style="margin-top:12px"><label class="f">Account balance ($)</label><input class="input mono" id="calc-bal" type="number" value="10000"></div>'
-    + '<div class="row"><div class="field"><label class="f">Risk %</label><input class="input mono" id="calc-risk" type="number" step="0.1" value="1"></div>'
-    + '<div class="field"><label class="f">Stop distance (price)</label><input class="input mono" id="calc-stop" type="number" step="any" value="8"></div></div>'
-    + '<button class="btn block" onclick="calcSize()">Calculate</button><div id="calc-out" class="mt"></div>'
-    + '<button class="btn ghost sm" onclick="resetPaper()" style="margin-top:6px">Reset paper account</button>'
-    + '</div></div></div>';
-  seedCandles(simMarket); drawChart(); updateTicker();
+    + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><strong class="mono" style="font-size:19px">'+fmt$(dayPnl)+'</strong><span class="small">Today&rsquo;s Closed PnL <span class="info-i" title="Net closed P&amp;L in your journal for today, against your guardrail limits">i</span></span></div>'
+    + '<div class="pnl-slider"><div class="pnl-track"><i style="left:'+pctPos+'%"></i></div>'
+    + '<div class="pnl-scale"><span><strong class="mono" style="color:var(--ink)">'+fmt$(lo)+'</strong><br>Max Loss</span><span style="text-align:right"><strong class="mono" style="color:var(--ink)">'+(hi>=1000? "$"+(hi/1000)+"K" : fmt$(hi))+'</strong><br>Max Profit</span></div></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
+    + '<div class="side-count"><span style="flex:1">&#9719; '+opensTxt+'</span><span class="mono" id="tw-count" style="white-space:nowrap">'+fmtCountdown(info.target - new Date())+'</span></div>'
+    + '</div>'
+    + '<div class="card side-card"><div class="side-tabs">'+tabBtn("watchlist","Watchlist")+tabBtn("alerts","Alerts")+tabBtn("plan","Trading Plan")+'</div>'
+    + (sideTab==="watchlist"? sideWatchlistHTML() : sideTab==="alerts"? sideAlertsHTML() : sidePlanHTML())
+    + '</div>';
+}
+function sideWatchlistRowsHTML(){
+  const q = twlSearch.trim().toUpperCase();
+  let rows = "";
+  ["Forex","Indices","Crypto","Metals"].forEach(cls=>{
+    const items = WL_INSTRUMENTS.filter(r=> r[1]===cls && (!q || r[0].includes(q))).map(r=> wlState[r[0]]);
+    if(!items.length) return;
+    rows += '<div class="wl-group-head">'+cls+'</div>' + items.map(s=>{
+      const chg = (s.last - s.open)/s.open*100; const pinned = DB.wlPins.includes(s.sym);
+      return '<div class="twl-row '+(s.sym===simMarket?"sel":"")+'" onclick="setChartSymbol(\''+s.sym+'\')">'
+        + '<span class="twl-sym mono">'+s.sym+'</span>'
+        + '<span class="mono" data-twl-last="'+s.sym+'">'+s.last.toFixed(s.dec)+'</span>'
+        + '<span class="mono '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+s.sym+'" style="min-width:56px;text-align:right">'+fmtPct(chg)+'</span>'
+        + '<button class="wl-pin '+(pinned?"on":"")+'" title="'+(pinned? "Unpin":"Pin to top")+'" onclick="event.stopPropagation();toggleWlPin(\''+s.sym+'\');RENDER.trading()">'+(pinned? "&#9733;":"&#9734;")+'</button></div>';
+    }).join("");
+  });
+  return rows || '<div class="empty" style="padding:16px"><div class="e-title">No instruments match</div>Try a different search.</div>';
+}
+function sideWatchlistHTML(){
+  return '<div style="display:flex;gap:8px;margin-bottom:4px"><input class="input" style="flex:1" placeholder="Search all instruments…" value="'+esc(twlSearch)+'" oninput="twlSearch=this.value;refreshSideWatchlist()"></div>'
+    + '<div style="display:flex;gap:10px;padding:2px 6px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800"><span style="flex:1">Instrument</span><span>Last</span><span style="min-width:56px;text-align:right">Chg</span><span style="width:26px"></span></div>'
+    + '<div id="twl-list">'+sideWatchlistRowsHTML()+'</div>'
+    + '<div class="small" style="margin-top:8px">Simulated practice feed. Click a row to load it on the chart; &#9733; pins it on the Watchlist page too.</div>';
+}
+function refreshSideWatchlist(){ const l = $("#twl-list"); if(l) l.innerHTML = sideWatchlistRowsHTML(); }
+function paintTradingWlPrices(){
+  if(currentView!=="trading") return;
+  WL_INSTRUMENTS.forEach(r=>{ const s = wlState[r[0]];
+    const le = document.querySelector('[data-twl-last="'+s.sym+'"]'); if(le) le.textContent = s.last.toFixed(s.dec);
+    const ce = document.querySelector('[data-twl-chg="'+s.sym+'"]');
+    if(ce){ const chg = (s.last - s.open)/s.open*100; ce.textContent = fmtPct(chg); ce.className = "mono "+(chg>=0?"pos":"neg"); ce.style.minWidth = "56px"; ce.style.textAlign = "right"; }
+  });
+}
+function sideAlertsHTML(){
+  const info = sessionInfo(); const st = guardrailStatus();
+  const high = weekEvents().filter(e=> e.date===todayStr() && e.impact==="High");
+  const items = [];
+  items.push({ t: info.open? "Trading window open — closes "+DB.guardrails.winEnd : "Trading window closed — opens "+DB.guardrails.winStart, c: info.open? "green":"amber" });
+  if(DB.guardrails.enabled && st.breached) items.push({ t: "Guardrail breach: "+st.reasons.join(" · "), c:"red" });
+  else if(DB.guardrails.enabled) items.push({ t: "Guardrails clear — "+st.trades+"/"+DB.guardrails.maxTrades+" trades used, "+fmt$(st.pnl)+" today", c:"green" });
+  high.forEach(e=> items.push({ t: "High-impact "+e.cur+" news today: "+e.event+" ("+e.time+" GMT)", c:"amber" }));
+  if(DB.routine.enabled && routineDoneCount() < DB.routine.steps.length) items.push({ t: "Pre-market routine incomplete ("+routineDoneCount()+"/"+DB.routine.steps.length+")", c:"amber" });
+  DB.paper.positions.forEach(p=> items.push({ t: p.market+" "+p.dir+" open @ "+p.entry+(p.sl? " · SL "+p.sl:"")+(p.tp? " · TP "+p.tp:""), c:"pine" }));
+  return items.map(i=>'<div class="alert-row"><span class="chip '+i.c+'">&#9679;</span><span>'+esc(i.t)+'</span></div>').join("");
+}
+function toggleTradingCheck(planId, i, val){
+  if(!activePlanRun || activePlanRun.planId!==planId) activePlanRun = { planId, checks:{} };
+  activePlanRun.checks[i] = val; RENDER.trading();
+}
+function sidePlanHTML(){
+  if(!DB.plans.length) return '<div class="empty" style="padding:16px"><div class="e-title">No trade plan yet</div>Build one in Edge Plans, then arm its checklist here before you trade.</div><button class="btn primary sm block" onclick="go(\'edge\')">Open Edge Plans</button>';
+  if(!sidePlanId || !DB.plans.some(p=>p.id===sidePlanId)) sidePlanId = (DB.activePlanId && DB.plans.some(p=>p.id===DB.activePlanId)) ? DB.activePlanId : DB.plans[0].id;
+  const p = DB.plans.find(x=>x.id===sidePlanId);
+  const running = activePlanRun && activePlanRun.planId===p.id;
+  return '<label class="f">Plan</label><select class="input" onchange="sidePlanId=this.value;RENDER.trading()">'+DB.plans.map(x=>'<option value="'+x.id+'" '+(x.id===p.id?"selected":"")+'>'+esc(x.name)+'</option>').join("")+'</select>'
+    + '<div class="small" style="margin:8px 0">Bias: '+esc(p.bias||"—")+' &middot; '+esc(p.market||"")+'</div>'
+    + (p.criteria||[]).map((c,i)=>'<label style="display:flex;gap:9px;align-items:center;padding:5px 0;font-size:13.5px;cursor:pointer"><input type="checkbox" '+(running&&activePlanRun.checks[i]?"checked":"")+' onchange="toggleTradingCheck(\''+p.id+'\','+i+',this.checked)" style="width:17px;height:17px;accent-color:var(--pine)">'+esc(c)+'</label>').join("")
+    + '<div class="small" style="margin-top:6px">'+(running? checklistStatus(p) : "Tick every box to arm this plan, then trade it.")+'</div>';
+}
+RENDER.trading = function(){
+  const el = document.querySelector('[data-view="trading"]');
+  const st = guardrailStatus(); const lockedOut = DB.guardrails.enabled && st.breached && !st.overridden;
+  el.innerHTML =
+    tradingHeaderHTML(lockedOut)
+    + tradingBannerHTML()
+    + (lockedOut? '<div class="alert red" style="margin-top:16px"><div><strong>Guardrails lockout is active.</strong> Paper trading is blocked '+(DB.guardrails.hardLock? '— Hard Lock is ON, so there is no override; trading unlocks tomorrow.' : 'until you override (logged) or the day resets.')+' This is the discipline working as designed.</div></div>':"")
+    + (!st.inWindow && DB.guardrails.enabled? '<div class="alert amber" style="margin-top:16px"><div><strong>Outside your trading window</strong> ('+DB.guardrails.winStart+' – '+DB.guardrails.winEnd+'). Edge decays outside your A-session — trade only if the setup is truly A+.</div></div>':"")
+    + '<div class="trade-grid" style="margin-top:16px"><div style="min-width:0">'
+    + '<div class="card mb"><div class="tv-wrap"><div id="tv-chart-mount"></div></div><div class="small" style="margin-top:8px">Chart &amp; market data by TradingView — switch symbol &amp; timeframe from the chart&rsquo;s own header. Paper positions below run on the simulated practice feed.</div></div>'
+    + positionsPanelHTML()
+    + '</div>'
+    + (tradeWide? "" : '<div class="side-col">'+tradingSidebarHTML(st, lockedOut)+'</div>')
+    + '</div>';
+  seedCandles(simMarket);
   loadTvChart();
-  $("#sim-market").addEventListener("change", e=>{ simMarket=e.target.value; seedCandles(simMarket); drawChart(); updateTicker(); const tvs=$("#tv-symbol"); if(tvs) tvs.value=simMarket; loadTvChart(); });
-  $("#tv-symbol").addEventListener("change", e=>{ simMarket=e.target.value; const sm=$("#sim-market"); if(sm) sm.value=simMarket; seedCandles(simMarket); drawChart(); updateTicker(); loadTvChart(); });
   clearInterval(simTimer); simTimer = setInterval(()=>{ if(currentView==="trading") tickSim(); }, 1600);
 };
 /* ---- TradingView advanced chart (embedded widget, drawing toolbar on) ---- */
 const TV_SYMBOLS = { XAUUSD:"OANDA:XAUUSD", BTCUSD:"BITSTAMP:BTCUSD", ETHUSD:"BITSTAMP:ETHUSD", SOLUSD:"BITSTAMP:SOLUSD",
   EURUSD:"FX:EURUSD", GBPUSD:"FX:GBPUSD", GBPJPY:"FX:GBPJPY", USDJPY:"FX:USDJPY" };
-let tvInterval = "60", tvScriptLoading = false;
+let tvInterval = "240", tvScriptLoading = false;
 function setTvInterval(iv){ tvInterval = iv; if(currentView==="trading") RENDER.trading(); }
 function loadTvChart(){
   const mount = document.getElementById("tv-chart-mount"); if(!mount) return;
   const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const build = ()=>{
-    if(!window.TradingView){ mount.innerHTML = '<div class="empty"><div class="e-title">Chart unavailable offline</div>The TradingView widget needs an internet connection. Your simulated practice chart below still works.</div>'; return; }
+    if(!window.TradingView){ mount.innerHTML = '<div class="empty"><div class="e-title">Chart unavailable offline</div>The TradingView widget needs an internet connection. Your positions panel and paper feed below keep working.</div>'; return; }
     mount.innerHTML = "";
     new TradingView.widget({
       container_id: "tv-chart-mount",
-      symbol: TV_SYMBOLS[simMarket] || "OANDA:XAUUSD",
+      symbol: tvSymbolFor(simMarket),
       interval: tvInterval,
       theme: dark? "dark":"light",
       style: "1",
@@ -1207,7 +1496,7 @@ function loadTvChart(){
   const sc = document.createElement("script");
   sc.src = "https://s3.tradingview.com/tv.js"; sc.async = true;
   sc.onload = build;
-  sc.onerror = ()=>{ mount.innerHTML = '<div class="empty"><div class="e-title">Chart unavailable offline</div>The TradingView widget needs an internet connection. Your simulated practice chart below still works.</div>'; };
+  sc.onerror = ()=>{ mount.innerHTML = '<div class="empty"><div class="e-title">Chart unavailable offline</div>The TradingView widget needs an internet connection. Your positions panel and paper feed below keep working.</div>'; };
   document.head.appendChild(sc);
 }
 let simDir = "Long";
@@ -1305,6 +1594,7 @@ function wlTick(){
     s.last = Math.max(s.open*0.5, s.last + move);
   });
   if(currentView==="watchlist") paintWatchlistPrices();
+  paintTradingWlPrices();
 }
 setInterval(wlTick, 2200);
 RENDER.watchlist = function(){
@@ -1426,6 +1716,26 @@ const EDGE_PLAN_PRESETS = [
     criteria:["Imbalance","Market Shift + LQ Sweep","Breakout Candle"],
     exitRules:"Move stop to breakeven after 1R. SL beyond the sweep extreme. Exit at the opposing HTF liquidity pool — minimum 1:2R, set & forget." }
 ];
+/* Management / exit / notes detail for the built-in presets */
+const PRESET_EXTRA = {
+  "jasons-strategy": {
+    mgmt:"Set & forget by default. If price stalls at internal liquidity for 3+ candles without displacement, tighten the stop to breakeven — never widen it.",
+    exit:"Stop beyond the sweep extreme. Target the opposing HTF liquidity pool; flat if the pool is not reached by session end.",
+    notes:"Best in the London & New York killzones on gold. Skip entries with red-folder USD news inside the entry window." },
+  "london-checklist": {
+    mgmt:"TP1 at the Asia range midpoint banks half and moves the stop to breakeven. No re-entries after 10:30 — the London move is done.",
+    exit:"Stop beyond the London sweep wick. Flat before the New York open, no exceptions.",
+    notes:"Works best Tuesday to Thursday. Monday ranges are often still forming; Friday London fades into profit-taking." },
+  "weekly-range": {
+    mgmt:"Scale in only on confirmation — never average into a weekly sweep that has not rejected. Trail behind daily structure after 2R.",
+    exit:"Stop beyond the weekly sweep extreme. Target the opposite side of the weekly range, or exit at the Friday close — whichever comes first.",
+    notes:"One A+ weekly setup beats five forced ones. If there is no sweep by Wednesday, stand aside — no trade is a position." },
+  "market-mechanics-plan": {
+    mgmt:"Move the stop to breakeven after 1R. No partials before the opposing pool unless a same-direction HTF POI blocks the path.",
+    exit:"Stop beyond the sweep extreme. Exit at the opposing HTF liquidity pool — minimum 1:2R, set & forget.",
+    notes:"From the Market Mechanics mentorship: rank liquidity, don't just find it. HTF = destination, LTF = path and entry." }
+};
+EDGE_PLAN_PRESETS.forEach(p=> Object.assign(p, PRESET_EXTRA[p.id] || {}));
 function edgePresetCardHTML(p){
   const list = (title, items) => '<div style="margin-top:12px"><div class="small" style="font-weight:800;margin-bottom:5px">'+title+'</div>'
     + items.map(s=>'<div style="display:flex;gap:8px;padding:3px 0;font-size:13.5px"><span style="color:var(--pine);font-weight:800">·</span><span>'+esc(s)+'</span></div>').join("") + '</div>';
@@ -1438,30 +1748,113 @@ function edgePresetCardHTML(p){
 }
 function useEdgePreset(id){
   const p = EDGE_PLAN_PRESETS.find(x=>x.id===id); if(!p) return;
-  DB.plans.push({ id:uid(), name:p.name, market:p.market, bias:p.bias, criteria:p.criteria.slice(), exitRules:p.exitRules });
+  if(!canCreatePlan()){ planPaywallModal(); return; }
+  const np = { id:uid(), name:p.name, type:p.type, market:p.market, bias:p.bias,
+    charting:(p.charting||[]).slice(), criteria:p.criteria.slice(),
+    mgmt:p.mgmt||"", exit:p.exit||"", exitRules:p.exitRules, notes:p.notes||"", modelShot:"" };
+  DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id };
   saveDB(); RENDER.edge(); toast("“"+p.name+"” copied to your plans — edit it freely.");
 }
 
+/* ---- Edge page state: viewing is free; creating new plans is a Basic feature ---- */
+let edgeSel = null;              // {kind:"plan"|"preset", id}
+const presetChecks = {};         // presetId -> {index:true} session-only ticks on read-only presets
+function canCreatePlan(){ return planRank() >= PLANS.basic.rank; }
+function planPaywallModal(){
+  openModal('<div style="text-align:center;padding:6px 0"><div class="lock-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>'
+    + '<h3>Creating plans is a Basic feature</h3><div class="small" style="max-width:430px;margin:6px auto 16px">Viewing your plans and every preset is free. Creating a new plan — or copying a preset into an editable plan of your own — needs Basic ($44/mo) or Plus.</div>'
+    + '<button class="btn primary" onclick="closeModal();startCheckout(\'basic\')">Upgrade to Basic — $44/mo</button> <button class="btn" onclick="closeModal();go(\'pricing\')">Compare plans</button></div>');
+}
+function newPlanGate(){ if(!canCreatePlan()){ planPaywallModal(); return; } openPlanModal(); }
+function edgeSelection(){
+  if(edgeSel){
+    if(edgeSel.kind==="plan" && DB.plans.some(p=>p.id===edgeSel.id)) return edgeSel;
+    if(edgeSel.kind==="preset" && EDGE_PLAN_PRESETS.some(p=>p.id===edgeSel.id)) return edgeSel;
+  }
+  if(DB.plans.length){
+    const act = DB.plans.find(p=>p.id===DB.activePlanId) || DB.plans[0];
+    return { kind:"plan", id: act.id };
+  }
+  return { kind:"preset", id: EDGE_PLAN_PRESETS[0].id };
+}
+function selectEdge(kind, id){ edgeSel = { kind:kind, id:id }; RENDER.edge(); }
+function setActivePlan(id){ DB.activePlanId = id; saveDB(); RENDER.edge(); toast("Active plan set — it loads first in the Trading plan tab."); }
+function togglePresetCheck(id, i, val){ if(!presetChecks[id]) presetChecks[id] = {}; presetChecks[id][i] = val; }
+function viewModelShots(kind, id){
+  const p = kind==="plan"? DB.plans.find(x=>x.id===id) : EDGE_PLAN_PRESETS.find(x=>x.id===id);
+  if(!p) return;
+  if(p.modelShot) openModal('<h3>Entry models — '+esc(p.name)+'</h3><img src="'+p.modelShot+'" alt="Entry model screenshot" style="max-width:100%;border-radius:10px;margin-top:12px"><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Close</button></div>');
+  else openModal('<h3>Entry models — '+esc(p.name)+'</h3><div class="small" style="margin:10px 0 16px">No entry model screenshots yet. '+(kind==="plan"? "Use Upload Image on the plan to attach your model screenshots." : "Copy this preset into your plans to attach your own screenshots.")+'</div><div style="display:flex;justify-content:flex-end"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+function uploadModelShot(planId, input){
+  const f = input.files && input.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = ()=>{ const p = DB.plans.find(x=>x.id===planId); if(!p) return; p.modelShot = rd.result; saveDB(); RENDER.edge(); toast("Entry model screenshot attached."); };
+  rd.readAsDataURL(f);
+}
+function edgeDetailHTML(sel){
+  const isPlan = sel.kind==="plan";
+  const p = isPlan? DB.plans.find(x=>x.id===sel.id) : EDGE_PLAN_PRESETS.find(x=>x.id===sel.id);
+  if(!p) return '<div class="card"><div class="empty"><div class="e-title">Nothing selected</div>Pick a plan or a preset on the left.</div></div>';
+  const charting = p.charting || [], criteria = p.criteria || [];
+  const running = isPlan && activePlanRun && activePlanRun.planId===p.id;
+  const checks = isPlan? (running? activePlanRun.checks : {}) : (presetChecks[p.id]||{});
+  const mgmt = p.mgmt || p.exitRules || "", exitTxt = p.exit || p.exitRules || "";
+  const sec = (title, inner)=> '<div style="margin-top:20px"><div class="small" style="font-weight:800;letter-spacing:.05em;margin-bottom:7px">'+title+'</div>'+inner+'</div>';
+  const infoCell = (label, val)=> '<div><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)">'+label+'</div><div style="font-weight:700;margin-top:2px">'+esc(val)+'</div></div>';
+  let h = '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="font-size:18px">'+esc(p.name)+'</h3><div class="card-sub">'+esc(p.desc || p.bias || "")+'</div></div>'
+    + '<div style="display:flex;gap:7px;flex-wrap:wrap">'
+    + (isPlan && DB.activePlanId===p.id? '<span class="chip green">Active</span>' : "")
+    + (isPlan? "" : '<span class="chip">Preset</span>')
+    + '<span class="chip pine">'+esc(p.type || "Custom plan")+'</span></div></div>'
+    + '<div class="grid g3 mt" style="gap:12px">'
+    + infoCell("PLAN TYPE", p.type || "Custom plan")
+    + infoCell("MARKET", p.market || "—")
+    + infoCell("BIAS", p.bias || "—")
+    + '</div>';
+  if(isPlan){
+    const pts = DB.trades.filter(t=>t.planId===p.id); const s = computeStats(pts);
+    h += '<div class="grid g3 mt" style="gap:12px">'
+      + infoCell("TRADES", String(s.n))
+      + infoCell("WIN RATE", s.n? s.winRate.toFixed(0)+"%" : "—")
+      + '<div><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)">NET P&amp;L</div><div class="mono" style="font-weight:800;margin-top:2px"><span class="'+(s.pnl>=0?"pos":"neg")+'">'+fmt$(s.pnl)+'</span></div></div>'
+      + '</div>';
+  }
+  h += sec("CHARTING PROCESS", charting.length? '<ol class="num-list">'+charting.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>' : '<div class="small">No charting steps recorded'+(isPlan? ' — add them via Edit.':'.')+'</div>');
+  h += sec("ENTRY CRITERIA", criteria.length? criteria.map((c,i)=>'<label style="display:flex;gap:9px;align-items:center;padding:5px 0;font-size:14px;cursor:pointer"><input type="checkbox" '+(checks[i]?"checked":"")+' onchange="'+(isPlan? 'toggleCheck(\''+p.id+'\','+i+',this.checked)' : 'togglePresetCheck(\''+p.id+'\','+i+',this.checked)')+'" style="width:17px;height:17px;accent-color:var(--pine)">'+esc(c)+'</label>').join("") : '<div class="small">No criteria yet.</div>');
+  h += sec("ENTRY MODELS",
+      (p.modelShot? '<img src="'+p.modelShot+'" alt="Entry model screenshot" style="max-width:100%;border-radius:10px">' : '<div class="model-box">No entry model screenshot yet</div>')
+      + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center"><button class="btn sm" onclick="viewModelShots(\''+sel.kind+'\',\''+p.id+'\')">View All</button>'
+      + (isPlan? '<label class="btn sm" style="cursor:pointer">Upload Image<input type="file" accept="image/*" style="display:none" onchange="uploadModelShot(\''+p.id+'\',this)"></label>'
+               : '<span class="small">Copy this preset to attach your own model screenshots.</span>')
+      + '</div>');
+  h += sec("TRADE MANAGEMENT RULES", mgmt? '<div style="font-size:14px">'+esc(mgmt)+'</div>' : '<div class="small">—</div>');
+  h += sec("EXIT CRITERIA", exitTxt? '<div style="font-size:14px">'+esc(exitTxt)+'</div>' : '<div class="small">—</div>');
+  h += sec("TRADING NOTES", p.notes? '<div style="font-size:14px;white-space:pre-wrap">'+esc(p.notes)+'</div>' : '<div class="small">No notes yet.</div>');
+  h += '<div class="divider"></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    + (isPlan
+        ? (DB.activePlanId!==p.id? '<button class="btn sm" onclick="setActivePlan(\''+p.id+'\')">Set as active</button>' : "")
+          + '<button class="btn sm" onclick="openPlanModal(\''+p.id+'\')">Edit</button><button class="btn sm" onclick="deletePlan(\''+p.id+'\')">Delete</button>'
+          + (running && p.criteria.every((c,i)=>activePlanRun.checks[i])? '<button class="btn primary sm" onclick="go(\'trading\')">Checklist complete → Trade</button>' : '<span class="small">'+(running? checklistStatus(p) : "Tick every entry criterion to arm this plan.")+'</span>')
+        : '<button class="btn primary sm" onclick="useEdgePreset(\''+p.id+'\')">Use this preset</button><span class="small">Creates your own editable copy</span>')
+    + '</div></div>';
+  return h;
+}
 RENDER.edge = function(){
   const el = document.querySelector('[data-view="edge"]');
-  if(!hasAccess("edge")){ el.innerHTML = lockScreenHTML("edge"); return; }
-  el.innerHTML = '<div style="margin-bottom:16px"><h2 style="font-size:18px">Presets</h2><div class="small">Built-in EdgeFlo plans. Copy one into your plans and make it your own.</div></div>'
-    + '<div class="grid g3" style="margin-bottom:28px">' + EDGE_PLAN_PRESETS.map(edgePresetCardHTML).join("") + '</div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div><h2 style="font-size:18px">Your trade plans</h2><div class="small">A plan you can&rsquo;t checklist in 30 seconds is not a plan.</div></div><button class="btn primary" onclick="openPlanModal()">+ New plan</button></div>'
-    + (DB.plans.length? '<div class="grid g2">' + DB.plans.map(p=>{
-        const pts = DB.trades.filter(t=>t.planId===p.id); const s = computeStats(pts);
-        const running = activePlanRun && activePlanRun.planId===p.id;
-        return '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px"><div><h3>'+esc(p.name)+'</h3><div class="card-sub">Bias: '+esc(p.bias)+' · '+esc(p.market)+'</div></div><span class="chip '+(s.pnl>=0?"green":"red")+'">'+fmt$(s.pnl)+'</span></div>'
-        + '<div class="grid g3 mt" style="gap:10px"><div><div class="s-label small" style="font-weight:800">TRADES</div><strong class="mono">'+s.n+'</strong></div><div><div class="s-label small" style="font-weight:800">WIN RATE</div><strong class="mono">'+(s.n? s.winRate.toFixed(0)+"%":"—")+'</strong></div><div><div class="s-label small" style="font-weight:800">AVG R</div><strong class="mono '+(s.avgR>=0?"pos":"neg")+'">'+(s.n? fmtR(s.avgR):"—")+'</strong></div></div>'
-        + '<div class="divider"></div><div class="small" style="font-weight:800;margin-bottom:6px">PRE-TRADE CHECKLIST</div>'
-        + p.criteria.map((c,i)=>'<label style="display:flex;gap:9px;align-items:center;padding:5px 0;font-size:13.5px;cursor:pointer"><input type="checkbox" '+(running&&activePlanRun.checks[i]?"checked":"")+' onchange="toggleCheck(\''+p.id+'\','+i+',this.checked)" style="width:17px;height:17px;accent-color:var(--pine)">'+esc(c)+'</label>').join("")
-        + '<div class="small" style="margin-top:6px">'+(running? checklistStatus(p) : "Tick every box to arm this plan, then take the trade in Trading.")+'</div>'
-        + '<div class="divider"></div><div class="small"><strong>Exit rules:</strong> '+esc(p.exitRules||"—")+'</div>'
-        + '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" onclick="openPlanModal(\''+p.id+'\')">Edit</button><button class="btn sm" onclick="deletePlan(\''+p.id+'\')">Delete</button>'
-        + (running && p.criteria.every((c,i)=>activePlanRun.checks[i])? '<button class="btn primary sm" onclick="go(\'trading\')">Checklist complete → Trade</button>':"")
-        + '</div></div>';
-      }).join("") + '</div>'
-      : '<div class="card"><div class="empty"><div class="e-title">No plans yet</div>Build your first plan from your Market Mechanics playbook — bias, POI, sweep, shift, pullback.</div><div style="text-align:center"><button class="btn primary" onclick="openPlanModal()">Create a plan</button> <button class="btn" onclick="seedPlaybookPlan()">Start from the Market Mechanics template</button></div></div>');
+  const sel = edgeSelection();
+  const planItem = (p)=>{
+    const active = DB.activePlanId===p.id;
+    return '<button class="plan-item '+(sel.kind==="plan"&&sel.id===p.id?"sel":"")+'" onclick="selectEdge(\'plan\',\''+p.id+'\')"><span style="flex:1;min-width:0"><span class="pi-name">'+esc(p.name)+'</span><span class="pi-sub">'+esc(p.market||"")+'</span></span>'+(active? '<span class="chip green">Active</span>':"")+'</button>';
+  };
+  const presetItem = (p)=> '<button class="plan-item '+(sel.kind==="preset"&&sel.id===p.id?"sel":"")+'" onclick="selectEdge(\'preset\',\''+p.id+'\')"><span style="flex:1;min-width:0"><span class="pi-name">'+esc(p.name)+'</span><span class="pi-sub">'+esc(p.type)+'</span></span></button>';
+  el.innerHTML = '<div class="edge-layout"><div class="card" style="padding:14px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center"><span class="side-head">MY PLANS</span><button class="icon-btn" title="New plan" onclick="newPlanGate()" style="width:30px;height:30px;font-size:18px">+</button></div>'
+    + (DB.plans.length? DB.plans.map(planItem).join("") : '<div class="small" style="padding:8px 2px">No plans yet — view a preset, then copy it into your plans or create your own with +.</div>')
+    + '<div class="divider" style="margin:12px 0"></div><div class="side-head">PRESETS</div>'
+    + EDGE_PLAN_PRESETS.map(presetItem).join("")
+    + '<div class="small" style="margin-top:12px">Viewing plans &amp; presets is free — creating new plans is a Basic feature.</div>'
+    + '</div><div style="min-width:0">' + edgeDetailHTML(sel) + '</div></div>';
 };
 function checklistStatus(p){
   const done = p.criteria.filter((c,i)=>activePlanRun.checks[i]).length;
@@ -1472,27 +1865,42 @@ function toggleCheck(planId, i, val){
   activePlanRun.checks[i]=val; RENDER.edge();
 }
 function seedPlaybookPlan(){
-  DB.plans.push({ id:uid(), name:"Market Mechanics — Sweep & Shift", market:"XAUUSD", bias:"HTF daily bias first",
+  if(!canCreatePlan()){ planPaywallModal(); return; }
+  const np = { id:uid(), name:"Market Mechanics — Sweep & Shift", type:"Intraday / Swing", market:"XAUUSD", bias:"HTF daily bias first",
+    charting:["Mark the HTF draw on liquidity (4H)","Mark the POI in premium / discount","Drop to the LTF and wait at the POI — no chasing"],
     criteria:["HTF bias confirmed (4H BOS direction)","Price reached a HTF POI in premium/discount","Liquidity swept beyond the POI extreme","Market structure shift on LTF after the sweep","Pullback into the displacement / FVG / order block","Target = opposing HTF liquidity, at least 1:2R available"],
-    exitRules:"SL beyond the sweep extreme. TP at the opposing HTF pool. Set & forget — no mid-trade management." });
+    mgmt:"Set & forget — no mid-trade management. If the shift fails to displace, the idea is wrong, not early.",
+    exit:"SL beyond the sweep extreme. TP at the opposing HTF pool.",
+    exitRules:"SL beyond the sweep extreme. TP at the opposing HTF pool. Set & forget — no mid-trade management.",
+    notes:"From the Market Mechanics mentorship playbook.", modelShot:"" };
+  DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id };
   saveDB(); RENDER.edge(); toast("Template plan added.");
 }
 function openPlanModal(id){
   const p = id? DB.plans.find(x=>x.id===id) : null;
-  openModal('<h3>'+(p?"Edit plan":"New trade plan")+'</h3><div class="small" style="margin-bottom:14px">Criteria become the pre-trade checklist you must clear before entry.</div>'
+  openModal('<h3>'+(p?"Edit plan":"New trade plan")+'</h3><div class="small" style="margin-bottom:14px">Criteria become the pre-trade checklist you must clear before entry — in Edge Plans and in the Trading sidebar.</div>'
     + '<div class="field"><label class="f">Plan name</label><input class="input" id="pf-name" value="'+(p?esc(p.name):"")+'" placeholder="e.g. London sweep reversal"></div>'
     + '<div class="row"><div class="field"><label class="f">Market</label><select class="input" id="pf-market">'+MARKETS.map(m=>'<option '+(p&&p.market===m?"selected":"")+'>'+m+'</option>').join("")+'</select></div>'
-    + '<div class="field"><label class="f">Bias rule</label><input class="input" id="pf-bias" value="'+(p?esc(p.bias):"")+'" placeholder="e.g. Only longs above daily open"></div></div>'
+    + '<div class="field"><label class="f">Plan type</label><input class="input" id="pf-type" value="'+(p?esc(p.type||""):"")+'" placeholder="e.g. Intraday reversal"></div></div>'
+    + '<div class="field"><label class="f">Bias rule</label><input class="input" id="pf-bias" value="'+(p?esc(p.bias||""):"")+'" placeholder="e.g. Only longs above daily open"></div>'
+    + '<div class="field"><label class="f">Charting process — one step per line</label><textarea class="input" id="pf-charting" rows="4" placeholder="Mark HTF bias &amp; draw on liquidity&#10;Mark POIs in premium / discount">'+(p?esc((p.charting||[]).join("\n")):"")+'</textarea></div>'
     + '<div class="field"><label class="f">Entry criteria — one per line</label><textarea class="input" id="pf-criteria" rows="5" placeholder="HTF bias confirmed&#10;Liquidity swept at POI&#10;Structure shift on 15m">'+(p?esc(p.criteria.join("\n")):"")+'</textarea></div>'
-    + '<div class="field"><label class="f">Exit rules</label><textarea class="input" id="pf-exit" rows="2" placeholder="SL beyond sweep, TP at opposing liquidity">'+(p?esc(p.exitRules||""):"")+'</textarea></div>'
+    + '<div class="field"><label class="f">Trade management rules</label><textarea class="input" id="pf-mgmt" rows="2" placeholder="Breakeven after 1R, no widening the stop…">'+(p?esc(p.mgmt||""):"")+'</textarea></div>'
+    + '<div class="field"><label class="f">Exit criteria</label><textarea class="input" id="pf-exit" rows="2" placeholder="SL beyond sweep, TP at opposing liquidity">'+(p?esc(p.exit || p.exitRules || ""):"")+'</textarea></div>'
+    + '<div class="field"><label class="f">Trading notes</label><textarea class="input" id="pf-notes" rows="2" placeholder="When this plan is ON / OFF, best sessions…">'+(p?esc(p.notes||""):"")+'</textarea></div>'
     + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="savePlan(\''+(p?p.id:"")+'\')">Save plan</button></div>');
 }
 function savePlan(id){
   const name = $("#pf-name").value.trim(); if(!name){ toast("Give the plan a name."); return; }
-  const rec = { id: id||uid(), name, market: $("#pf-market").value, bias: $("#pf-bias").value.trim(),
-    criteria: $("#pf-criteria").value.split("\n").map(s=>s.trim()).filter(Boolean), exitRules: $("#pf-exit").value.trim() };
+  const lines = s=> $(s).value.split("\n").map(x=>x.trim()).filter(Boolean);
+  const exitTxt = $("#pf-exit").value.trim();
+  const rec = { id: id||uid(), name, market: $("#pf-market").value, type: $("#pf-type").value.trim(),
+    bias: $("#pf-bias").value.trim(), charting: lines("#pf-charting"),
+    criteria: lines("#pf-criteria"), mgmt: $("#pf-mgmt").value.trim(),
+    exit: exitTxt, exitRules: exitTxt, notes: $("#pf-notes").value.trim(),
+    modelShot: id? (DB.plans.find(x=>x.id===id)||{}).modelShot || "" : "" };
   if(!rec.criteria.length){ toast("Add at least one checklist criterion."); return; }
-  if(id){ const i=DB.plans.findIndex(x=>x.id===id); DB.plans[i]=rec; } else DB.plans.push(rec);
+  if(id){ const i=DB.plans.findIndex(x=>x.id===id); DB.plans[i]=rec; } else { DB.plans.push(rec); DB.activePlanId = rec.id; edgeSel = { kind:"plan", id: rec.id }; }
   saveDB(); closeModal(); renderAll(); toast("Plan saved.");
 }
 function deletePlan(id){ DB.plans = DB.plans.filter(p=>p.id!==id); saveDB(); renderAll(); toast("Plan deleted."); }
@@ -1520,7 +1928,6 @@ const NEWS_TEMPLATES = [
   { d:2, time:"13:30", cur:"USD", event:"CPI (YoY) — inflation print", impact:"High" },
   { d:3, time:"18:00", cur:"USD", event:"Fed Chair Speech", impact:"Medium" }
 ];
-let newsImpact = "All";
 function weekEvents(){
   const now = new Date(); const monday = new Date(now); const dow = (now.getDay()+6)%7;
   monday.setDate(now.getDate()-dow);
@@ -1528,18 +1935,191 @@ function weekEvents(){
     return Object.assign({}, t, { date: todayStr(d), dayLabel: d.toLocaleDateString("en-US",{weekday:"short", month:"short", day:"numeric"}) }); })
     .sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : a.time<b.time?-1:1);
 }
+
+/* ---- News page (EdgeFlo layout) ----
+   Static sample releases anchored to the current day, so Today / quick
+   ranges always have something to show. Times are local display times. */
+const NEWS_EVENTS = [
+  { off:-2, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Inflation", event:"CPI (YoY)", actual:"3.1%", fc:"3.0%", prev:"2.9%" },
+  { off:-2, time:"15:00", cur:"USD", cc:"US", impact:"Medium", cat:"Growth & GDP", event:"Retail Sales (MoM)", actual:"0.4%", fc:"0.5%", prev:"0.3%" },
+  { off:-1, time:"09:00", cur:"EUR", cc:"EU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"ECB President Lagarde Speech", actual:"—", fc:"—", prev:"—" },
+  { off:0,  time:"06:00", cur:"AUD", cc:"AU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"RBA Kent Speech", actual:"", fc:"", prev:"" },
+  { off:1,  time:"07:00", cur:"GBP", cc:"GB", impact:"Medium", cat:"Growth & GDP", event:"UK GDP (MoM)", actual:"", fc:"0.2%", prev:"0.1%" },
+  { off:1,  time:"13:30", cur:"USD", cc:"US", impact:"Low",    cat:"Growth & GDP", event:"Housing Starts", actual:"", fc:"1.38M", prev:"1.36M" },
+  { off:1,  time:"19:00", cur:"USD", cc:"US", impact:"High",   cat:"Central Banks & Interest Rates", event:"Fed Chair Powell Speech", actual:"", fc:"", prev:"" },
+  { off:2,  time:"01:30", cur:"AUD", cc:"AU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"RBA Meeting Minutes", actual:"", fc:"", prev:"" },
+  { off:2,  time:"09:30", cur:"GBP", cc:"GB", impact:"Low",    cat:"Growth & GDP", event:"Services PMI", actual:"", fc:"51.8", prev:"51.2" },
+  { off:2,  time:"15:00", cur:"USD", cc:"US", impact:"Low",    cat:"Growth & GDP", event:"Existing Home Sales", actual:"", fc:"4.02M", prev:"3.97M" },
+  { off:3,  time:"12:45", cur:"EUR", cc:"EU", impact:"High",   cat:"Central Banks & Interest Rates", event:"ECB Interest Rate Decision", actual:"", fc:"2.15%", prev:"2.15%" },
+  { off:3,  time:"13:30", cur:"EUR", cc:"EU", impact:"High",   cat:"Central Banks & Interest Rates", event:"ECB Press Conference", actual:"", fc:"", prev:"" },
+  { off:3,  time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"Initial Jobless Claims", actual:"", fc:"230K", prev:"228K" },
+  { off:4,  time:"04:00", cur:"JPY", cc:"JP", impact:"High",   cat:"Central Banks & Interest Rates", event:"BoJ Interest Rate Decision", actual:"", fc:"0.75%", prev:"0.75%" },
+  { off:5,  time:"08:30", cur:"GBP", cc:"GB", impact:"High",   cat:"Inflation", event:"UK CPI (YoY)", actual:"", fc:"3.4%", prev:"3.6%" },
+  { off:5,  time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Employment", event:"Non-Farm Payrolls", actual:"", fc:"118K", prev:"102K" },
+  { off:5,  time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Employment", event:"Unemployment Rate", actual:"", fc:"4.3%", prev:"4.2%" }
+];
+const NEWS_CATS = [ ["Central Banks & Interest Rates","%"], ["Inflation","◐"], ["Employment","▤"], ["Growth & GDP","↗"] ];
+const NEWS_IMP_COLORS = { High:"#E5484D", Medium:"#F0A02C", Low:"#B7C0BA" };
+let newsViewMode = "list";
+let newsFrom = todayStr(), newsTo = todayStr(), newsRangeKey = "today";
+let newsImp = { High:true, Medium:true, Low:true };
+let newsCats = {}; NEWS_CATS.forEach(c=> newsCats[c[0]] = true);
+let newsCur = "All";
+let newsOpenRow = null;
+let newsCalOff = 0;
+let newsClockTimer = null;
+
+function newsAllEvents(){
+  return NEWS_EVENTS.map((e,i)=>{ const d = new Date(); d.setDate(d.getDate()+e.off);
+    return Object.assign({}, e, { id:"ne"+i, date: todayStr(d) }); })
+    .sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : a.time<b.time?-1:1);
+}
+function newsFiltered(){
+  return newsAllEvents().filter(e=> e.date>=newsFrom && e.date<=newsTo && newsImp[e.impact] && newsCats[e.cat] && (newsCur==="All" || e.cur===newsCur));
+}
+function newsNowHHMM(){ const d = new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function newsGmtLabel(){ const m = -new Date().getTimezoneOffset(); const a = Math.abs(m); const h = Math.floor(a/60), mm = a%60;
+  return "GMT"+(m<0?"-":"+")+h+(mm? ":"+String(mm).padStart(2,"0") : ""); }
+function newsRange(key){
+  const t = new Date(); const add = n=>{ const x = new Date(t); x.setDate(x.getDate()+n); return x; };
+  const dow = (t.getDay()+6)%7;
+  if(key==="today"){ newsFrom = newsTo = todayStr(t); }
+  else if(key==="tomorrow"){ newsFrom = newsTo = todayStr(add(1)); }
+  else if(key==="week"){ newsFrom = todayStr(add(-dow)); newsTo = todayStr(add(6-dow)); }
+  else if(key==="nextweek"){ newsFrom = todayStr(add(7-dow)); newsTo = todayStr(add(13-dow)); }
+  else if(key==="month"){ newsFrom = todayStr(new Date(t.getFullYear(), t.getMonth(), 1)); newsTo = todayStr(new Date(t.getFullYear(), t.getMonth()+1, 0)); }
+  else if(key==="nextmonth"){ newsFrom = todayStr(new Date(t.getFullYear(), t.getMonth()+1, 1)); newsTo = todayStr(new Date(t.getFullYear(), t.getMonth()+2, 0)); }
+  newsRangeKey = key; RENDER.news();
+}
+function newsShift(days){
+  const f = new Date(newsFrom+"T12:00:00"); f.setDate(f.getDate()+days);
+  const t = new Date(newsTo+"T12:00:00"); t.setDate(t.getDate()+days);
+  newsFrom = todayStr(f); newsTo = todayStr(t); newsRangeKey = ""; RENDER.news();
+}
+function newsNavLabel(){
+  if(newsFrom===todayStr() && newsTo===todayStr()) return "Today";
+  const f = new Date(newsFrom+"T12:00:00");
+  if(newsFrom===newsTo) return f.toLocaleDateString("en-US",{weekday:"short", month:"short", day:"numeric"});
+  const t = new Date(newsTo+"T12:00:00");
+  return f.toLocaleDateString("en-US",{month:"short", day:"numeric"}) + " – " + t.toLocaleDateString("en-US",{month:"short", day:"numeric"});
+}
+function newsToggleRow(id){ newsOpenRow = newsOpenRow===id? null : id; RENDER.news(); }
+function newsToggleCat(i, val){ newsCats[NEWS_CATS[i][0]] = val; RENDER.news(); }
+function newsClearImp(){ newsImp = { High:false, Medium:false, Low:false }; RENDER.news(); }
+function newsClearCats(){ NEWS_CATS.forEach(c=> newsCats[c[0]] = false); RENDER.news(); }
+function newsBlockGate(){
+  if(DB.sub.plan==="plus") toast("News Block is active on your Plus plan — entries pause 30 min around high-impact releases.");
+  else startCheckout("plus");
+}
+function newsCalPick(ds){ newsFrom = newsTo = ds; newsRangeKey = ""; newsViewMode = "list"; RENDER.news(); }
+
+function newsFiltersHTML(){
+  const impSel = ["High","Medium","Low"].filter(i=>newsImp[i]).length;
+  const catSel = NEWS_CATS.filter(c=>newsCats[c[0]]).length;
+  const selStatus = (n, tot)=> n===tot? "All selected" : n===0? "None selected" : n+" selected";
+  const calIco = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+  return '<div class="card" style="padding:16px">'
+    + '<div class="flt-title">Filters</div>'
+    + '<div class="date-pair"><input type="date" class="input" value="'+newsFrom+'" max="'+newsTo+'" onchange="newsFrom=this.value;newsRangeKey=\'\';RENDER.news()"><span class="dp-arrow">&rarr;</span><input type="date" class="input" value="'+newsTo+'" min="'+newsFrom+'" onchange="newsTo=this.value;newsRangeKey=\'\';RENDER.news()"><span class="dp-cal">'+calIco+'</span></div>'
+    + '<div class="range-links">'+[["today","Today"],["tomorrow","Tomorrow"],["week","This week"],["nextweek","Next week"],["month","This month"],["nextmonth","Next month"]].map(r=>'<button class="'+(newsRangeKey===r[0]?"on":"")+'" onclick="newsRange(\''+r[0]+'\')">'+r[1]+'</button>').join("")+'</div>'
+    + '<div class="flt-sec"><div class="flt-head"><span class="flt-name">Currencies</span><button class="flt-link" onclick="newsCur=\'All\';RENDER.news()">Select all</button></div>'
+    + '<select class="input" onchange="newsCur=this.value;RENDER.news()">'+["All","USD","EUR","GBP","JPY","AUD","NZD","CAD","CHF"].map(c=>'<option value="'+c+'"'+(newsCur===c?" selected":"")+'>'+(c==="All"?"All currencies":c)+'</option>').join("")+'</select></div>'
+    + '<div class="flt-sec"><div class="flt-head"><span class="flt-name">Impact</span><span class="flt-status">'+selStatus(impSel,3)+'</span><button class="flt-link" onclick="newsClearImp()">Clear</button></div>'
+    + ["High","Medium","Low"].map(i=>'<label class="flt-check"><input type="checkbox"'+(newsImp[i]?" checked":"")+' onchange="newsImp[\''+i+'\']=this.checked;RENDER.news()"><span class="imp-dot" style="background:'+NEWS_IMP_COLORS[i]+'"></span>'+i+'</label>').join("")
+    + '</div>'
+    + '<div class="flt-sec"><div class="flt-head"><span class="flt-name">Categories</span><span class="flt-status">'+selStatus(catSel,NEWS_CATS.length)+'</span><button class="flt-link" onclick="newsClearCats()">Clear</button></div>'
+    + NEWS_CATS.map((c,i)=>'<label class="flt-check"><input type="checkbox"'+(newsCats[c[0]]?" checked":"")+' onchange="newsToggleCat('+i+',this.checked)"><span class="cat-ico">'+c[1]+'</span>'+esc(c[0])+'</label>').join("")
+    + '</div></div>';
+}
+function newsListHTML(){
+  const evs = newsFiltered();
+  const nowT = newsNowHHMM(), today = todayStr();
+  let body = "";
+  if(!evs.length){
+    body = '<div class="empty"><div class="e-title">No events in range</div>No releases match these filters for the selected dates — widen the range or clear a filter.</div>';
+  } else {
+    let lastDate = "", nowInserted = false;
+    evs.forEach(e=>{
+      if(e.date!==lastDate){
+        if(lastDate===today && !nowInserted){ body += '<div class="now-line"><span>'+nowT+'</span></div>'; nowInserted = true; }
+        lastDate = e.date;
+        const d = new Date(e.date+"T12:00:00");
+        body += '<div class="ev-day">'+d.toLocaleDateString("en-US",{weekday:"long", month:"long", day:"numeric", year:"numeric"})+'</div>';
+      }
+      if(e.date===today && !nowInserted && e.time>nowT){ body += '<div class="now-line"><span>'+nowT+'</span></div>'; nowInserted = true; }
+      const past = e.date<today || (e.date===today && e.time<nowT);
+      const open = newsOpenRow===e.id;
+      body += '<div class="ev-item"><div class="ev-row'+(past?" past":"")+'">'
+        + '<button class="ev-expand" title="Event details" onclick="newsToggleRow(\''+e.id+'\')">'+(open?"&minus;":"+")+'</button>'
+        + '<span class="mono">'+e.time+'</span>'
+        + '<span style="display:flex;align-items:center;gap:7px"><span class="flag-badge">'+e.cc+'</span><strong>'+e.cur+'</strong></span>'
+        + '<span style="text-align:center"><span class="imp-dot" style="background:'+NEWS_IMP_COLORS[e.impact]+'"></span></span>'
+        + '<span style="font-weight:600">'+esc(e.event)+'</span>'
+        + '<span class="mono" style="text-align:right">'+(e.actual? esc(e.actual) : "&mdash;")+'</span>'
+        + '</div>'
+        + (open? '<div class="ev-detail">'
+          + '<span><span class="dm-label">ACTUAL</span><br><strong>'+(e.actual? esc(e.actual):"—")+'</strong></span>'
+          + '<span><span class="dm-label">FORECAST</span><br><strong>'+(e.fc? esc(e.fc):"—")+'</strong></span>'
+          + '<span><span class="dm-label">PREVIOUS</span><br><strong>'+(e.prev? esc(e.prev):"—")+'</strong></span>'
+          + '<span><span class="dm-label">IMPACT</span><br><strong>'+e.impact+'</strong></span>'
+          + '<span><span class="dm-label">CATEGORY</span><br><strong>'+esc(e.cat)+'</strong></span>'
+          + '</div>' : "")
+        + '</div>';
+    });
+    if(lastDate===today && !nowInserted) body += '<div class="now-line"><span>'+nowT+'</span></div>';
+  }
+  return '<div class="card" style="padding:14px 18px 18px">'
+    + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="display:flex;gap:4px"><button class="icon-btn" style="width:28px;height:28px;font-size:17px" title="Previous day" onclick="newsShift(-1)">&lsaquo;</button><button class="icon-btn" style="width:28px;height:28px;font-size:17px" title="Next day" onclick="newsShift(1)">&rsaquo;</button></span>'
+    + '<strong style="font-size:14.5px">'+newsNavLabel()+'</strong>'
+    + '<span style="flex:1"></span><span class="mono" style="font-size:13px;font-weight:700"><span id="news-clock">'+nowT+'</span> <span style="color:var(--muted);font-weight:600">('+newsGmtLabel()+')</span></span></div>'
+    + '<div class="ev-head"><span></span><span>Time</span><span>Currency</span><span style="text-align:center">Impact</span><span>Event</span><span style="text-align:right">Actual</span></div>'
+    + body
+    + '<div class="small" style="margin-top:12px">Sample calendar data for layout — check your broker calendar for confirmed figures before trading a release.</div>'
+    + '</div>';
+}
+function newsCalendarHTML(){
+  const base = new Date(); base.setDate(1); base.setMonth(base.getMonth()+newsCalOff);
+  const y = base.getFullYear(), m = base.getMonth();
+  const startDow = (new Date(y, m, 1).getDay()+6)%7;
+  const evs = newsAllEvents().filter(e=> newsImp[e.impact] && newsCats[e.cat] && (newsCur==="All" || e.cur===newsCur));
+  const byDate = {}; evs.forEach(e=>{ (byDate[e.date] = byDate[e.date]||[]).push(e); });
+  let cells = "";
+  for(let i=0;i<42;i++){
+    const d = new Date(y, m, 1-startDow+i); const ds = todayStr(d); const list = byDate[ds]||[];
+    const imps = []; list.forEach(e=>{ if(imps.indexOf(e.impact)<0) imps.push(e.impact); });
+    cells += '<div class="cal-day'+(d.getMonth()!==m?" dim":"")+(ds===todayStr()?" today":"")+'" onclick="newsCalPick(\''+ds+'\')"><div class="d-num">'+d.getDate()+'</div>'
+      + (list.length? '<div class="cal-ev-dots">'+imps.map(i=>'<i style="background:'+NEWS_IMP_COLORS[i]+'"></i>').join("")+'</div><div class="d-cnt">'+list.length+' event'+(list.length>1?"s":"")+'</div>' : "")
+      + '</div>';
+  }
+  return '<div class="card">'
+    + '<div class="cal-head"><button class="icon-btn" style="width:30px;height:30px" title="Previous month" onclick="newsCalOff--;RENDER.news()">&lsaquo;</button>'
+    + '<strong style="font-size:15px">'+base.toLocaleDateString("en-US",{month:"long", year:"numeric"})+'</strong>'
+    + '<button class="icon-btn" style="width:30px;height:30px" title="Next month" onclick="newsCalOff++;RENDER.news()">&rsaquo;</button>'
+    + '<span class="small" style="margin-left:auto">Tap a day to open it in List view</span></div>'
+    + '<div class="cal-grid">'+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>'<div class="cal-dow">'+d+'</div>').join("")+cells+'</div>'
+    + '</div>';
+}
 RENDER.news = function(){
   const el = document.querySelector('[data-view="news"]');
-  const evs = weekEvents().filter(e=> newsImpact==="All" || e.impact===newsImpact);
-  const todayHigh = weekEvents().filter(e=> e.date===todayStr() && e.impact==="High");
+  const todayHigh = newsAllEvents().filter(e=> e.date===todayStr() && e.impact==="High");
+  const plus = DB.sub.plan==="plus";
+  const lockSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const listSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1.1"/><circle cx="4" cy="12" r="1.1"/><circle cx="4" cy="18" r="1.1"/></svg>';
+  const calSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+  const refreshSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>';
   el.innerHTML =
-    (todayHigh.length && DB.guardrails.newsBlock? '<div class="alert amber mb"><div><strong>High-impact news today:</strong> '+todayHigh.map(e=>esc(e.event)+" ("+e.time+" GMT)").join(" · ")+'. Your guardrail says: no new entries 30 min either side of the print.</div></div>':"")
-    + '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h3>This week&rsquo;s releases</h3><div class="card-sub">Scheduled economic events · times in GMT · check your broker calendar for exact figures</div></div>'
-    + '<div class="seg">'+["All","High","Medium","Low"].map(i=>'<button class="'+(newsImpact===i?"on":"")+'" onclick="newsImpact=\''+i+'\';RENDER.news()">'+i+'</button>').join("")+'</div></div>'
-    + '<div class="mt" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Day</th><th>Time</th><th>Currency</th><th>Event</th><th>Impact</th></tr></thead><tbody>'
-    + evs.map(e=>'<tr'+(e.date===todayStr()? ' style="background:var(--pine-soft)"':"")+'><td style="white-space:nowrap;font-weight:700">'+e.dayLabel+(e.date===todayStr()?' <span class="chip pine">Today</span>':"")+'</td><td class="mono">'+e.time+'</td><td><span class="chip">'+e.cur+'</span></td><td>'+esc(e.event)+'</td><td><span class="chip '+(e.impact==="High"?"red":e.impact==="Medium"?"amber":"")+'">'+e.impact+'</span></td></tr>').join("")
-    + '</tbody></table></div>'
-    + '<div class="small" style="margin-top:10px">Red-folder events move gold and the dollar hard. The playbook rule: if your setup needs the print to work, it is not a setup — it is a gamble.</div></div>';
+    '<div class="news-head"><h2>News</h2><span style="flex:1"></span>'
+    + '<div class="view-tgl"><button class="'+(newsViewMode==="list"?"on":"")+'" onclick="newsViewMode=\'list\';RENDER.news()">'+listSvg+'List</button><button class="'+(newsViewMode==="calendar"?"on":"")+'" onclick="newsViewMode=\'calendar\';RENDER.news()">'+calSvg+'Calendar</button></div>'
+    + '<button class="lock-btn'+(plus?" active":"")+'" onclick="newsBlockGate()">'+lockSvg+(plus? "News Block active" : "News Block requires Plus plan")+'</button>'
+    + '<button class="icon-btn" title="Refresh calendar" onclick="RENDER.news();toast(\'Calendar refreshed.\')">'+refreshSvg+'</button></div>'
+    + (todayHigh.length && DB.guardrails.newsBlock? '<div class="alert amber mb"><div><strong>High-impact news today:</strong> '+todayHigh.map(e=>esc(e.event)+" ("+e.time+")").join(" · ")+'. Your guardrail says: no new entries 30 min either side of the print.</div></div>':"")
+    + '<div class="news-layout">' + newsFiltersHTML() + (newsViewMode==="list"? newsListHTML() : newsCalendarHTML()) + '</div>';
+  if(newsClockTimer) clearInterval(newsClockTimer);
+  newsClockTimer = setInterval(()=>{
+    const c = document.getElementById("news-clock");
+    if(!c || currentView!=="news"){ clearInterval(newsClockTimer); newsClockTimer = null; return; }
+    c.textContent = newsNowHHMM();
+  }, 15000);
 };
 
 /* ================= NOTEBOOK ================= */
