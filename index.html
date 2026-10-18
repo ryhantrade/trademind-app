@@ -264,6 +264,13 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .routine-step .rs-text{flex:1;font-weight:600;font-size:14px}
 .rs-btn{border:1px solid var(--line2);background:var(--card);border-radius:8px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;line-height:1;padding:0}
 .rs-btn:hover{color:var(--pine);border-color:var(--pine)}
+.rs-go{white-space:nowrap;margin-right:2px}
+/* Return bar shown while the user is off completing a routine step */
+#routine-return{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:190;background:var(--card);border:1.5px solid var(--pine);border-radius:14px;box-shadow:var(--shadow);padding:12px 16px;align-items:center;gap:10px;flex-wrap:wrap;max-width:min(680px,94vw)}
+#routine-return.on{display:flex}
+#routine-return .rr-title{font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--pine);text-transform:uppercase}
+#routine-return .rr-step{font-weight:700;font-size:14px}
+@media (max-width:860px){ #routine-return{bottom:82px} }
 .tgl{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
 .tgl input{width:17px;height:17px;accent-color:var(--pine)}
 
@@ -320,6 +327,12 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .icon-btn:hover{color:var(--pine);border-color:var(--pine)}
 .premarket-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--green-bg);border:1px solid var(--line2);border-radius:12px;padding:12px 16px;margin-top:16px;font-size:13.5px}
 .premarket-banner .pm-star{color:var(--green);font-size:16px}
+.trade-lock{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--card);border:1.5px dashed var(--line2);border-radius:12px;padding:16px;margin-top:16px}
+.trade-lock .tl-ico{width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:var(--pine-soft);color:var(--pine);display:flex;align-items:center;justify-content:center}
+.trade-lock .tl-title{font-weight:800;font-size:15.5px}
+.trade-lock .tl-sub{color:var(--muted);font-size:13px;margin-top:2px;max-width:560px}
+.icon-btn:disabled{opacity:.45;cursor:not-allowed}
+.icon-btn:disabled:hover{color:var(--muted);border-color:var(--line2)}
 .trade-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
 .side-col{display:flex;flex-direction:column;gap:16px;min-width:0}
 .side-card{padding:16px}
@@ -573,6 +586,7 @@ input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px
 
 <!-- Modal -->
 <div class="modal-bk" id="modal-bk"><div class="modal" id="modal-box"></div></div>
+<div id="routine-return" role="status"></div>
 <div class="toast" id="toast" role="status"></div>
 
 <!--
@@ -641,7 +655,7 @@ const DEFAULTS = {
   activePlanId: null,                           // Edge plan marked Active
   notes: [], folders: ["General","Reviews","Ideas"],
   guardrails: { enabled:true, maxLoss:200, maxProfit:400, maxTrades:5, winStart:"07:00", winEnd:"17:00", newsBlock:true, hardLock:false,
-                marginInvert:false, prompts:true, riskMode:"pct", riskValue:1, tz:"UTC" },
+                marginInvert:false, prompts:true, routineGate:true, riskMode:"pct", riskValue:1, tz:"UTC" },
   overrides: [],                                // guardrail rule-break log
   paper: { balance:10000, positions: [] },
   checkins: [],                                 // sanctuary streak dates (yyyy-mm-dd)
@@ -866,12 +880,68 @@ setInterval(()=>{
 /* ---------------- Pre-Market Routine ---------------- */
 function routineToday(){ return (DB.routine.done[todayStr()]||[]).slice(); }
 function routineDoneCount(){ const t = routineToday(); return DB.routine.steps.filter((s,i)=> t.includes(i)).length; }
+/* Routine-gated trading (Guardrails → "Routine-gated trading", default on):
+   trading stays locked until today's routine is 100% complete. Routine
+   progress is keyed by date, so the lock resets daily with the routine. */
+function routineGateOn(){ return DB.guardrails.routineGate !== false && DB.routine.enabled && DB.routine.steps.length>0; }
+function routineCompleteToday(){ const total = DB.routine.steps.length; return total>0 && routineDoneCount()>=total; }
+function routineLocked(){ return routineGateOn() && !routineCompleteToday(); }
 function toggleRoutineStep(i, val){
+  const wasLocked = routineLocked();
   const d = todayStr(); const arr = (DB.routine.done[d]||[]).slice();
   const ix = arr.indexOf(i);
   if(val && ix<0) arr.push(i);
   if(!val && ix>=0) arr.splice(ix,1);
   DB.routine.done[d] = arr; saveDB(); refreshRoutineUI();
+  if(wasLocked && !routineLocked()) toast("Pre-market routine complete — trading is unlocked for today ✓");
+}
+/* ---- Routine step actions: a step's "Continue" button takes you to the
+   page where that step actually happens (EdgeFlo behaviour), and a return
+   bar brings you back to tick it off. Matching is keyword-based so custom
+   steps link too; a step with no match simply has no Continue button. */
+let routineTrip = null; // step index while the user is off completing it
+function routineStepAction(step){
+  const s = String(step||"").toLowerCase();
+  const m = s.match(/(\d+)\s*min/);
+  if(/meditat|breath|mindful/.test(s)) return { view:"sanctuary", mins: m? +m[1] : null };
+  if(/chart|mark ?up|markup|draw|levels?|zones?/.test(s)) return { view:"trading" };
+  if(/news|calendar|red folder|events?/.test(s)) return { view:"news" };
+  if(/plan/.test(s)) return { view:"edge" };
+  if(/journal|yesterday|reflect/.test(s)) return { view:"journal" };
+  if(/guardrail|max loss|risk limit/.test(s)) return { view:"guardrails" };
+  if(/intention|affirm|visual/.test(s)) return { view:"sanctuary", mins:null };
+  if(/note/.test(s)) return { view:"notebook" };
+  return null;
+}
+function continueRoutineStep(i){
+  const act = routineStepAction(DB.routine.steps[i]);
+  if(!act) return;
+  routineTrip = i;
+  closeModal();
+  go(act.view);
+  if(act.view==="sanctuary" && act.mins){
+    const secs = Math.min(3600, Math.max(60, act.mins*60));
+    if(timerTotal!==secs) setTimer(secs); // preset the meditation timer to the step's length; the user presses Start
+  }
+  renderRoutineReturn();
+  toast("Routine step: \u201C"+DB.routine.steps[i]+"\u201D — do it here, then tick it off from the bar below.");
+}
+function renderRoutineReturn(){
+  const bar = $("#routine-return"); if(!bar) return;
+  if(routineTrip===null){ bar.className=""; bar.innerHTML=""; return; }
+  const i = routineTrip, step = DB.routine.steps[i];
+  if(step==null || routineToday().includes(i)){ routineTrip = null; bar.className=""; bar.innerHTML=""; return; }
+  bar.className = "on";
+  bar.innerHTML = '<div style="flex:1;min-width:170px"><div class="rr-title">Pre-market routine · step '+(i+1)+' of '+DB.routine.steps.length+'</div><div class="rr-step">'+esc(step)+'</div></div>'
+    + '<button class="btn sm" onclick="backToRoutine(false)">Back to routine</button>'
+    + '<button class="btn primary sm" onclick="backToRoutine(true)">Done — tick it off &#10003;</button>'
+    + '<button class="rs-btn" title="Dismiss" onclick="routineTrip=null;renderRoutineReturn()">&#215;</button>';
+}
+function backToRoutine(markDone){
+  if(routineTrip===null) return;
+  const i = routineTrip; routineTrip = null; renderRoutineReturn();
+  if(markDone && !routineToday().includes(i)) toggleRoutineStep(i, true);
+  openRoutineModal();
 }
 function renderRoutineBanner(){
   const b = $("#routine-banner"); if(!b) return;
@@ -902,13 +972,15 @@ function skipRoutineBanner(){ const b=$("#routine-banner"); if(b){ b.className="
 /* The routine lives in a modal now (EdgeFlo dashboard has no routine card):
    the Dashboard pill and the banner both open it. */
 function openRoutineModal(){
-  openModal('<div id="routine-modal"><h3>Pre-Market Routine</h3><div class="small" style="margin-bottom:6px">Tick each step before you trade. Progress saves automatically and resets daily.</div>'
+  openModal('<div id="routine-modal"><h3>Pre-Market Routine</h3><div class="small" style="margin-bottom:6px">Tick each step before you trade — or hit <strong>Continue</strong> on a step to jump to where it happens, then come back and tick it off. Progress saves automatically and resets daily.</div>'
     + routineCardHTML()
     + '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn primary" onclick="closeModal()">Done</button></div></div>');
 }
 function refreshRoutineUI(){
   renderRoutineBanner();
+  renderRoutineReturn();
   if(currentView==="dashboard") RENDER.dashboard();
+  if(currentView==="trading") RENDER.trading(); // keep the routine lock / unlock state live
   const mb = $("#modal-bk");
   if(mb && mb.classList.contains("on") && document.getElementById("routine-modal")) openRoutineModal();
 }
@@ -920,6 +992,7 @@ function routineCardHTML(){
     + '<span class="chip '+(done>=total && total? "green":"pine")+'">'+(done>=total && total? "Complete ✓" : done+"/"+total)+'</span></div>'
     + '<div class="progress" style="margin:12px 0 4px"><i style="width:'+(total? done/total*100:0)+'%"></i></div>'
     + r.steps.map((s,i)=>'<div class="routine-step '+(doneArr.includes(i)?"done":"")+'"><input type="checkbox" '+(doneArr.includes(i)?"checked":"")+' onchange="toggleRoutineStep('+i+',this.checked)" style="width:18px;height:18px;accent-color:var(--pine)"><span class="rs-text">'+esc(s)+'</span>'
+      + (!doneArr.includes(i) && routineStepAction(s)? '<button class="btn primary sm rs-go" title="Go to where this step happens" onclick="continueRoutineStep('+i+')">Continue</button>' : "")
       + '<button class="rs-btn" title="Move up" onclick="moveRoutineStep('+i+',-1)">↑</button><button class="rs-btn" title="Move down" onclick="moveRoutineStep('+i+',1)">↓</button><button class="rs-btn" title="Remove step" onclick="removeRoutineStep('+i+')">×</button></div>').join("");
   if(total<6){
     html += '<div style="display:flex;gap:8px;margin-top:12px"><input class="input" id="routine-new" placeholder="Add a step (max 6)…" maxlength="80" onkeydown="if(event.key===\'Enter\')addRoutineStep()"><button class="btn" onclick="addRoutineStep()">Add</button></div>';
@@ -1762,7 +1835,7 @@ function updateTicker(){
   t.innerHTML = '<span class="t-price mono">'+p.toFixed(simCandles.dec)+'</span><span class="chip '+(chg>=0?"green":"red")+'">'+fmtPct(chg)+' today (simulated feed)</span>';
 }
 /* ---- Trading page state (EdgeFlo layout) ---- */
-let posTab = "open", posPanelHidden = false, tradeWide = false, sideTab = "watchlist", twlSearch = "", sidePlanId = "", tradeBannerOff = false;
+let posTab = "open", posPanelHidden = false, tradeWide = false, sideTab = "watchlist", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
 let sideSessionOpen = true, twlPinnedOnly = false, twlPinFirst = false;
 function tvSymbolFor(sym){
   if(TV_SYMBOLS[sym]) return TV_SYMBOLS[sym];
@@ -1797,11 +1870,12 @@ function tradingHeaderHTML(lockedOut){
     + (activePlan? '<span class="chip pine" title="Your active Edge plan — the Trading Plan tab is armed with it">Active plan: '+esc(activePlan.name)+'</span>' : "")
     + '<button class="icon-btn" title="Switch account" style="border:0;font-size:16px" onclick="go(\'account\')">&or;</button>'
     + '<span style="flex:1"></span>'
-    + '<button class="icon-btn" title="Quick trade" onclick="openTradePanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
+    + '<button class="icon-btn" title="'+(lockedOut? "Trading locked":"Quick trade")+'" '+(lockedOut?"disabled":"")+' onclick="openTradePanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
     + '<button class="btn '+(lockedOut?"":"primary")+'" '+(lockedOut?"disabled":"")+' onclick="openTradePanel()">'+lockSvg+' Trade</button>'
     + '<button class="icon-btn" title="'+(tradeWide?"Show sidebar":"Expand chart")+'" onclick="tradeWide=!tradeWide;RENDER.trading()">'+(tradeWide?"&laquo;":"&raquo;")+'</button></div>';
 }
 function tradingBannerHTML(){
+  if(routineGateOn()) return ""; // gate on: the lock panel (or unlock banner) below replaces the dismissible prompt — no "start anyway"
   if(tradeBannerOff || !DB.routine.enabled || !DB.routine.steps.length) return "";
   if(DB.settings && DB.settings.routinePrefs && DB.settings.routinePrefs.startPrompt===false) return ""; // start-session prompt off (Account → Pre-Market Routine)
   const done = routineDoneCount(); if(done >= DB.routine.steps.length) return "";
@@ -1811,6 +1885,22 @@ function tradingBannerHTML(){
     + '<div style="flex:1;min-width:200px;color:var(--muted)">Complete your pre-market routine before execution</div>'
     + '<button class="btn ghost sm" onclick="tradeBannerOff=true;RENDER.trading()">Start session anyway</button>'
     + '<button class="btn primary sm" onclick="go(\'dashboard\')">Complete pre-market routine '+arrowSvg+'</button></div>';
+}
+/* Routine-gate panels for the Trading page: a locked state while today's
+   routine is incomplete, and a success banner once it unlocks. */
+function routineLockHTML(){
+  const done = routineDoneCount(), total = DB.routine.steps.length;
+  const lockBig = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  return '<div class="trade-lock"><div class="tl-ico">'+lockBig+'</div>'
+    + '<div style="flex:1;min-width:220px"><div class="tl-title">Trading is locked</div>'
+    + '<div class="tl-sub">Complete your pre-market routine to unlock trading &middot; '+done+' of '+total+' steps done. The lock resets daily with the routine.</div></div>'
+    + '<button class="btn primary" onclick="openRoutineModal()">Complete pre-market routine</button></div>';
+}
+function routineUnlockHTML(){
+  if(!routineGateOn() || !routineCompleteToday()) return "";
+  if(unlockSeenDate === todayStr()) return ""; // dismissed for today
+  const done = routineDoneCount(), total = DB.routine.steps.length;
+  return '<div class="alert green" style="margin-top:16px"><div><strong>Trading unlocked &#10003;</strong> Pre-market routine complete ('+done+'/'+total+') — you are cleared to trade for today.</div><span style="flex:1"></span><button class="btn sm ghost" onclick="unlockSeenDate=todayStr();RENDER.trading()">Dismiss</button></div>';
 }
 function positionsPanelHTML(){
   const open = DB.paper.positions, closed = DB.trades.filter(t=>t.source==="paper").slice().reverse();
@@ -1844,6 +1934,7 @@ function exitAllPositions(){
   toast("All positions closed — see Closed Positions and your Journal.");
 }
 function openTradePanel(){
+  if(routineLocked()){ toast("Trading is locked — complete your pre-market routine to unlock trading."); openRoutineModal(); return; }
   const st = guardrailStatus();
   if(DB.guardrails.enabled && st.breached && !st.overridden){ toast(DB.guardrails.hardLock? "Hard Lock is ON — trading is locked until tomorrow." : "Guardrails lockout — trading blocked."); return; }
   openModal('<h3>Trade — '+esc(simMarket)+'</h3><div class="small" style="margin-bottom:12px">Paper order @ market on the simulated practice feed &middot; last <strong class="mono">'+curPrice().toFixed(simCandles.dec)+'</strong>. 1% risk is the house rule — size like it.</div>'
@@ -2013,16 +2104,18 @@ function sidePlanHTML(){
 RENDER.trading = function(){
   const el = document.querySelector('[data-view="trading"]');
   const st = guardrailStatus(); const lockedOut = DB.guardrails.enabled && st.breached && !st.overridden;
+  const rLocked = routineLocked(); const tradeLocked = lockedOut || rLocked;
   el.innerHTML =
-    tradingHeaderHTML(lockedOut)
+    tradingHeaderHTML(tradeLocked)
     + tradingBannerHTML()
+    + (rLocked? routineLockHTML() : routineUnlockHTML())
     + (lockedOut? '<div class="alert red" style="margin-top:16px"><div><strong>Guardrails lockout is active.</strong> Paper trading is blocked '+(DB.guardrails.hardLock? '— Hard Lock is ON, so there is no override; trading unlocks tomorrow.' : 'until you override (logged) or the day resets.')+' This is the discipline working as designed.</div></div>':"")
     + (!st.inWindow && DB.guardrails.enabled? '<div class="alert amber" style="margin-top:16px"><div><strong>Outside your trading window</strong> ('+DB.guardrails.winStart+' – '+DB.guardrails.winEnd+'). Edge decays outside your A-session — trade only if the setup is truly A+.</div></div>':"")
     + '<div class="trade-grid" style="margin-top:16px"><div style="min-width:0">'
     + '<div class="card mb"><div class="tv-wrap"><div id="tv-chart-mount"></div></div><div class="small" style="margin-top:8px">Chart &amp; market data by TradingView — switch symbol &amp; timeframe from the chart&rsquo;s own header. Paper positions below run on the simulated practice feed.</div></div>'
     + positionsPanelHTML()
     + '</div>'
-    + (tradeWide? "" : '<div class="side-col">'+tradingSidebarHTML(st, lockedOut)+'</div>')
+    + (tradeWide? "" : '<div class="side-col">'+tradingSidebarHTML(st, tradeLocked)+'</div>')
     + '</div>';
   seedCandles(simMarket);
   loadTvChart();
@@ -2066,6 +2159,7 @@ let simDir = "Long";
 function setDir(d){ simDir=d; const l=$("#dir-long"), s=$("#dir-short"); if(l&&s){ l.classList.toggle("on", d==="Long"); s.classList.toggle("on", d==="Short"); } }
 function posPnl(pos){ const px = pos.market===simMarket? curPrice() : pos.entry; const dir = pos.dir==="Long"?1:-1; return (px - pos.entry)*dir*pos.size; }
 function openPosition(){
+  if(routineLocked()){ toast("Trading is locked — complete your pre-market routine to unlock trading."); return; }
   const st = guardrailStatus();
   if(DB.guardrails.enabled && st.breached && !st.overridden){ toast(DB.guardrails.hardLock? "Hard Lock is ON — trading is locked until tomorrow." : "Guardrails lockout — trading blocked."); return; }
   const size = parseFloat($("#pt-size").value); if(!(size>0)){ toast("Enter a size above zero."); return; }
@@ -2210,6 +2304,7 @@ RENDER.guardrails = function(){
     + tRow("gr-margininvert", "Invert margin level", "Margin Health in the Trading header shows margin used instead of margin free.", g.marginInvert)
     + tRow("gr-news", "News Block", "Flag high-impact releases and warn against new entries around the print.", g.newsBlock)
     + tRow("gr-prompts", "Trading Prompts", "Post-trade emotion prompts after opening and closing a paper position — answers sync straight into the Journal entry.", g.prompts)
+    + tRow("gr-routinegate", "Routine-gated trading", "Trading stays locked until today's pre-market routine is 100% complete. It unlocks automatically when the last step is ticked, and the lock resets daily with the routine.", g.routineGate !== false)
     + '</div>'
     + '<div class="divider"></div>'
     + '<div class="field"><label class="f">Fixed Risk Per Trade</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg"><button type="button" id="gr-rm-pct" class="'+(grRiskMode==="pct"?"on":"")+'" onclick="grSetRiskMode(\'pct\')">% of balance</button><button type="button" id="gr-rm-usd" class="'+(grRiskMode==="usd"?"on":"")+'" onclick="grSetRiskMode(\'usd\')">$ fixed</button></div>'
@@ -2230,7 +2325,7 @@ RENDER.guardrails = function(){
 function applyGuardrailDefaults(){
   const set = (id, v)=>{ const e = document.getElementById(id); if(e) e.value = v; };
   const chk = (id, v)=>{ const e = document.getElementById(id); if(e) e.checked = v; };
-  chk("gr-enabled", true); chk("gr-hardlock", false); chk("gr-margininvert", false); chk("gr-news", true); chk("gr-prompts", true);
+  chk("gr-enabled", true); chk("gr-hardlock", false); chk("gr-margininvert", false); chk("gr-news", true); chk("gr-prompts", true); chk("gr-routinegate", true);
   grSetRiskMode("pct"); set("gr-risk", 1);
   set("gr-maxloss", 200); set("gr-maxprofit", 400); set("gr-maxtrades", 5);
   set("gr-start", "07:00"); set("gr-end", "17:00"); set("gr-tz", "UTC");
@@ -2241,7 +2336,7 @@ function saveGuardrails(){
     maxLoss: Math.abs(parseFloat($("#gr-maxloss").value)||200), maxProfit: Math.abs(parseFloat($("#gr-maxprofit").value)||0),
     maxTrades: Math.max(1, parseInt($("#gr-maxtrades").value)||5), winStart: $("#gr-start").value||"07:00", winEnd: $("#gr-end").value||"17:00",
     newsBlock: $("#gr-news").checked, hardLock: $("#gr-hardlock").checked,
-    marginInvert: $("#gr-margininvert").checked, prompts: $("#gr-prompts").checked,
+    marginInvert: $("#gr-margininvert").checked, prompts: $("#gr-prompts").checked, routineGate: $("#gr-routinegate").checked,
     riskMode: grRiskMode, riskValue: Math.max(0, parseFloat($("#gr-risk").value)||0), tz: $("#gr-tz").value||"UTC" };
   saveDB(); renderAll(); toast("Guardrails saved — enforcement is live.");
 }
