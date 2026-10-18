@@ -24,7 +24,7 @@
   --rail:224px;
 }
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --pine:#2DB3A4; --pine-deep:#5CC9BB; --pine-soft:#123029; --pine-ink:#D9F2EC;
     --bg:#0B1512; --bg2:#0E1B16; --card:#132019; --card2:#172720;
     --ink:#E4EFE8; --muted:#9DB3A7; --faint:#6E877B;
@@ -36,6 +36,22 @@
     --shadow-sm:0 2px 10px rgba(0,0,0,.3);
   }
 }
+:root[data-theme="dark"]{
+  --pine:#2DB3A4; --pine-deep:#5CC9BB; --pine-soft:#123029; --pine-ink:#D9F2EC;
+  --bg:#0B1512; --bg2:#0E1B16; --card:#132019; --card2:#172720;
+  --ink:#E4EFE8; --muted:#9DB3A7; --faint:#6E877B;
+  --line:#22382E; --line2:#2C463A;
+  --green:#3ECF8E; --green-bg:#123527;
+  --red:#F07676; --red-bg:#3A1E1E;
+  --amber:#E5B45A; --amber-bg:#37290F;
+  --shadow:0 8px 28px rgba(0,0,0,.35);
+  --shadow-sm:0 2px 10px rgba(0,0,0,.3);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{ color-scheme:light }
+:root[data-theme="dark"] h1,:root[data-theme="dark"] h2,:root[data-theme="dark"] h3,:root[data-theme="dark"] h4,
+:root[data-theme="dark"] .brand-name,:root[data-theme="dark"] .plan-card .pc-name,
+:root[data-theme="dark"] #routine-banner .rb-title{ color:var(--ink) }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
@@ -56,7 +72,9 @@ h1,h2,h3,h4{margin:0;color:var(--pine-ink);letter-spacing:-.01em}
 .brand-sub{font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .nav-group{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px}
 .nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:9px 10px;border:0;background:transparent;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px;text-align:left;transition:background .15s,color .15s}
-.nav-item svg{flex:0 0 20px}
+.nav-item>svg{flex:0 0 30px;width:30px;height:30px;padding:5px;border-radius:9px;background:var(--card2);color:var(--faint);transition:background .15s,color .15s}
+.nav-item:hover>svg{color:var(--pine)}
+.nav-item.active>svg{background:var(--pine);color:#fff}
 .nav-item:hover{background:var(--card2);color:var(--ink)}
 .nav-item.active{background:var(--pine-soft);color:var(--pine)}
 .nav-item .lock{margin-left:auto;color:var(--amber);display:flex}
@@ -425,7 +443,7 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .flt-check input{width:16px;height:16px;accent-color:var(--pine);flex:0 0 16px;margin:0}
 .imp-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px;display:inline-block}
 .cat-ico{width:15px;flex:0 0 15px;display:inline-flex;align-items:center;justify-content:center;color:var(--pine)}
-.ev-head,.ev-row{display:grid;grid-template-columns:30px 56px 104px 58px minmax(0,1fr) 82px;gap:8px;align-items:center}
+.ev-head,.ev-row{display:grid;grid-template-columns:30px 56px 104px 58px minmax(0,1fr) 82px 30px;gap:8px;align-items:center}
 .ev-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:10px 6px 8px;border-bottom:1px solid var(--line)}
 .ev-day{font-size:12.5px;font-weight:800;color:var(--muted);padding:15px 6px 3px}
 .ev-item{border-bottom:1px solid var(--line)}
@@ -443,7 +461,7 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .cal-ev-dots{display:flex;gap:3px;margin-top:5px}
 .cal-ev-dots i{width:7px;height:7px;border-radius:50%;display:block}
 @media (max-width:640px){
-  .ev-head,.ev-row{grid-template-columns:26px 46px 82px 22px minmax(0,1fr) 54px;gap:6px;font-size:12.5px}
+  .ev-head,.ev-row{grid-template-columns:26px 46px 82px 22px minmax(0,1fr) 54px 26px;gap:6px;font-size:12.5px}
   .ev-detail{margin-left:6px}
 }
 
@@ -473,6 +491,21 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
   .chat-box{height:60vh}
   .row{flex-direction:column;gap:0}
 }
+/* ---------- Settings rows / swatches ---------- */
+.set-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.set-row:last-child{border-bottom:0}
+.set-row .sr-txt{flex:1;min-width:0}
+.set-row .sr-name{font-weight:700;font-size:13.5px}
+.set-row .sr-sub{font-size:12px;color:var(--muted)}
+.swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;flex:0 0 26px}
+.swatch.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--line2)}
+.note-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 10px}
+.bm-btn{border:0;background:transparent;font-size:16px;line-height:1;color:var(--faint);padding:2px;cursor:pointer}
+.bm-btn.on{color:var(--amber)}
+input[type="range"].vol{-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;background:var(--bg2);outline:none;flex:1;min-width:120px}
+input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--pine);cursor:pointer;border:2.5px solid var(--card);box-shadow:var(--shadow-sm)}
+.tpl-preview{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;white-space:pre-wrap;max-height:220px;overflow-y:auto;margin-top:10px}
+
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
 </style>
 </head>
@@ -512,7 +545,6 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
         <button class="avatar" id="tb-avatar" aria-label="Account">?</button>
       </div>
     </header>
-    <div id="sessionbar" role="status"></div>
     <div id="routine-banner"></div>
     <div id="lockout-slot" style="padding:0 28px"></div>
 
@@ -521,7 +553,6 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
       <section class="view" data-view="journal"></section>
       <section class="view" data-view="addtrade"></section>
       <section class="view" data-view="trading"></section>
-      <section class="view" data-view="watchlist"></section>
       <section class="view" data-view="guardrails"></section>
       <section class="view" data-view="edge"></section>
       <section class="view" data-view="news"></section>
@@ -589,16 +620,16 @@ const STRIPE_CONFIG = {
 const PLANS = {
   free:  { name:"Free",  rank:0, monthly:0,  yearly:0,
            tagline:"Try the core journal & dashboard",
-           features:["Dashboard & equity curve","Trade journal + calendar view","Paper trading ($10k virtual)","Economic calendar","Notebook & Sanctuary"] },
+           features:["Dashboard & equity curve","Trade journal + calendar view","Paper trading ($10k virtual)","Full guardrails & lockout","Economic calendar","Notebook & Sanctuary"] },
   basic: { name:"Basic", rank:1, monthly:44, yearly:35,
            tagline:"Discipline tools for serious journaling",
-           features:["Everything in Free","Guardrails with auto lockout","Edge trade-plan builder","Unlimited journal history","Per-plan performance tracking","Trading-window enforcement"] },
+           features:["Everything in Free","Edge trade-plan builder","Unlimited journal history","Per-plan performance tracking","Trading-window enforcement","Priority email support"] },
   plus:  { name:"Plus",  rank:2, monthly:63, yearly:50,
            tagline:"Full analytics + AI coaching",
            features:["Everything in Basic","AI Coach (reviews your real stats)","Performance analytics deep-dive","Setup / market / weekday breakdowns","R-distribution & drawdown analysis","Priority support"] }
 };
 /* Which plan each premium module needs */
-const MODULE_PLAN = { guardrails:"basic", coach:"plus", performance:"plus" };
+const MODULE_PLAN = { coach:"plus", performance:"plus" }; // Guardrails configuration is free for everyone — discipline is not an upsell
 
 /* ---------------- Store (localStorage) ---------------- */
 const DB_KEY = "edgepine_db_v1";
@@ -609,7 +640,8 @@ const DEFAULTS = {
   plans: [],                                    // Edge plans
   activePlanId: null,                           // Edge plan marked Active
   notes: [], folders: ["General","Reviews","Ideas"],
-  guardrails: { enabled:true, maxLoss:200, maxProfit:400, maxTrades:5, winStart:"07:00", winEnd:"17:00", newsBlock:true, hardLock:false },
+  guardrails: { enabled:true, maxLoss:200, maxProfit:400, maxTrades:5, winStart:"07:00", winEnd:"17:00", newsBlock:true, hardLock:false,
+                marginInvert:false, prompts:true, riskMode:"pct", riskValue:1, tz:"UTC" },
   overrides: [],                                // guardrail rule-break log
   paper: { balance:10000, positions: [] },
   checkins: [],                                 // sanctuary streak dates (yyyy-mm-dd)
@@ -621,7 +653,21 @@ const DEFAULTS = {
   dailyNotes: {},                               // date -> { text, voices:[{id, at, dur, src}] }
   trackFavs: [],                                // sanctuary favourite track ids
   trackPlays: [],                               // sanctuary completed listen dates
-  wlPins: ["XAUUSD","EURUSD","BTCUSD"]          // watchlist pinned symbols
+  wlPins: ["XAUUSD","EURUSD","BTCUSD"],         // watchlist pinned symbols
+  alerts: [],                                   // price alerts {id, symbol, condition, price, status, created, triggeredAt}
+  sessions: [],                                 // sanctuary session log {date, minutes, kind, at}
+  newsBookmarks: [],                            // bookmarked news event keys (date|time|cur|event)
+  newsPrefs: null,                              // persisted news filters {from,to,rangeKey,imp,cats,cur,wlOnly,bookOnly}
+  sanctuary: { ambient:"none", volume:50, bells:false, bellEvery:5 },
+  settings: {
+    profile: { name:"", phone:"", email:"", avatar:"", timezone:"", time24:false, currency:"USD", theme:"system" },
+    routinePrefs: { startPrompt:true, autoHide:true, resetTime:"04:00" },
+    journaling: { reviewMode:"replay", confTags:"Liquidity sweep, FVG retest, Order block, Displacement, Premium / discount", mistakeTags:"FOMO entry, Moved stop, Oversized, Revenge trade, No sweep" },
+    notif: { browser:false,
+             channels: { push:true, inapp:true, email:false },
+             events: { priceAlert:true, positionClosed:true, dealExecuted:true, pendingFilled:true, maxTradesWarn:true,
+                       maxProfit:true, newsBlockWarn:true, premarket:true, sessionRemind:true, eodJournal:true, weeklyReview:true } }
+  }
 };
 let DB;
 function loadDB(){
@@ -645,6 +691,16 @@ function loadDB(){
   if(!Array.isArray(DB.trackFavs)) DB.trackFavs = [];
   if(!Array.isArray(DB.trackPlays)) DB.trackPlays = [];
   if(!Array.isArray(DB.wlPins)) DB.wlPins = DEFAULTS.wlPins.slice();
+  if(!Array.isArray(DB.alerts)) DB.alerts = [];
+  if(!Array.isArray(DB.sessions)) DB.sessions = [];
+  if(!Array.isArray(DB.newsBookmarks)) DB.newsBookmarks = [];
+  if(DB.newsPrefs===undefined) DB.newsPrefs = null;
+  DB.sanctuary = Object.assign({}, DEFAULTS.sanctuary, DB.sanctuary||{});
+  DB.settings = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS.settings)), DB.settings||{});
+  ["profile","routinePrefs","journaling"].forEach(k=>{ DB.settings[k] = Object.assign({}, DEFAULTS.settings[k], DB.settings[k]||{}); });
+  DB.settings.notif = Object.assign({}, DEFAULTS.settings.notif, DB.settings.notif||{});
+  DB.settings.notif.channels = Object.assign({}, DEFAULTS.settings.notif.channels, DB.settings.notif.channels||{});
+  DB.settings.notif.events = Object.assign({}, DEFAULTS.settings.notif.events, DB.settings.notif.events||{});
 }
 function saveDB(){ try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){ toast("Storage full — screenshot images may be too large."); } }
 loadDB();
@@ -654,7 +710,9 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const todayStr = (d) => { d = d||new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
-const fmt$ = n => (n<0?"-$":"$") + Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const CUR_SYMBOLS = { USD:"$", EUR:"€", GBP:"£", JPY:"¥", BDT:"৳" };
+const fmt$ = n => { const sym = CUR_SYMBOLS[(DB.settings && DB.settings.profile && DB.settings.profile.currency) || "USD"] || "$";
+  return (n<0?"-":"") + sym + Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); };
 const fmtR = n => (n>0?"+":"") + n.toFixed(2) + "R";
 const fmtPct = n => (n>0?"+":"") + n.toFixed(1) + "%";
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -662,6 +720,27 @@ const MARKETS = ["BTCUSD","ETHUSD","XAUUSD","EURUSD","GBPUSD","GBPJPY","SOLUSD",
 const SESSIONS = ["London","New York","Asia","Overlap"];
 const EMOTIONS = ["Confident","Calm","Focused","FOMO","Fearful","Greedy","Revenge","Tired"];
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),2800); }
+/* ---- Theme (Account → Profile): system / light / dark ---- */
+function isDark(){
+  const t = (DB.settings && DB.settings.profile && DB.settings.profile.theme) || "system";
+  if(t==="dark") return true; if(t==="light") return false;
+  return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+function applyTheme(){
+  const t = (DB.settings && DB.settings.profile && DB.settings.profile.theme) || "system";
+  const de = document.documentElement;
+  if(t==="dark" || t==="light"){ de.setAttribute("data-theme", t); de.style.colorScheme = t; }
+  else { de.removeAttribute("data-theme"); de.style.colorScheme = ""; }
+}
+/* ---- Notifications (Account → Notifications): per-event + channel routing ---- */
+function notifyEvent(key, title, body){
+  const n = DB.settings && DB.settings.notif; if(!n) return;
+  if(n.events && n.events[key]===false) return;
+  if(n.channels && n.channels.inapp!==false) toast(title+" — "+body);
+  if(n.browser && n.channels && n.channels.push && window.Notification && Notification.permission==="granted"){
+    try{ new Notification(title, { body: body }); }catch(e){}
+  }
+}
 function planRank(){ return PLANS[DB.sub.plan].rank; }
 function hasAccess(view){ const need = MODULE_PLAN[view]; if(!need) return true; return planRank() >= PLANS[need].rank; }
 
@@ -779,8 +858,8 @@ function renderSessionBar(){
 }
 setInterval(()=>{
   const c = $("#sb-count"); if(c){ const info = sessionInfo(); c.textContent = fmtCountdown(info.target - new Date()); }
-  const ck = $("#sb-clock"); if(ck) ck.textContent = new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  const twc = document.getElementById("tw-count"); if(twc) twc.textContent = fmtCountdownHM(sessionInfo().target - new Date());
+  const ck = $("#sb-clock"); if(ck) ck.textContent = new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12: !(DB.settings && DB.settings.profile && DB.settings.profile.time24)});
+  document.querySelectorAll(".tw-count").forEach(e=>{ e.textContent = fmtCountdownHM(sessionInfo().target - new Date()); });
   if(new Date().getSeconds()===0) renderSessionBar();
 }, 1000);
 
@@ -792,28 +871,47 @@ function toggleRoutineStep(i, val){
   const ix = arr.indexOf(i);
   if(val && ix<0) arr.push(i);
   if(!val && ix>=0) arr.splice(ix,1);
-  DB.routine.done[d] = arr; saveDB(); renderRoutineBanner();
-  if(currentView==="dashboard") RENDER.dashboard();
+  DB.routine.done[d] = arr; saveDB(); refreshRoutineUI();
 }
 function renderRoutineBanner(){
   const b = $("#routine-banner"); if(!b) return;
-  if(currentView==="trading"){ b.className=""; b.innerHTML=""; return; } // Trading page carries its own EdgeFlo-style banner
+  if(currentView==="trading" || currentView==="dashboard"){ b.className=""; b.innerHTML=""; return; } // Trading carries its own banner; the Dashboard uses the routine pill + modal (EdgeFlo layout)
   const r = DB.routine;
   if(!r.enabled || !r.steps.length){ b.className=""; b.innerHTML=""; return; }
-  /* The banner always belongs on the Dashboard; the pinned toggle only
-     controls whether it also follows you onto the other pages. */
-  if(currentView!=="dashboard" && !r.pinned){ b.className=""; b.innerHTML=""; return; }
+  /* The pinned toggle controls whether the banner follows you onto the
+     other pages (never the Dashboard or Trading — see above). */
+  if(!r.pinned){ b.className=""; b.innerHTML=""; return; }
   const done = routineDoneCount(), total = r.steps.length;
-  if(done>=total){ b.className=""; b.innerHTML=""; return; }
+  if(done>=total){
+    if(DB.settings && DB.settings.routinePrefs && DB.settings.routinePrefs.autoHide===false){
+      b.className = "on";
+      b.innerHTML = '<span class="rb-title">Pre-market routine</span><span class="chip green">Complete ✓ '+done+'/'+total+'</span><span class="small">All steps done — the banner stays visible because auto-hide is off in Account settings.</span><button class="btn sm" onclick="skipRoutineBanner()">Hide for now</button>';
+      return;
+    }
+    b.className=""; b.innerHTML=""; return;
+  }
   b.className = "on";
   b.innerHTML = '<span class="rb-title">Pre-market routine</span>'
     + '<span class="chip pine">'+done+'/'+total+' done</span>'
     + '<span class="rb-track"><i style="width:'+(total? done/total*100:0)+'%"></i></span>'
     + '<span class="small">Next: '+esc(r.steps.find((s,i)=> !routineToday().includes(i)) || "")+'</span>'
-    + '<button class="btn primary sm" onclick="go(\'dashboard\')">Open routine</button>'
+    + '<button class="btn primary sm" onclick="openRoutineModal()">Open routine</button>'
     + '<button class="btn sm" onclick="skipRoutineBanner()">Later</button>';
 }
-function skipRoutineBanner(){ const b=$("#routine-banner"); if(b){ b.className=""; b.innerHTML=""; } toast("Banner hidden for now — the routine card lives on your Dashboard and resets daily."); }
+function skipRoutineBanner(){ const b=$("#routine-banner"); if(b){ b.className=""; b.innerHTML=""; } toast("Banner hidden for now — open the routine any time from the Dashboard pill."); }
+/* The routine lives in a modal now (EdgeFlo dashboard has no routine card):
+   the Dashboard pill and the banner both open it. */
+function openRoutineModal(){
+  openModal('<div id="routine-modal"><h3>Pre-Market Routine</h3><div class="small" style="margin-bottom:6px">Tick each step before you trade. Progress saves automatically and resets daily.</div>'
+    + routineCardHTML()
+    + '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn primary" onclick="closeModal()">Done</button></div></div>');
+}
+function refreshRoutineUI(){
+  renderRoutineBanner();
+  if(currentView==="dashboard") RENDER.dashboard();
+  const mb = $("#modal-bk");
+  if(mb && mb.classList.contains("on") && document.getElementById("routine-modal")) openRoutineModal();
+}
 
 function routineCardHTML(){
   const r = DB.routine; const doneArr = routineToday(); const done = routineDoneCount(), total = r.steps.length;
@@ -834,11 +932,11 @@ function routineCardHTML(){
     + '</div></div>';
   return html;
 }
-function setRoutineEnabled(v){ DB.routine.enabled=v; saveDB(); renderRoutineBanner(); RENDER.dashboard(); }
+function setRoutineEnabled(v){ DB.routine.enabled=v; saveDB(); refreshRoutineUI(); }
 function addRoutineStep(){
   const inp = $("#routine-new"); const v = (inp.value||"").trim(); if(!v) return;
   if(DB.routine.steps.length>=6){ toast("Maximum 6 steps."); return; }
-  DB.routine.steps.push(v); saveDB(); renderRoutineBanner(); RENDER.dashboard();
+  DB.routine.steps.push(v); saveDB(); refreshRoutineUI();
 }
 function removeRoutineStep(i){
   DB.routine.steps.splice(i,1);
@@ -848,7 +946,7 @@ function removeRoutineStep(i){
   Object.keys(DB.routine.done).forEach(d=>{
     DB.routine.done[d] = (DB.routine.done[d]||[]).filter(k=>k!==i).map(k=> k>i? k-1 : k);
   });
-  saveDB(); renderRoutineBanner(); RENDER.dashboard();
+  saveDB(); refreshRoutineUI();
 }
 function moveRoutineStep(i, dir){
   const j = i+dir; if(j<0 || j>=DB.routine.steps.length) return;
@@ -857,21 +955,21 @@ function moveRoutineStep(i, dir){
      instead of clearing — reordering must never change completion state. */
   const d = todayStr();
   DB.routine.done[d] = (DB.routine.done[d]||[]).map(k => k===i ? j : (k===j ? i : k));
-  saveDB(); renderRoutineBanner(); RENDER.dashboard();
+  saveDB(); refreshRoutineUI();
 }
 
 /* ---------------- Router & nav ---------------- */
 const ICONS = {
-  dashboard:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
-  journal:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3h13a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5z"/><path d="M5 3v18"/><path d="M9 8h6M9 12h6"/></svg>',
-  trading:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V9M9.5 19V5M15 19v-8M20 19V7"/></svg>',
-  watchlist:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/><path d="M19 15.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L16.1 17.6l2-.3z" fill="currentColor" stroke="none"/></svg>',
+  dashboard:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>',
+  journal:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M7.5 14.5h4M7.5 17.5h6.5"/></svg>',
+  trading:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v3M7 14v6M17 5v4M17 16v5"/><rect x="4.6" y="6" width="4.8" height="8" rx="1"/><rect x="14.6" y="9" width="4.8" height="7" rx="1"/></svg>',
+  watchlist:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6l2.5 5.2 5.7.7-4.2 4 1.1 5.6L12 16.4l-5.1 2.7 1.1-5.6-4.2-4 5.7-.7z"/></svg>',
   guardrails:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.2 8.2-7 10-3.8-1.8-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
   edge:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
-  news:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="15" height="14" rx="2"/><path d="M18 9h2a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2"/><path d="M7 9h7M7 13h7M7 17h4"/></svg>',
-  notebook:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>',
-  coach:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.3-2.9A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01" stroke-width="3"/></svg>',
-  sanctuary:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4.5-1.2-7-4.3-7-9V5.5C8 6 10 8 11 10.5 11.6 7 13.5 4 17 3c.3 3.5-.6 6-2.4 8C16.8 12 18 14 18 16c0 3-2.3 4.6-6 5z"/></svg>',
+  news:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.3 3.6 5.2 3.6 8.5s-1.2 6.2-3.6 8.5c-2.4-2.3-3.6-5.2-3.6-8.5S9.6 5.8 12 3.5z"/></svg>',
+  notebook:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="3" width="13" height="18" rx="2"/><path d="M9.8 8h5M9.8 12h5M9.8 16h3"/><path d="M5.5 7H3.6M5.5 12H3.6M5.5 17H3.6"/></svg>',
+  coach:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.8 4.5l1.6 4.1 4.1 1.6-4.1 1.6-1.6 4.1-1.6-4.1-4.1-1.6 4.1-1.6z"/><path d="M18.6 15.8l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>',
+  sanctuary:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.2c-1-1.5-1.5-3.1-1.5-4.9 0-1.9.5-3.7 1.5-5.3 1 1.6 1.5 3.4 1.5 5.3 0 1.8-.5 3.4-1.5 4.9z"/><path d="M12 15.2c-2-1.9-4.4-2.9-7.2-2.9.7 3.3 3.4 5.6 7.2 6 3.8-.4 6.5-2.7 7.2-6-2.8 0-5.2 1-7.2 2.9z"/><path d="M5.5 20.8c2.1.9 4.3 1.4 6.5 1.4s4.4-.5 6.5-1.4"/></svg>',
   performance:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>',
   pricing:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M16.5 6.5c-.8-1-2.4-1.5-4.5-1.5-2.8 0-4.5 1.3-4.5 3.2 0 4.6 9.3 2.4 9.3 6.6 0 1.9-1.9 3.2-4.8 3.2-2.1 0-3.8-.6-4.7-1.7"/></svg>',
   account:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.4-3.6 4.4-5.4 8-5.4s6.6 1.8 8 5.4"/></svg>',
@@ -880,11 +978,11 @@ const ICONS = {
   cross:'<svg class="fi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="color:var(--faint)"><path d="M6 6l12 12M18 6L6 18"/></svg>'
 };
 const NAV_MAIN = [
-  ["dashboard","Dashboard"],["journal","Journal"],["trading","Trading"],["watchlist","Watchlist"],["edge","Edge Plans"],["guardrails","Guardrails"],
+  ["dashboard","Dashboard"],["journal","Journal"],["trading","Trading"],["edge","Edge Plans"],["guardrails","Guardrails"],
   ["news","News"],["notebook","Notebook"],["coach","AI Coach"],["sanctuary","Sanctuary"],["performance","Performance"]
 ];
 const NAV_ACCT = [["pricing","Pricing"],["account","Account"]];
-const TITLES = { dashboard:"Dashboard", journal:"Trade Journal", addtrade:"Add Trade", trading:"Trading", watchlist:"Watchlist", guardrails:"Guardrails", edge:"Edge — Trade Plans",
+const TITLES = { dashboard:"Dashboard", journal:"Trade Journal", addtrade:"Add Trade", trading:"Trading", guardrails:"Guardrails", edge:"Edge — Trade Plans",
   news:"News", notebook:"Notebook", coach:"AI Coach", sanctuary:"Sanctuary",
   performance:"Performance Analytics", pricing:"Pricing", checkout:"Checkout", account:"Account" };
 let currentView = "dashboard";
@@ -901,9 +999,6 @@ function buildNav(){
     + '<button id="mb-more"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>More</span></button>';
   $("#more-panel").innerHTML = NAV_MAIN.concat(NAV_ACCT).filter(n=>prim.indexOf(n[0])<0)
     .map(n=>'<button data-nav="'+n[0]+'">'+ICONS[n[0]]+'<span>'+n[1]+'</span></button>').join("");
-  $$("[data-nav]").forEach(b=> b.addEventListener("click", ()=>{ go(b.getAttribute("data-nav")); $("#more-sheet").classList.remove("on"); }));
-  $("#mb-more").addEventListener("click", ()=> $("#more-sheet").classList.add("on"));
-  $("#more-sheet").addEventListener("click", e=>{ if(e.target.id==="more-sheet") e.target.classList.remove("on"); });
   const p = PLANS[DB.sub.plan];
   $("#rail-plan").innerHTML = '<div class="pc-name">'+p.name+' plan</div><div class="pc-sub">'
     + (DB.sub.plan==="free" ? "Unlock Guardrails, Edge, AI Coach &amp; analytics." : "Your premium modules are unlocked. Keep executing the plan.")
@@ -912,16 +1007,44 @@ function buildNav(){
   $("#tb-badge").className = "plan-badge" + (DB.sub.plan==="plus" ? " plus" : "");
   $("#tb-upgrade").style.display = DB.sub.plan==="plus" ? "none" : "";
   const u = DB.user;
-  $("#tb-avatar").textContent = u ? u.name.trim().charAt(0).toUpperCase() : "?";
+  $("#tb-avatar").textContent = u ? ((DB.settings && DB.settings.profile.avatar) || u.name.trim().charAt(0).toUpperCase()) : "?";
 }
 function go(view){
   currentView = view;
+  /* The view switch itself must never be held hostage by a failing widget:
+     toggle visibility + title first, then render inside a guard so one
+     page's error can never strand the user on the Dashboard. */
   $$(".view").forEach(s=> s.classList.toggle("on", s.getAttribute("data-view")===view));
   $$("[data-nav]").forEach(b=> b.classList.toggle("active", b.getAttribute("data-nav")===view));
   $("#tb-title").textContent = TITLES[view] || "EdgePine";
   window.scrollTo({top:0});
-  renderRoutineBanner();
-  if(RENDER[view]) RENDER[view]();
+  dashChrome(view);
+  try{ renderRoutineBanner(); }catch(e){ if(window.console) console.error("Routine banner failed", e); }
+  try{ if(RENDER[view]) RENDER[view](); }
+  catch(err){ if(window.console) console.error("Render failed for view: "+view, err); }
+}
+/* One delegated nav handler for the whole app: it survives every
+   buildNav() re-render (innerHTML rebuilds drop per-button listeners,
+   never this one) and is attached exactly once. */
+document.addEventListener("click", e=>{
+  if(!e.target || !e.target.closest) return;
+  if(e.target.closest("#mb-more")){ const sh = $("#more-sheet"); if(sh) sh.classList.add("on"); return; }
+  const b = e.target.closest("[data-nav]");
+  if(b){ go(b.getAttribute("data-nav")); const sh = $("#more-sheet"); if(sh) sh.classList.remove("on"); return; }
+  if(e.target.id==="more-sheet") e.target.classList.remove("on");
+});
+/* Dashboard header chrome (EdgeFlo layout): on the Dashboard the top bar
+   carries the page subtitle and drops the plan badge / upgrade / avatar;
+   every other page keeps the date line and the full right side. */
+function dashChrome(view){
+  const sub = $("#tb-date"), right = document.querySelector(".tb-right");
+  if(view==="dashboard"){
+    if(sub) sub.textContent = "Your trading performance at a glance — track your progress, discipline, and daily flow.";
+    if(right) right.style.display = "none";
+  } else {
+    if(sub) sub.textContent = new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric", year:"numeric" });
+    if(right) right.style.display = "";
+  }
 }
 function lockScreenHTML(view){
   const need = MODULE_PLAN[view]; const p = PLANS[need];
@@ -993,9 +1116,7 @@ function balanceChartSVG(){
 }
 RENDER.dashboard = function(){
   const el = document.querySelector('[data-view="dashboard"]');
-  const tr = rangeTrades(); const s = computeStats(tr); const all = computeStats(DB.trades);
-  const sess = groupStats(tr, t=>t.session||"—");
-  const maxSess = Math.max(1,...sess.map(x=>Math.abs(x.pnl)));
+  const tr = rangeTrades(); const s = computeStats(tr);
   const recent = DB.trades.slice().sort((a,b)=> b.date<a.date?-1:1).slice(0,6);
   const st = guardrailStatus();
   const wins = tr.filter(t=>tradePnl(t)>0), losses = tr.filter(t=>tradePnl(t)<0);
@@ -1008,9 +1129,8 @@ RENDER.dashboard = function(){
   const infoI = t=> ' <span class="info-i" title="'+t+'">i</span>';
   el.innerHTML =
     '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">'
-    + '<h2 style="font-size:20px;font-weight:800">Dashboard</h2>'
     + '<span style="flex:1"></span>'
-    + (DB.routine.enabled && DB.routine.steps.length? '<button class="routine-pill" onclick="document.getElementById(\'dash-routine\').scrollIntoView({behavior:\'smooth\',block:\'start\'})"><span class="info-i" style="border-color:rgba(255,255,255,.75);color:#fff">i</span> Pre-Market Routine '+routineDoneCount()+'/'+DB.routine.steps.length+'</button>' : "")
+    + (DB.routine.enabled && DB.routine.steps.length? '<button class="routine-pill" onclick="openRoutineModal()"><span class="info-i" style="border-color:rgba(255,255,255,.75);color:#fff">i</span> Pre-Market Routine '+routineDoneCount()+'/'+DB.routine.steps.length+'</button>' : "")
     + '<div class="range-tabs" role="tablist">'
     + [["today","Today"],["7d","7D"],["30d","30D"],["90d","90D"],["ytd","YTD"],["all","ALL"]].map(r=>'<button class="'+(dashRange===r[0]?"on":"")+'" onclick="setRange(\''+r[0]+'\')">'+r[1]+'</button>').join("")
     + '</div></div>'
@@ -1024,16 +1144,10 @@ RENDER.dashboard = function(){
     + '</div>'
     + '<div class="dash-main mt"><div style="min-width:0">'
     + '<div class="card"><h3>Account Balance</h3><div class="card-sub">Paper balance across '+DB.trades.length+' closed trades &middot; range: '+dashRange.toUpperCase()+'</div><div class="mt">'+balanceChartSVG()+'</div></div>'
-    + '<div class="grid g2 mt" style="align-items:start"><div id="dash-routine" style="min-width:0">' + routineCardHTML() + '</div>'
-    + '<div class="card"><h3>Session breakdown</h3><div class="card-sub">Where the money is made</div><div class="mt">'
-    + (sess.length? sess.map(x=>'<div class="bar-row"><span class="b-name">'+esc(x.key)+'</span><span class="b-track"><span class="b-fill" style="width:'+Math.max(4,Math.abs(x.pnl)/maxSess*100)+'%;background:'+(x.pnl>=0?"var(--green)":"var(--red)")+';display:block"></span></span><span class="b-val mono '+(x.pnl>=0?"pos":"neg")+'">'+fmt$(x.pnl)+'</span></div>').join("")
-      + '<div class="small" style="margin-top:8px">All-time: '+all.n+' trades · '+fmt$(all.pnl)+' net</div>'
-      : '<div class="empty"><div class="e-title">Nothing to break down yet</div>Log a few trades first.</div>')
-    + '</div></div></div></div>'
-    + '<div class="side-col" style="min-width:0">' + edgeScoreCardHTML() + disciplineCardHTML(st) + '</div></div>'
-    + '<div class="card mt"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3>Recent Trades</h3><span style="display:flex;gap:6px;align-items:center"><button class="btn sm" onclick="loadSampleData()">Load sample trades</button><button class="btn primary sm" onclick="openTradeModal()">+ Log trade</button><button class="btn ghost sm" onclick="go(\'journal\')">All Trades &rsaquo;</button></span></div>'
-    + (recent.length? tradeTable(recent, false) : '<div class="empty"><div class="e-title">Your journal is empty</div>Log your first trade or load the sample trades to explore the app.</div>')
-    + '</div>';
+    + '<div class="card mt"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3>Recent Trades</h3><button class="btn ghost sm" onclick="go(\'journal\')">All Trades &rsaquo;</button></div>'
+    + (recent.length? tradeTable(recent, false) : '<div class="empty"><div class="e-title">No data</div>No closed trades yet — your recent trades will appear here.</div>')
+    + '</div></div>'
+    + '<div class="side-col" style="min-width:0">' + edgeScoreCardHTML() + disciplineCardHTML(st) + '</div></div>';
 };
 function disciplineCardHTML(st){
   const g = DB.guardrails;
@@ -1046,11 +1160,14 @@ function disciplineCardHTML(st){
     + '<div class="pnl-slider"><div class="pnl-track"><i style="left:'+pctPos+'%"></i></div>'
     + '<div class="pnl-scale"><span><strong class="mono" style="color:var(--ink)">'+fmt$(lo)+'</strong><br>Max Loss</span><span style="text-align:right"><strong class="mono" style="color:var(--ink)">'+(hi>=1000? "$"+(hi/1000)+"K" : fmt$(hi))+'</strong><br>Max Profit</span></div></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
-    + '<div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">'
-    + meter("Daily P&L vs limits", fmt$(st.pnl), Math.min(100, Math.abs(st.pnl)/Math.max(1, st.pnl<0?g.maxLoss:g.maxProfit)*100), st.pnl<0?"red":"green")
-    + meter("Trades used", st.trades+" / "+g.maxTrades, Math.min(100, st.trades/Math.max(1,g.maxTrades)*100), st.trades>=g.maxTrades?"red":"")
-    + meter("Trading window "+g.winStart+" – "+g.winEnd, st.inWindow? "Open now":"Closed", st.inWindow?100:0, st.inWindow?"green":"red")
-    + '</div></div>';
+    + disciplineOpensBanner()
+    + '</div>';
+}
+function disciplineOpensBanner(){
+  const g = DB.guardrails; const info = sessionInfo();
+  const opensTxt = info.open? "Trading window open — closes at "+g.winEnd
+    : (new Date() > hmToDate(g.winEnd, 0)? "Trading opens at "+g.winStart+" tomorrow" : "Trading opens at "+g.winStart);
+  return '<div class="side-count"><span style="flex:1">&#9719; '+opensTxt+'</span><span class="mono tw-count" style="white-space:nowrap">'+fmtCountdownHM(info.target - new Date())+'</span></div>';
 }
 function statCard(label, value, sub, cls){
   return '<div class="stat-card"><div class="s-label">'+label+'</div><div class="s-value mono '+(cls||"")+'">'+value+'</div><div class="s-sub">'+sub+'</div></div>';
@@ -1128,6 +1245,7 @@ RENDER.journal = function(){
   el.innerHTML =
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">'
     + '<h2 style="font-size:20px;font-weight:800">Journal</h2>'
+    + (DB.activePlanId && DB.plans.some(p=>p.id===DB.activePlanId)? '<span class="chip pine" title="Your active Edge plan">Active plan: '+esc(DB.plans.find(p=>p.id===DB.activePlanId).name)+'</span>' : "")
     + '<span style="flex:1"></span>'
     + '<div class="seg solid" role="group" aria-label="PnL display unit">'+["$","%","R"].map(u=>'<button class="'+(journalUnit===u?"on":"")+'" onclick="journalUnit=\''+u+'\';RENDER.journal()">'+u+'</button>').join("")+'</div>'
     + '<button class="btn" style="color:var(--pine)" onclick="openTradeModal()">+ Add Manual Trade</button>'
@@ -1180,7 +1298,7 @@ function journalDailyPanelHTML(){
         + (rTotal? DB.routine.steps.map((st,i)=> isToday
             ? '<label class="flt-check"><input type="checkbox" '+(doneIdx.includes(i)?"checked":"")+' onchange="toggleRoutineStep('+i+',this.checked);RENDER.journal()"><span>'+esc(st)+'</span></label>'
             : '<div class="day-row" style="padding:5px 0"><span>'+esc(st)+'</span><strong class="'+(doneIdx.includes(i)? "pos":"")+'">'+(doneIdx.includes(i)? "Done":"—")+'</strong></div>').join("")
-          : '<div class="small">Routine is off — enable it from the Dashboard card.</div>')
+          : '<div class="small">Routine is off — enable it from the Dashboard routine pill.</div>')
         + '</div>' : "")
     + '<div class="day-row"><span>Trades Journaled</span><span style="display:flex;align-items:center;gap:8px"><strong class="mono">'+journaled+'/'+list.length+'</strong><button class="chev-btn" title="Per-trade journal status" onclick="journalShowJournaled=!journalShowJournaled;RENDER.journal()">'+chev(journalShowJournaled)+'</button></span></div>'
     + (journalShowJournaled? '<div style="padding:2px 0 8px">'
@@ -1427,17 +1545,17 @@ RENDER.addtrade = function(){
     + '<div class="grid g3 mt" style="gap:12px">' + upBox("HTF") + upBox("MTF") + upBox("LTF") + '</div>'
     + '<input type="file" id="at-shot-file" accept="image/*" style="display:none">'
     + '<div class="divider"></div>'
-    + '<div style="display:flex;align-items:center;gap:10px"><h3>Review &amp; Reflection</h3><span class="chip '+(reviewed? "green":"amber")+'">'+(reviewed? "Reviewed":"Pending")+'</span></div>'
+    + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h3>Review &amp; Reflection</h3><span class="chip '+(reviewed? "green":"amber")+'">'+(reviewed? "Reviewed":"Pending")+'</span><span class="chip" title="Your preferred review style, set in Account → Journaling">Preferred review: '+(DB.settings.journaling.reviewMode==="charts"? "Chart Images":"Trade Replay")+'</span></div>'
     + '<div class="tf-grid" style="margin-top:12px">'
     + atFld("Which plan did you intend to follow?", '<select class="input" id="at-plan">'+planOpts+'</select>')
     + '<div class="field"><label class="f">Did you follow your plan?</label><div style="display:flex;gap:7px"><button type="button" class="pill-tgl'+(f.followed===true?" on":"")+'" onclick="atSetFollowed(true)">Yes</button><button type="button" class="pill-tgl'+(f.followed===false?" on":"")+'" onclick="atSetFollowed(false)">No</button></div></div>'
     + atFld("Setup Quality", '<div style="display:flex;gap:6px;flex-wrap:wrap">'+["A+","A","B","C","F"].map(q=>pill("setupQ", q)).join("")+'</div>')
     + atFld("Execution Quality", '<div style="display:flex;gap:6px;flex-wrap:wrap">'+["Excellent","Good","Average","Poor"].map(q=>pill("execQ", q)).join("")+'</div>')
-    + atFld("Entry Confluences", '<div style="display:flex;gap:7px"><input class="input" id="at-confluences" placeholder="Select" value="'+esc(f.confluences)+'"><button type="button" class="icon-btn" title="Add a confluence tag separator" onclick="atTagAppend(\'at-confluences\')">'+tagSvg+'</button></div>')
+    + atFld("Entry Confluences", '<div style="display:flex;gap:7px"><input class="input" id="at-confluences" list="at-conf-list" placeholder="Select" value="'+esc(f.confluences)+'"><button type="button" class="icon-btn" title="Add a confluence tag separator" onclick="atTagAppend(\'at-confluences\')">'+tagSvg+'</button></div><datalist id="at-conf-list">'+(DB.settings.journaling.confTags||"").split(",").map(t=>t.trim()).filter(Boolean).map(t=>'<option value="'+esc(t)+'"></option>').join("")+'</datalist>')
     + atFld("Trade Management", '<input class="input" id="at-mgmt" placeholder="e.g. Partial at 1R, move SL to BE a…" value="'+esc(f.mgmt)+'">')
     + '</div>'
     + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:2px 10px">'
-    + atFld("Mistakes", '<div style="display:flex;gap:7px"><input class="input" id="at-mistakes" placeholder="Start typing" value="'+esc(f.mistakes)+'"><button type="button" class="icon-btn" title="Add a mistake tag separator" onclick="atTagAppend(\'at-mistakes\')">'+tagSvg+'</button></div>')
+    + atFld("Mistakes", '<div style="display:flex;gap:7px"><input class="input" id="at-mistakes" list="at-mist-list" placeholder="Start typing" value="'+esc(f.mistakes)+'"><button type="button" class="icon-btn" title="Add a mistake tag separator" onclick="atTagAppend(\'at-mistakes\')">'+tagSvg+'</button></div><datalist id="at-mist-list">'+(DB.settings.journaling.mistakeTags||"").split(",").map(t=>t.trim()).filter(Boolean).map(t=>'<option value="'+esc(t)+'"></option>').join("")+'</datalist>')
     + atFld("Entry Emotion", '<select class="input" id="at-entry-emotion">'+emoOpts(f.entryEmotion)+'</select>')
     + atFld("Exit Emotion", '<select class="input" id="at-exit-emotion">'+emoOpts(f.exitEmotion)+'</select>')
     + '</div>'
@@ -1615,7 +1733,7 @@ function drawChart(){
   const dpr = window.devicePixelRatio||1; const W = cv.clientWidth, H = cv.clientHeight;
   if(cv.width!==W*dpr){ cv.width=W*dpr; cv.height=H*dpr; }
   const ctx = cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
-  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = isDark();
   let min=Infinity, max=-Infinity; simCandles.forEach(c=>{ min=Math.min(min,c.l); max=Math.max(max,c.h); });
   const pad=(max-min)*0.12||1; min-=pad; max+=pad;
   const Y=v=> H-18 - ((v-min)/(max-min))*(H-36); const cw = W/simCandles.length;
@@ -1666,14 +1784,17 @@ function paintTradingLive(){
 function tradingHeaderHTML(lockedOut){
   const openPnl = openPnlNow(); const equity = DB.paper.balance + openPnl;
   const marginUsed = DB.paper.positions.reduce((a,p)=> a + Math.abs(p.size * p.entry) * 0.01, 0);
-  const mh = DB.paper.positions.length && equity>0 ? Math.max(0, Math.min(100, (equity - marginUsed) / equity * 100)).toFixed(1) + "%" : "N/A";
+  const freePct = DB.paper.positions.length && equity>0 ? Math.max(0, Math.min(100, (equity - marginUsed) / equity * 100)) : null;
+  const mh = freePct===null? "N/A" : ((DB.guardrails.marginInvert? 100 - freePct : freePct).toFixed(1) + "%");
+  const activePlan = DB.plans.find(p=>p.id===DB.activePlanId) || null;
   const lockSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="vertical-align:-1px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   return '<div class="card acct-bar">'
     + '<h2 style="font-size:19px;font-weight:800;margin-right:4px">Trading</h2>'
     + '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="Paper account cash balance">i</span></div><div class="acct-val mono">'+fmt$(DB.paper.balance)+'</div></div>'
     + '<div class="acct-cell"><div class="acct-label">Open PnL <span class="info-i" title="Unrealised P&amp;L across open paper positions">i</span></div><div class="acct-val mono"><span id="th-openpnl" class="'+(openPnl>=0?"pos":"neg")+'">'+(openPnl>0?"+":"")+fmt$(openPnl)+'</span></div></div>'
     + '<div class="acct-cell"><div class="acct-label">Equity <span class="info-i" title="Balance plus open P&amp;L">i</span></div><div class="acct-val mono" id="th-equity">'+fmt$(equity)+'</div></div>'
-    + '<div class="acct-cell"><div class="acct-label">Margin Health <span class="info-i" title="Free margin as a share of equity (1% margin per position). N/A with no open positions.">i</span></div><div class="acct-val mono">'+mh+'</div></div>'
+    + '<div class="acct-cell"><div class="acct-label">Margin Health <span class="info-i" title="'+(DB.guardrails.marginInvert? "Margin level inverted in Guardrails: showing margin USED as a share of equity (1% margin per position)." : "Free margin as a share of equity (1% margin per position). N/A with no open positions.")+'">i</span></div><div class="acct-val mono">'+mh+'</div></div>'
+    + (activePlan? '<span class="chip pine" title="Your active Edge plan — the Trading Plan tab is armed with it">Active plan: '+esc(activePlan.name)+'</span>' : "")
     + '<button class="icon-btn" title="Switch account" style="border:0;font-size:16px" onclick="go(\'account\')">&or;</button>'
     + '<span style="flex:1"></span>'
     + '<button class="icon-btn" title="Quick trade" onclick="openTradePanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
@@ -1682,6 +1803,7 @@ function tradingHeaderHTML(lockedOut){
 }
 function tradingBannerHTML(){
   if(tradeBannerOff || !DB.routine.enabled || !DB.routine.steps.length) return "";
+  if(DB.settings && DB.settings.routinePrefs && DB.settings.routinePrefs.startPrompt===false) return ""; // start-session prompt off (Account → Pre-Market Routine)
   const done = routineDoneCount(); if(done >= DB.routine.steps.length) return "";
   const arrowSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="12" cy="12" r="9.2" fill="#fff"/><path d="M8.6 12h6.8M12.6 8.6L16 12l-3.4 3.4" stroke="var(--pine)" stroke-width="2.2"/></svg>';
   return '<div class="premarket-banner"><span class="pm-star">&#9733;</span>'
@@ -1753,7 +1875,7 @@ function tradingSidebarHTML(st, lockedOut){
     + '<div class="pnl-slider"><div class="pnl-track"><i style="left:'+pctPos+'%"></i></div>'
     + '<div class="pnl-scale"><span><strong class="mono" style="color:var(--ink)">'+fmt$(lo)+'</strong><br>Max Loss</span><span style="text-align:right"><strong class="mono" style="color:var(--ink)">'+(hi>=1000? "$"+(hi/1000)+"K" : fmt$(hi))+'</strong><br>Max Profit</span></div></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
-    + '<div class="side-count"><span style="flex:1">&#9719; '+opensTxt+'</span><span class="mono" id="tw-count" style="white-space:nowrap">'+fmtCountdownHM(info.target - new Date())+'</span></div>'
+    + '<div class="side-count"><span style="flex:1">&#9719; '+opensTxt+'</span><span class="mono tw-count" style="white-space:nowrap">'+fmtCountdownHM(info.target - new Date())+'</span></div>'
     : "";
   return '<div class="card side-card"><div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">'
     + (lockedOut? '<span class="chip">'+lockSvgS+' Trading locked</span>' : '<span class="chip green">'+lockSvgS+' Trading unlocked</span>')
@@ -1800,7 +1922,7 @@ function sideWatchlistHTML(){
     + '<button class="icon-btn"'+act(twlPinFirst)+' title="Float pinned instruments to the top" onclick="twlPinFirst=!twlPinFirst;RENDER.trading()">'+pinSvgB+'</button></div>'
     + '<div style="display:flex;gap:10px;padding:2px 6px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800"><span style="flex:1">Instrument</span><span>Last</span><span style="min-width:56px;text-align:right">Chg</span><span style="width:26px"></span></div>'
     + '<div id="twl-list">'+sideWatchlistRowsHTML()+'</div>'
-    + '<div class="small" style="margin-top:8px">Simulated practice feed. Click a row to load it on the chart; &#9733; pins it on the Watchlist page too.</div>';
+    + '<div class="small" style="margin-top:8px">Simulated practice feed. Click a row to load it on the chart; &#9733; pins it here and feeds the News watchlist filter.</div>';
 }
 function refreshSideWatchlist(){ const l = $("#twl-list"); if(l) l.innerHTML = sideWatchlistRowsHTML(); }
 function paintTradingWlPrices(){
@@ -1811,9 +1933,60 @@ function paintTradingWlPrices(){
     if(ce){ const chg = (s.last - s.open)/s.open*100; ce.textContent = fmtPct(chg); ce.className = "mono "+(chg>=0?"pos":"neg"); ce.style.minWidth = "56px"; ce.style.textAlign = "right"; }
   });
 }
+/* ---- Price alerts: user-created, watched against the practice feed ---- */
+function alertsListHTML(){
+  if(!DB.alerts.length) return '<div class="small">No price alerts yet. Create one above — when the practice feed crosses your level, it lands here as triggered history and notifies you (Account → Notifications).</div>';
+  return DB.alerts.slice().reverse().map(a=>{
+    const s = wlState[a.symbol];
+    const last = s? s.last.toFixed(s.dec) : "—";
+    return '<div class="alert-row"><span style="flex:1;min-width:0"><strong>'+esc(a.symbol)+'</strong> <span class="small">'+(a.condition==="above"? "at or above":"at or below")+'</span> <span class="mono" style="font-weight:700">'+a.price+'</span>'
+      + '<div class="small">'+(a.status==="triggered"? "Triggered "+esc(a.triggeredAt||"") : "Watching · last "+last)+' · set '+esc(a.created||"")+'</div></span>'
+      + (a.status==="triggered"? '<span class="chip red">Triggered</span>' : '<span class="chip green">Active</span>')
+      + (a.status==="triggered"? '<button class="btn sm" title="Watch this level again" onclick="rearmAlert(\''+a.id+'\')">Re-arm</button>' : "")
+      + '<button class="btn sm" title="Delete alert" onclick="deleteAlert(\''+a.id+'\')">&times;</button></div>';
+  }).join("");
+}
+function paintAlertsList(){ const l = document.getElementById("alerts-list"); if(l) l.innerHTML = alertsListHTML(); }
+function toggleAlertForm(force){
+  const f = document.getElementById("al-form"); if(!f) return;
+  f.style.display = (force!==undefined? force : f.style.display==="none")? "block":"none";
+}
+function createAlert(){
+  const sym = $("#al-sym").value, cond = $("#al-cond").value, price = parseFloat($("#al-price").value);
+  if(!(price>0)){ toast("Enter a trigger price above zero."); return; }
+  DB.alerts.push({ id:uid(), symbol:sym, condition:cond, price:price, status:"active",
+    created: new Date().toLocaleDateString("en-US",{month:"short", day:"numeric"})+" "+new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}), triggeredAt:"" });
+  saveDB(); paintAlertsList(); toggleAlertForm(false);
+  toast("Alert set — "+sym+" "+(cond==="above"? "≥":"≤")+" "+price+".");
+}
+function rearmAlert(id){ const a = DB.alerts.find(x=>x.id===id); if(!a) return; a.status="active"; a.triggeredAt=""; saveDB(); paintAlertsList(); toast("Alert re-armed for "+a.symbol+"."); }
+function deleteAlert(id){ DB.alerts = DB.alerts.filter(x=>x.id!==id); saveDB(); paintAlertsList(); }
+function checkPriceAlerts(){
+  if(!DB.alerts.length) return;
+  let fired = false;
+  DB.alerts.forEach(a=>{
+    if(a.status!=="active") return;
+    const s = wlState[a.symbol]; if(!s) return;
+    const hit = a.condition==="above"? s.last>=a.price : s.last<=a.price;
+    if(hit){
+      a.status = "triggered"; fired = true;
+      a.triggeredAt = new Date().toLocaleDateString("en-US",{month:"short", day:"numeric"})+" "+new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+      notifyEvent("priceAlert", "Price alert triggered", a.symbol+" crossed "+(a.condition==="above"? "above":"below")+" "+a.price+" — now "+s.last.toFixed(s.dec));
+    }
+  });
+  if(fired){ saveDB(); paintAlertsList(); }
+}
 function sideAlertsHTML(){
   const info = sessionInfo(); const st = guardrailStatus();
   const high = weekEvents().filter(e=> e.date===todayStr() && e.impact==="High");
+  const form = '<button class="btn primary sm block" onclick="toggleAlertForm()">+ Create New Alert</button>'
+    + '<div id="al-form" style="display:none;margin-top:10px">'
+    + '<div class="field"><label class="f">Instrument</label><select class="input" id="al-sym">'+WL_INSTRUMENTS.map(r=>'<option value="'+r[0]+'"'+(r[0]===simMarket?" selected":"")+'>'+r[0]+'</option>').join("")+'</select></div>'
+    + '<div class="row"><div class="field"><label class="f">Condition</label><select class="input" id="al-cond"><option value="above">At or above</option><option value="below">At or below</option></select></div>'
+    + '<div class="field"><label class="f">Price</label><input class="input mono" id="al-price" type="number" step="any" placeholder="e.g. 2700"></div></div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn sm" onclick="toggleAlertForm(false)">Cancel</button><button class="btn primary sm" onclick="createAlert()">Create alert</button></div></div>'
+    + '<div class="flt-name" style="margin:14px 0 4px">Your price alerts</div><div id="alerts-list">'+alertsListHTML()+'</div>'
+    + '<div class="flt-name" style="margin:14px 0 4px">Session alerts</div>';
   const items = [];
   items.push({ t: info.open? "Trading window open — closes "+DB.guardrails.winEnd : "Trading window closed — opens "+DB.guardrails.winStart, c: info.open? "green":"amber" });
   if(DB.guardrails.enabled && st.breached) items.push({ t: "Guardrail breach: "+st.reasons.join(" · "), c:"red" });
@@ -1821,7 +1994,7 @@ function sideAlertsHTML(){
   high.forEach(e=> items.push({ t: "High-impact "+e.cur+" news today: "+e.event+" ("+e.time+" GMT)", c:"amber" }));
   if(DB.routine.enabled && routineDoneCount() < DB.routine.steps.length) items.push({ t: "Pre-market routine incomplete ("+routineDoneCount()+"/"+DB.routine.steps.length+")", c:"amber" });
   DB.paper.positions.forEach(p=> items.push({ t: p.market+" "+p.dir+" open @ "+p.entry+(p.sl? " · SL "+p.sl:"")+(p.tp? " · TP "+p.tp:""), c:"pine" }));
-  return items.map(i=>'<div class="alert-row"><span class="chip '+i.c+'">&#9679;</span><span>'+esc(i.t)+'</span></div>').join("");
+  return form + items.map(i=>'<div class="alert-row"><span class="chip '+i.c+'">&#9679;</span><span>'+esc(i.t)+'</span></div>').join("");
 }
 function toggleTradingCheck(planId, i, val){
   if(!activePlanRun || activePlanRun.planId!==planId) activePlanRun = { planId, checks:{} };
@@ -1862,7 +2035,7 @@ let tvInterval = "240", tvScriptLoading = false;
 function setTvInterval(iv){ tvInterval = iv; if(currentView==="trading") RENDER.trading(); }
 function loadTvChart(){
   const mount = document.getElementById("tv-chart-mount"); if(!mount) return;
-  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = isDark();
   const build = ()=>{
     if(!window.TradingView){ mount.innerHTML = '<div class="empty"><div class="e-title">Chart unavailable offline</div>The TradingView widget needs an internet connection. Your positions panel and paper feed below keep working.</div>'; return; }
     mount.innerHTML = "";
@@ -1901,7 +2074,8 @@ function openPosition(){
     sl: isNaN(sl)?null:sl, tp: isNaN(tp)?null:tp, planId: $("#pt-plan").value, opened: new Date().toLocaleTimeString(), emotion:"", openNote:"" };
   DB.paper.positions.push(pos);
   saveDB(); RENDER.trading(); toast(simDir+" "+size+" "+simMarket+" opened @ market.");
-  postTradePrompt("open", pos.id);
+  notifyEvent("dealExecuted", "Position opened", simDir+" "+size+" "+simMarket+" @ "+pos.entry);
+  if(DB.guardrails.prompts!==false) postTradePrompt("open", pos.id);
 }
 function closePosition(id, exitPrice, why, reflection){
   const i = DB.paper.positions.findIndex(p=>p.id===id); if(i<0) return;
@@ -1914,39 +2088,52 @@ function closePosition(id, exitPrice, why, reflection){
   const rec = { id:uid(), date:todayStr(), market:pos.market, dir:pos.dir, entry:pos.entry,
     sl: pos.sl || (pos.dir==="Long"? pos.entry*0.995 : pos.entry*1.005), exit:+exit.toFixed(4), size:pos.size,
     session:"New York", planId:pos.planId||"", emotion:(reflection && reflection.emotion) || pos.emotion || "",
+    exitEmotion:(reflection && reflection.exitEmotion) || "",
     notes: noteBits.join(" · "), shot:"", source:"paper" };
   DB.paper.balance += tradePnl(rec); DB.trades.push(rec);
   saveDB(); renderAll(); toast("Closed "+pos.market+": "+fmt$(tradePnl(rec))+" ("+fmtR(tradeR(rec))+") — added to Journal.");
+  notifyEvent("positionClosed", "Position closed", pos.market+" "+fmt$(tradePnl(rec))+" ("+fmtR(tradeR(rec))+")");
 }
-function closePositionUI(id){ postTradePrompt("close", id); }
-/* ---- Post-trade prompts: emotion + note, synced to the Journal ---- */
-let ptpEmotion = "";
+function closePositionUI(id){
+  if(DB.guardrails.prompts===false){ closePosition(id, null, "Manual close"); return; } // Trading Prompts off in Guardrails
+  postTradePrompt("close", id);
+}
+/* ---- Post-trade prompts: entry/exit emotions + note, synced to the Journal ----
+   Gated by the Trading Prompts toggle in Guardrails. */
+let ptpEmotion = "", ptpExitEmotion = "";
 function postTradePrompt(kind, posId){
   const pos = DB.paper.positions.find(p=>p.id===posId); if(!pos) return;
   ptpEmotion = pos.emotion || "";
+  ptpExitEmotion = "";
   const isOpen = kind==="open";
+  const chipGroup = (gid, group, sel)=> '<div class="emo-grid" id="'+gid+'">'+EMOTIONS.map(e=>'<button class="emo-chip '+(sel===e?"on":"")+'" onclick="pickPromptEmotion(this,\''+e+'\',\''+group+'\')">'+e+'</button>').join("")+'</div>';
   openModal('<h3>'+(isOpen? "Position opened — 10-second check-in" : "Close this trade — 10-second debrief")+'</h3>'
-    + '<div class="small" style="margin-bottom:6px">'+esc(pos.dir)+' '+esc(pos.market)+' @ '+pos.entry+'. Tag the emotion honestly — it syncs straight into your Journal and feeds your Edge Score and P&amp;L-by-emotion stats.</div>'
-    + '<label class="f" style="margin-top:10px">How do you feel '+(isOpen? "right now":"about this trade")+'?</label>'
-    + '<div class="emo-grid" id="ptp-emos">'+EMOTIONS.map(e=>'<button class="emo-chip '+(ptpEmotion===e?"on":"")+'" onclick="pickPromptEmotion(this,\''+e+'\')">'+e+'</button>').join("")+'</div>'
+    + '<div class="small" style="margin-bottom:6px">'+esc(pos.dir)+' '+esc(pos.market)+' @ '+pos.entry+'. Tag the emotions honestly — they sync straight into your Journal entry and feed your Edge Score and P&amp;L-by-emotion stats.</div>'
+    + '<label class="f" style="margin-top:10px">'+(isOpen? "Entry emotion — how do you feel right now?" : "Entry emotion — how did you feel going in?")+'</label>'
+    + chipGroup("ptp-emos", "entry", ptpEmotion)
+    + (isOpen? "" : '<label class="f" style="margin-top:8px">Exit emotion — how do you feel closing it?</label>' + chipGroup("ptp-exit-emos", "exit", ptpExitEmotion))
     + '<div class="field" style="margin-top:8px"><label class="f">'+(isOpen? "Note to your future self" : "What happened / lesson")+'</label><textarea class="input" id="ptp-note" rows="2" placeholder="'+(isOpen? "Why this setup, why now…" : "Followed the plan? What would you repeat or never do again…")+'"></textarea></div>'
     + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="finishPrompt(\''+kind+'\',\''+posId+'\',true)">Skip</button><button class="btn primary" onclick="finishPrompt(\''+kind+'\',\''+posId+'\',false)">Save &amp; '+(isOpen? "continue":"close trade")+'</button></div>');
 }
-function pickPromptEmotion(btn, e){
-  ptpEmotion = (ptpEmotion===e)? "" : e;
-  Array.from(document.querySelectorAll("#ptp-emos .emo-chip")).forEach(c=> c.classList.toggle("on", c.textContent===ptpEmotion));
+function pickPromptEmotion(btn, e, group){
+  if(group==="exit"){ ptpExitEmotion = (ptpExitEmotion===e)? "" : e; }
+  else { ptpEmotion = (ptpEmotion===e)? "" : e; }
+  const sel = group==="exit"? ptpExitEmotion : ptpEmotion;
+  const grid = document.getElementById(group==="exit"? "ptp-exit-emos" : "ptp-emos");
+  if(grid) Array.from(grid.querySelectorAll(".emo-chip")).forEach(c=> c.classList.toggle("on", c.textContent===sel));
 }
 function finishPrompt(kind, posId, skip){
   const note = skip? "" : (($("#ptp-note")||{}).value||"").trim();
-  const emotion = skip? (DB.paper.positions.find(p=>p.id===posId)||{}).emotion || "" : ptpEmotion;
+  const pos = DB.paper.positions.find(p=>p.id===posId);
+  const emotion = skip? (pos||{}).emotion || "" : ptpEmotion;
+  const exitEmotion = skip? "" : ptpExitEmotion;
   closeModal();
   if(kind==="open"){
-    const pos = DB.paper.positions.find(p=>p.id===posId);
     if(pos && !skip){ pos.emotion = ptpEmotion; pos.openNote = note; saveDB(); }
     if(currentView==="trading") RENDER.trading();
     if(!skip) toast("Check-in saved — it will ride along to the Journal when this trade closes.");
   } else {
-    closePosition(posId, null, "Manual close", { emotion, note });
+    closePosition(posId, null, "Manual close", { emotion, exitEmotion, note });
   }
 }
 function calcSize(){
@@ -1961,7 +2148,7 @@ function resetPaper(){ DB.paper = { balance:10000, positions:[] }; saveDB(); ren
 
 <script>
 "use strict";
-/* ================= WATCHLIST ================= */
+/* ================= PRACTICE FEED (powers the Trading sidebar watchlist tab + price alerts) ================= */
 /* Practice feed: prices random-walk from reference levels while you watch,
    the same simulated-feed convention as the Trading tab. */
 const WL_INSTRUMENTS = [
@@ -1975,7 +2162,6 @@ const WL_INSTRUMENTS = [
 ];
 const wlState = {};
 WL_INSTRUMENTS.forEach(row=>{ wlState[row[0]] = { sym:row[0], cls:row[1], open:row[2], last:row[2], dec:row[3], dir:0 }; });
-let wlClass = "All", wlSearch = "";
 function wlTick(){
   WL_INSTRUMENTS.forEach(row=>{
     const s = wlState[row[0]];
@@ -1983,94 +2169,81 @@ function wlTick(){
     s.dir = move>0? 1 : move<0? -1 : 0;
     s.last = Math.max(s.open*0.5, s.last + move);
   });
-  if(currentView==="watchlist") paintWatchlistPrices();
   paintTradingWlPrices();
+  checkPriceAlerts();
 }
 setInterval(wlTick, 2200);
-RENDER.watchlist = function(){
-  const el = document.querySelector('[data-view="watchlist"]');
-  el.innerHTML = '<div class="card"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
-    + '<div><h3>Watchlist</h3><div class="card-sub">25 instruments · simulated practice feed, ticking live · pin ★ your markets to keep them on top</div></div>'
-    + '<span style="flex:1"></span>'
-    + '<input class="input" style="width:210px" placeholder="Search instruments…" value="'+esc(wlSearch)+'" oninput="wlSearch=this.value;paintWatchlist()">'
-    + '<div class="seg">'+["All","Forex","Indices","Crypto","Metals"].map(c=>'<button class="'+(wlClass===c?"on":"")+'" onclick="wlClass=\''+c+'\';RENDER.watchlist()">'+c+'</button>').join("")+'</div></div>'
-    + '<div class="divider"></div>'
-    + '<div style="display:flex;gap:10px;padding:0 4px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:800"><span style="min-width:76px">Symbol</span><span style="flex:1">Class</span><span>Last</span><span style="min-width:74px;text-align:right">Chg %</span><span style="width:30px"></span></div>'
-    + '<div id="wl-list"></div>'
-    + '<div class="small" style="margin-top:10px">Prices are a practice simulation anchored to reference levels — for live quotes use the TradingView chart in Trading. Pinned instruments are saved on this device.</div></div>';
-  paintWatchlist();
-};
-function wlVisible(){
-  return WL_INSTRUMENTS.map(row=>wlState[row[0]])
-    .filter(s=> (wlClass==="All" || s.cls===wlClass) && (!wlSearch || s.sym.includes(wlSearch.toUpperCase())))
-    .sort((a,b)=> ((DB.wlPins.includes(b.sym)?1:0) - (DB.wlPins.includes(a.sym)?1:0)) || a.sym.localeCompare(b.sym));
-}
-function wlRowHTML(s){
-  const chg = (s.last - s.open)/s.open*100;
-  const pinned = DB.wlPins.includes(s.sym);
-  return '<div class="wl-row" id="wl-'+s.sym+'" style="'+(pinned? "background:var(--card2);border-radius:10px;padding-left:8px;padding-right:8px":"")+'">'
-    + '<span class="wl-sym mono">'+s.sym+'</span>'
-    + '<span style="flex:1"><span class="chip">'+s.cls+'</span>'+(pinned? ' <span class="chip pine">Pinned</span>':"")+'</span>'
-    + '<span class="mono" data-wl-last style="font-weight:800;font-size:15px">'+s.last.toFixed(s.dec)+'</span>'
-    + '<span data-wl-chg style="min-width:74px;text-align:right"><span class="chip '+(chg>=0?"green":"red")+' mono">'+fmtPct(chg)+'</span></span>'
-    + '<button class="wl-pin '+(pinned?"on":"")+'" title="'+(pinned? "Unpin":"Pin to top")+'" onclick="toggleWlPin(\''+s.sym+'\')">'+(pinned? "★":"☆")+'</button></div>';
-}
-function paintWatchlist(){
-  const list = $("#wl-list"); if(!list) return;
-  const rows = wlVisible();
-  list.innerHTML = rows.length? rows.map(wlRowHTML).join("") : '<div class="empty"><div class="e-title">No instruments match</div>Try a different search or asset class.</div>';
-}
-function paintWatchlistPrices(){
-  wlVisible().forEach(s=>{
-    const row = document.getElementById("wl-"+s.sym); if(!row) return;
-    const lastEl = row.querySelector("[data-wl-last]"), chgEl = row.querySelector("[data-wl-chg]");
-    if(lastEl) lastEl.textContent = s.last.toFixed(s.dec);
-    if(chgEl){ const chg = (s.last - s.open)/s.open*100; chgEl.innerHTML = '<span class="chip '+(chg>=0?"green":"red")+' mono">'+fmtPct(chg)+'</span>'; }
-    row.classList.remove("up-flash","dn-flash"); void row.offsetWidth;
-    if(s.dir>0) row.classList.add("up-flash"); else if(s.dir<0) row.classList.add("dn-flash");
-  });
-}
 function toggleWlPin(sym){
   const i = DB.wlPins.indexOf(sym);
   if(i>=0) DB.wlPins.splice(i,1); else DB.wlPins.push(sym);
-  saveDB(); paintWatchlist();
-  toast(i>=0? sym+" unpinned." : sym+" pinned to the top of your watchlist.");
+  saveDB();
+  toast(i>=0? sym+" unpinned." : sym+" pinned in the Trading watchlist.");
 }
 </script>
 
 <script>
 "use strict";
 /* ================= GUARDRAILS ================= */
+let grRiskMode = "pct";
+function grSetRiskMode(m){
+  grRiskMode = m;
+  ["pct","usd"].forEach(x=>{ const b = document.getElementById("gr-rm-"+x); if(b) b.classList.toggle("on", x===m); });
+  const hint = document.getElementById("gr-risk-hint");
+  if(hint) hint.textContent = m==="pct"? "Percent of your paper balance, risked on every trade." : "Fixed dollar amount risked on every trade.";
+}
+const GUARDRAIL_TZS = ["UTC","Asia/Dhaka","Asia/Kolkata","Asia/Dubai","Asia/Tokyo","Australia/Sydney","Europe/London","Europe/Berlin","America/New_York","America/Chicago","America/Los_Angeles"];
 RENDER.guardrails = function(){
   const el = document.querySelector('[data-view="guardrails"]');
-  if(!hasAccess("guardrails")){ el.innerHTML = lockScreenHTML("guardrails"); return; }
   const g = DB.guardrails; const st = guardrailStatus();
+  grRiskMode = g.riskMode || "pct";
+  const sw = (id, on)=> '<label class="switch"><input type="checkbox" id="'+id+'" '+(on?"checked":"")+'><span class="sl"></span></label>';
+  const tRow = (id, name, sub, on)=> '<div class="set-row"><div class="sr-txt"><div class="sr-name">'+name+'</div><div class="sr-sub">'+sub+'</div></div>'+sw(id,on)+'</div>';
   el.innerHTML =
     '<div class="grid g3 mb">'
     + '<div class="stat-card"><div class="s-label">Today&rsquo;s P&L</div><div class="s-value mono '+(st.pnl>=0?"pos":"neg")+'">'+fmt$(st.pnl)+'</div><div class="s-sub">Limit -'+fmt$(g.maxLoss).slice(1)+' · Target '+fmt$(g.maxProfit)+'</div></div>'
     + '<div class="stat-card"><div class="s-label">Trades today</div><div class="s-value mono">'+st.trades+'<span style="font-size:16px;color:var(--faint)"> / '+g.maxTrades+'</span></div><div class="s-sub">'+(st.breached? "Limit reached":"Within limits")+'</div></div>'
     + '<div class="stat-card"><div class="s-label">Status</div><div class="s-value" style="font-size:20px;padding-top:6px">'+(st.breached? (st.overridden? '<span style="color:var(--amber)">Overridden</span>':'<span style="color:var(--red)">Locked out</span>') : '<span style="color:var(--green)">Clear to trade</span>')+'</div><div class="s-sub">Window '+g.winStart+' – '+g.winEnd+(st.inWindow?" · inside now":" · outside now")+' · Hard Lock '+(g.hardLock? '<strong style="color:var(--red)">ON</strong> — unlocks tomorrow' : 'off')+'</div></div></div>'
-    + '<div class="grid g2" style="grid-template-columns:1.2fr 1fr;align-items:start"><div class="card"><h3>Your rules</h3><div class="card-sub">Set them cold, obey them hot. Changes apply immediately.</div>'
-    + '<div class="field" style="margin-top:14px"><label class="f">Guardrails enabled</label><select class="input" id="gr-enabled"><option value="true" '+(g.enabled?"selected":"")+'>On — protect me</option><option value="false" '+(!g.enabled?"selected":"")+'>Off</option></select></div>'
-    + '<div class="row"><div class="field"><label class="f">Daily max loss ($)</label><input class="input mono" id="gr-maxloss" type="number" value="'+g.maxLoss+'"></div>'
-    + '<div class="field"><label class="f">Daily profit target ($)</label><input class="input mono" id="gr-maxprofit" type="number" value="'+g.maxProfit+'"></div>'
-    + '<div class="field"><label class="f">Max trades / day</label><input class="input mono" id="gr-maxtrades" type="number" value="'+g.maxTrades+'"></div></div>'
-    + '<div class="row"><div class="field"><label class="f">Trading window start</label><input class="input" id="gr-start" type="time" value="'+g.winStart+'"></div>'
-    + '<div class="field"><label class="f">Trading window end</label><input class="input" id="gr-end" type="time" value="'+g.winEnd+'"></div>'
-    + '<div class="field"><label class="f">Block around high-impact news</label><select class="input" id="gr-news"><option value="true" '+(g.newsBlock?"selected":"")+'>Yes</option><option value="false" '+(!g.newsBlock?"selected":"")+'>No</option></select></div></div>'
-    + '<div class="field"><label class="f">Hard Lock Trading</label><select class="input" id="gr-hardlock"><option value="false" '+(!g.hardLock?"selected":"")+'>Off — I can override a breach (logged as a rule break)</option><option value="true" '+(g.hardLock?"selected":"")+'>ON — no override: a breach locks trading until tomorrow</option></select><div class="small" style="margin-top:5px">Hard Lock removes the &ldquo;Trade anyway&rdquo; escape hatch. When a guardrail is breached, the Open button and the override both stay dead until the day resets — set it cold, thank yourself hot.</div></div>'
-    + '<button class="btn primary" onclick="saveGuardrails()">Save guardrails</button></div>'
+    + '<div class="grid g2" style="grid-template-columns:1.2fr 1fr;align-items:start"><div class="card"><h3>Trading preferences</h3><div class="card-sub">Guardrail configuration — free for every plan. Set the rules cold; they are enforced hot, everywhere in the app.</div>'
+    + '<div style="margin-top:6px">'
+    + tRow("gr-enabled", "Guardrail enforcement", "Master switch. When off, no daily limit locks you out — the session bar and Trading page stop enforcing.", g.enabled)
+    + tRow("gr-hardlock", "Hard Lock Trading", "After a breach, the “Trade anyway” override disappears — trading stays locked until the day resets tomorrow.", g.hardLock)
+    + tRow("gr-margininvert", "Invert margin level", "Margin Health in the Trading header shows margin used instead of margin free.", g.marginInvert)
+    + tRow("gr-news", "News Block", "Flag high-impact releases and warn against new entries around the print.", g.newsBlock)
+    + tRow("gr-prompts", "Trading Prompts", "Post-trade emotion prompts after opening and closing a paper position — answers sync straight into the Journal entry.", g.prompts)
+    + '</div>'
+    + '<div class="divider"></div>'
+    + '<div class="field"><label class="f">Fixed Risk Per Trade</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg"><button type="button" id="gr-rm-pct" class="'+(grRiskMode==="pct"?"on":"")+'" onclick="grSetRiskMode(\'pct\')">% of balance</button><button type="button" id="gr-rm-usd" class="'+(grRiskMode==="usd"?"on":"")+'" onclick="grSetRiskMode(\'usd\')">$ fixed</button></div>'
+    + '<input class="input mono" id="gr-risk" type="number" step="any" min="0" value="'+g.riskValue+'" style="max-width:130px"></div>'
+    + '<div class="small" id="gr-risk-hint" style="margin-top:5px">'+(grRiskMode==="pct"? "Percent of your paper balance, risked on every trade." : "Fixed dollar amount risked on every trade.")+' On your '+fmt$(DB.paper.balance)+' paper balance that is <strong class="mono">'+fmt$(grRiskMode==="pct"? DB.paper.balance*(g.riskValue||0)/100 : (g.riskValue||0))+'</strong> per trade.</div></div>'
+    + '<div class="row"><div class="field"><label class="f">Max Daily Loss ($)</label><input class="input mono" id="gr-maxloss" type="number" value="'+g.maxLoss+'"></div>'
+    + '<div class="field"><label class="f">Max Daily Profit ($)</label><input class="input mono" id="gr-maxprofit" type="number" value="'+g.maxProfit+'"></div>'
+    + '<div class="field"><label class="f">Max Trades Per Day</label><input class="input mono" id="gr-maxtrades" type="number" min="1" value="'+g.maxTrades+'"></div></div>'
+    + '<div class="row"><div class="field"><label class="f">Trading Window — start</label><input class="input" id="gr-start" type="time" value="'+g.winStart+'"></div>'
+    + '<div class="field"><label class="f">Trading Window — end</label><input class="input" id="gr-end" type="time" value="'+g.winEnd+'"></div>'
+    + '<div class="field"><label class="f">Window timezone</label><select class="input" id="gr-tz">'+GUARDRAIL_TZS.map(z=>'<option value="'+z+'"'+(g.tz===z?" selected":"")+'>'+z+'</option>').join("")+'</select></div></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px"><button class="btn" onclick="applyGuardrailDefaults()">Apply recommended defaults</button><span style="flex:1"></span><button class="btn" onclick="RENDER.guardrails()">Cancel</button><button class="btn primary" onclick="saveGuardrails()">Save</button></div></div>'
     + '<div class="card"><h3>Rule-break log</h3><div class="card-sub">Every override, on the record. Patterns here are the real leak.</div><div class="mt">'
     + (DB.overrides.length? DB.overrides.slice().reverse().map(o=>'<div class="pos-row"><div><strong>'+esc(o.date)+'</strong> <span class="small">'+esc(o.at||"")+'</span><div class="small">'+esc((o.reasons||[]).join(" · "))+'</div></div><span class="chip red">Override</span></div>').join("")
       : '<div class="empty"><div class="e-title">No rule breaks logged</div>Clean record. Keep it that way.</div>')
     + '</div></div></div>';
 };
+function applyGuardrailDefaults(){
+  const set = (id, v)=>{ const e = document.getElementById(id); if(e) e.value = v; };
+  const chk = (id, v)=>{ const e = document.getElementById(id); if(e) e.checked = v; };
+  chk("gr-enabled", true); chk("gr-hardlock", false); chk("gr-margininvert", false); chk("gr-news", true); chk("gr-prompts", true);
+  grSetRiskMode("pct"); set("gr-risk", 1);
+  set("gr-maxloss", 200); set("gr-maxprofit", 400); set("gr-maxtrades", 5);
+  set("gr-start", "07:00"); set("gr-end", "17:00"); set("gr-tz", "UTC");
+  toast("Recommended defaults filled in — 1% risk, $200 max loss, $400 target, 5 trades, 07:00–17:00. Hit Save to apply.");
+}
 function saveGuardrails(){
-  DB.guardrails = { enabled: $("#gr-enabled").value==="true",
-    maxLoss: Math.abs(parseFloat($("#gr-maxloss").value)||200), maxProfit: parseFloat($("#gr-maxprofit").value)||0,
-    maxTrades: parseInt($("#gr-maxtrades").value)||5, winStart: $("#gr-start").value||"07:00", winEnd: $("#gr-end").value||"17:00",
-    newsBlock: $("#gr-news").value==="true", hardLock: $("#gr-hardlock").value==="true" };
-  saveDB(); renderAll(); toast("Guardrails saved.");
+  DB.guardrails = { enabled: $("#gr-enabled").checked,
+    maxLoss: Math.abs(parseFloat($("#gr-maxloss").value)||200), maxProfit: Math.abs(parseFloat($("#gr-maxprofit").value)||0),
+    maxTrades: Math.max(1, parseInt($("#gr-maxtrades").value)||5), winStart: $("#gr-start").value||"07:00", winEnd: $("#gr-end").value||"17:00",
+    newsBlock: $("#gr-news").checked, hardLock: $("#gr-hardlock").checked,
+    marginInvert: $("#gr-margininvert").checked, prompts: $("#gr-prompts").checked,
+    riskMode: grRiskMode, riskValue: Math.max(0, parseFloat($("#gr-risk").value)||0), tz: $("#gr-tz").value||"UTC" };
+  saveDB(); renderAll(); toast("Guardrails saved — enforcement is live.");
 }
 
 /* ================= EDGE — PLAN BUILDER ================= */
@@ -2369,6 +2542,41 @@ let newsCur = "All";
 let newsOpenRow = null;
 let newsCalOff = 0;
 let newsClockTimer = null;
+let newsWlOnly = false, newsBookOnly = false;
+/* ---- News extras: bookmarks, watchlist filter, persisted filters ---- */
+function newsKey(e){ return e.date+"|"+e.time+"|"+e.cur+"|"+e.event; }
+function newsIsBookmarked(e){ return DB.newsBookmarks.includes(newsKey(e)); }
+function toggleNewsBookmark(key){
+  const i = DB.newsBookmarks.indexOf(key);
+  if(i>=0) DB.newsBookmarks.splice(i,1); else DB.newsBookmarks.push(key);
+  saveDB(); RENDER.news();
+  toast(i>=0? "Bookmark removed." : "Event bookmarked — find it any time with the “Bookmarked only” filter.");
+}
+function toggleNewsBookmarkById(id){
+  const e = newsAllEvents().find(x=>x.id===id); if(!e) return;
+  toggleNewsBookmark(newsKey(e));
+}
+function newsWlCurrencies(){
+  const set = new Set();
+  DB.wlPins.forEach(sym=>{
+    if(/^[A-Z]{6}$/.test(sym)){ set.add(sym.slice(0,3)); set.add(sym.slice(3)); }
+  });
+  return Array.from(set);
+}
+function newsSavePrefs(){
+  DB.newsPrefs = { from:newsFrom, to:newsTo, rangeKey:newsRangeKey, imp:Object.assign({}, newsImp),
+    cats:Object.assign({}, newsCats), cur:newsCur, wlOnly:newsWlOnly, bookOnly:newsBookOnly };
+  saveDB();
+}
+(function newsLoadPrefs(){
+  const p = DB.newsPrefs; if(!p) return;
+  if(p.from) newsFrom = p.from; if(p.to) newsTo = p.to;
+  newsRangeKey = p.rangeKey || "";
+  if(p.imp) newsImp = Object.assign(newsImp, p.imp);
+  if(p.cats) newsCats = Object.assign(newsCats, p.cats);
+  if(p.cur) newsCur = p.cur;
+  newsWlOnly = !!p.wlOnly; newsBookOnly = !!p.bookOnly;
+})();
 
 /* ---- Live economic calendar ----
    Primary source: the free FairEconomy (Forex Factory) weekly JSON feed —
@@ -2434,7 +2642,11 @@ function newsAllEvents(){
     .sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : a.time<b.time?-1:1);
 }
 function newsFiltered(){
-  return newsAllEvents().filter(e=> e.date>=newsFrom && e.date<=newsTo && newsImp[e.impact] && newsCats[e.cat] && (newsCur==="All" || e.cur===newsCur));
+  const wlCurs = newsWlCurrencies();
+  return newsAllEvents().filter(e=> e.date>=newsFrom && e.date<=newsTo && newsImp[e.impact] && newsCats[e.cat]
+    && (newsCur==="All" || e.cur===newsCur)
+    && (!newsWlOnly || wlCurs.includes(e.cur))
+    && (!newsBookOnly || newsIsBookmarked(e)));
 }
 function newsNowHHMM(){ const d = new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
 function newsGmtLabel(){ const m = -new Date().getTimezoneOffset(); const a = Math.abs(m); const h = Math.floor(a/60), mm = a%60;
@@ -2482,7 +2694,10 @@ function newsFiltersHTML(){
     + '<div class="date-pair"><input type="date" class="input" value="'+newsFrom+'" max="'+newsTo+'" onchange="newsFrom=this.value;newsRangeKey=\'\';RENDER.news()"><span class="dp-arrow">&rarr;</span><input type="date" class="input" value="'+newsTo+'" min="'+newsFrom+'" onchange="newsTo=this.value;newsRangeKey=\'\';RENDER.news()"><span class="dp-cal">'+calIco+'</span></div>'
     + '<div class="range-links">'+[["today","Today"],["tomorrow","Tomorrow"],["week","This week"],["nextweek","Next week"],["month","This month"],["nextmonth","Next month"]].map(r=>'<button class="'+(newsRangeKey===r[0]?"on":"")+'" onclick="newsRange(\''+r[0]+'\')">'+r[1]+'</button>').join("")+'</div>'
     + '<div class="flt-sec"><div class="flt-head"><span class="flt-name">Currencies</span><button class="flt-link" onclick="newsCur=\'All\';RENDER.news()">Select all</button></div>'
-    + '<select class="input" onchange="newsCur=this.value;RENDER.news()">'+["All","USD","EUR","GBP","JPY","AUD","NZD","CAD","CHF","CNY"].map(c=>'<option value="'+c+'"'+(newsCur===c?" selected":"")+'>'+(c==="All"?"All currencies":c)+'</option>').join("")+'</select></div>'
+    + '<select class="input" onchange="newsCur=this.value;RENDER.news()">'+["All","USD","EUR","GBP","JPY","AUD","NZD","CAD","CHF","CNY"].map(c=>'<option value="'+c+'"'+(newsCur===c?" selected":"")+'>'+(c==="All"?"All currencies":c)+'</option>').join("")+'</select>'
+    + '<label class="flt-check"><input type="checkbox"'+(newsWlOnly?" checked":"")+' onchange="newsWlOnly=this.checked;RENDER.news()"><span>Only my watchlist currencies</span></label>'
+    + '<div class="small" style="margin:-2px 0 2px 25px">From your pinned watchlist: '+(newsWlCurrencies().join(", ") || "pin instruments in Trading → Watchlist first")+'</div>'
+    + '<label class="flt-check"><input type="checkbox"'+(newsBookOnly?" checked":"")+' onchange="newsBookOnly=this.checked;RENDER.news()"><span>Bookmarked only</span></label></div>'
     + '<div class="flt-sec"><div class="flt-head"><span class="flt-name">Impact</span><span class="flt-status">'+selStatus(impSel,3)+'</span><button class="flt-link" onclick="newsClearImp()">Clear</button></div>'
     + ["High","Medium","Low"].map(i=>'<label class="flt-check"><input type="checkbox"'+(newsImp[i]?" checked":"")+' onchange="newsImp[\''+i+'\']=this.checked;RENDER.news()"><span class="imp-dot" style="background:'+NEWS_IMP_COLORS[i]+'"></span>'+i+'</label>').join("")
     + '</div>'
@@ -2515,6 +2730,7 @@ function newsListHTML(){
         + '<span style="text-align:center"><span class="imp-dot" style="background:'+NEWS_IMP_COLORS[e.impact]+'"></span></span>'
         + '<span style="font-weight:600">'+esc(e.event)+'</span>'
         + '<span class="mono" style="text-align:right">'+(e.actual? esc(e.actual) : "&mdash;")+'</span>'
+        + '<button class="bm-btn'+(newsIsBookmarked(e)? " on":"")+'" title="'+(newsIsBookmarked(e)? "Remove bookmark":"Bookmark this event")+'" onclick="toggleNewsBookmarkById(\''+e.id+'\')">'+(newsIsBookmarked(e)? "★":"☆")+'</button>'
         + '</div>'
         + (open? '<div class="ev-detail">'
           + '<span><span class="dm-label">ACTUAL</span><br><strong>'+(e.actual? esc(e.actual):"—")+'</strong></span>'
@@ -2531,7 +2747,7 @@ function newsListHTML(){
     + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="display:flex;gap:4px"><button class="icon-btn" style="width:28px;height:28px;font-size:17px" title="Previous day" onclick="newsShift(-1)">&lsaquo;</button><button class="icon-btn" style="width:28px;height:28px;font-size:17px" title="Next day" onclick="newsShift(1)">&rsaquo;</button></span>'
     + '<strong style="font-size:14.5px">'+newsNavLabel()+'</strong>'
     + '<span style="flex:1"></span><span class="mono" style="font-size:13px;font-weight:700"><span id="news-clock">'+nowT+'</span> <span style="color:var(--muted);font-weight:600">('+newsGmtLabel()+')</span></span></div>'
-    + '<div class="ev-head"><span></span><span>Time</span><span>Currency</span><span style="text-align:center">Impact</span><span>Event</span><span style="text-align:right">Actual</span></div>'
+    + '<div class="ev-head"><span></span><span>Time</span><span>Currency</span><span style="text-align:center">Impact</span><span>Event</span><span style="text-align:right">Actual</span><span></span></div>'
     + body
     + '<div class="small" style="margin-top:12px">'+(newsLiveEvents
       ? 'Live economic calendar — Forex Factory weekly feed (FairEconomy), fetched '+newsLiveUpdated.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'. Times are shown in your local timezone.'
@@ -2561,6 +2777,7 @@ function newsCalendarHTML(){
     + '</div>';
 }
 RENDER.news = function(){
+  newsSavePrefs(); // filters persist across sessions (localStorage, via the app store)
   const el = document.querySelector('[data-view="news"]');
   const todayHigh = newsAllEvents().filter(e=> e.date===todayStr() && e.impact==="High");
   const plus = DB.sub.plan==="plus";
@@ -2591,6 +2808,28 @@ RENDER.news = function(){
 
 /* ================= NOTEBOOK ================= */
 let nbFolder = "All", nbSearch = "", nbActive = null;
+const NOTE_COLORS = [ ["", "None", ""], ["pine","Pine","#01796F"], ["leaf","Leaf","#1E9E62"], ["amber","Amber","#C07F10"], ["rust","Rust","#D64545"], ["ocean","Ocean","#2F7FC1"], ["slate","Slate","#5D7167"] ];
+const NOTE_EMOJIS = ["", "📈", "🧠", "🎯", "🔥", "📊", "💡", "⚠️", "✅", "📝", "🏦", "🌊"];
+function noteColorHex(n){ const c = NOTE_COLORS.find(x=>x[0]===(n.color||"")); return c? c[2] : ""; }
+function nbHarvest(id){
+  const n = DB.notes.find(x=>x.id===id); if(!n) return null;
+  const t = document.getElementById("nb-title"), f = document.getElementById("nb-folder"), b = document.getElementById("nb-body");
+  if(t) n.title = t.value; if(f) n.folder = f.value; if(b) n.body = b.value;
+  return n;
+}
+function nbTogglePin(id){
+  const n = nbHarvest(id); if(!n) return;
+  n.pinned = !n.pinned; n.updated = todayStr(); saveDB(); RENDER.notebook();
+  toast(n.pinned? "Note pinned to the top." : "Note unpinned.");
+}
+function nbSetColor(id, color){
+  const n = nbHarvest(id); if(!n) return;
+  n.color = color; saveDB(); RENDER.notebook();
+}
+function nbSetEmoji(id, emoji){
+  const n = nbHarvest(id); if(!n) return;
+  n.emoji = emoji; saveDB(); RENDER.notebook();
+}
 RENDER.notebook = function(){
   const el = document.querySelector('[data-view="notebook"]');
   let list = DB.notes.slice().sort((a,b)=> (b.pinned-a.pinned) || (b.updated<a.updated?-1:1));
@@ -2602,13 +2841,25 @@ RENDER.notebook = function(){
     + '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">'
     + ["All"].concat(DB.folders).map(f=>'<button class="folder-chip '+(nbFolder===f?"on":"")+'" onclick="nbFolder=\''+esc(f)+'\';RENDER.notebook()">'+esc(f)+'</button>').join("")
     + '<button class="folder-chip" onclick="addFolder()">+ Folder</button></div>'
-    + (list.length? list.map(n=>'<div class="note-item '+(active&&active.id===n.id?"sel":"")+'" onclick="nbActive=\''+n.id+'\';RENDER.notebook()"><div class="n-title">'+(n.pinned?'<span style="color:var(--amber)">★</span>':"")+esc(n.title||"Untitled")+'</div><div class="small">'+esc(n.folder)+' · '+esc(n.updated)+'</div><div class="small" style="margin-top:3px">'+esc((n.body||"").slice(0,90))+(n.body&&n.body.length>90?"…":"")+'</div></div>').join("")
+    + (list.length? list.map(n=>{ const hex = noteColorHex(n); const snip = (n.body||"").replace(/\s+/g," ").trim();
+        return '<div class="note-item '+(active&&active.id===n.id?"sel":"")+'" onclick="nbActive=\''+n.id+'\';RENDER.notebook()"><div class="n-title">'
+        + '<button class="bm-btn'+(n.pinned?" on":"")+'" title="'+(n.pinned?"Unpin note":"Pin note")+'" onclick="event.stopPropagation();nbActive=\''+n.id+'\';nbTogglePin(\''+n.id+'\')">'+(n.pinned?"★":"☆")+'</button>'
+        + (hex? '<span class="note-dot" style="background:'+hex+'"></span>' : "")
+        + (n.emoji? '<span aria-hidden="true">'+n.emoji+'</span>' : "")
+        + '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(n.title||"Untitled")+'</span></div>'
+        + '<div class="small">'+esc(n.folder)+' · '+esc(n.updated)+'</div>'
+        + (snip? '<div class="small" style="margin-top:3px">'+esc(snip.slice(0,110))+(snip.length>110?"…":"")+'</div>' : '<div class="small" style="margin-top:3px;font-style:italic">Empty note</div>')
+        + '</div>'; }).join("")
       : '<div class="card"><div class="empty"><div class="e-title">No notes found</div>Write your first review, lesson or idea.</div></div>')
     + '</div>'
     + '<div class="card">' + (active?
         '<div class="field"><label class="f">Title</label><input class="input" id="nb-title" value="'+esc(active.title)+'" style="font-weight:800"></div>'
         + '<div class="row"><div class="field"><label class="f">Folder</label><select class="input" id="nb-folder">'+DB.folders.map(f=>'<option '+(active.folder===f?"selected":"")+'>'+esc(f)+'</option>').join("")+'</select></div>'
-        + '<div class="field"><label class="f">Pinned</label><select class="input" id="nb-pin"><option value="false" '+(!active.pinned?"selected":"")+'>No</option><option value="true" '+(active.pinned?"selected":"")+'>Yes</option></select></div></div>'
+        + '<div class="field"><label class="f">Pin note</label><button type="button" class="btn '+(active.pinned?"primary":"")+' block" onclick="nbTogglePin(\''+active.id+'\')">'+(active.pinned? "★ Pinned — tap to unpin" : "☆ Pin to top of list")+'</button></div></div>'
+        + '<div class="row"><div class="field"><label class="f">Color tag</label><div style="display:flex;gap:7px;align-items:center;padding-top:3px">'
+        + NOTE_COLORS.map(c=>'<button type="button" class="swatch'+((active.color||"")===c[0]?" on":"")+'" title="'+c[1]+'" style="background:'+(c[2]||"var(--card2)")+';'+(c[0]===""? "border-color:var(--line2);color:var(--faint);font-size:12px":"")+'" onclick="nbSetColor(\''+active.id+'\',\''+c[0]+'\')">'+(c[0]===""? "×":"")+'</button>').join("")
+        + '</div></div>'
+        + '<div class="field"><label class="f">Emoji tag</label><select class="input" id="nb-emoji" onchange="nbSetEmoji(\''+active.id+'\',this.value)">'+NOTE_EMOJIS.map(e=>'<option value="'+e+'"'+((active.emoji||"")===e?" selected":"")+'>'+(e? e+" tag" : "None")+'</option>').join("")+'</select></div></div>'
         + '<div class="field"><label class="f">Note</label><textarea class="input" id="nb-body" rows="14" placeholder="Session review, lessons, setups to watch…">'+esc(active.body||"")+'</textarea></div>'
         + '<div style="display:flex;gap:8px"><button class="btn primary" onclick="saveNote(\''+active.id+'\')">Save note</button><button class="btn" onclick="deleteNote(\''+active.id+'\')">Delete</button></div>'
       : '<div class="empty"><div class="e-title">Nothing selected</div>Create a note to start your trading notebook.</div>')
@@ -2617,13 +2868,12 @@ RENDER.notebook = function(){
   if(inp && nbSearch){ inp.focus(); inp.setSelectionRange(nbSearch.length, nbSearch.length); }
 };
 function newNote(){
-  const n = { id:uid(), title:"Untitled note", body:"", folder: DB.folders[0], pinned:false, updated: todayStr() };
+  const n = { id:uid(), title:"Untitled note", body:"", folder: DB.folders[0], pinned:false, color:"", emoji:"", updated: todayStr() };
   DB.notes.push(n); nbActive = n.id; nbFolder="All"; saveDB(); RENDER.notebook();
 }
 function saveNote(id){
-  const n = DB.notes.find(x=>x.id===id); if(!n) return;
-  n.title = $("#nb-title").value; n.folder = $("#nb-folder").value; n.pinned = $("#nb-pin").value==="true";
-  n.body = $("#nb-body").value; n.updated = todayStr(); saveDB(); RENDER.notebook(); toast("Note saved.");
+  const n = nbHarvest(id); if(!n) return;
+  n.updated = todayStr(); saveDB(); RENDER.notebook(); toast("Note saved.");
 }
 function deleteNote(id){ DB.notes = DB.notes.filter(n=>n.id!==id); nbActive=null; saveDB(); RENDER.notebook(); toast("Note deleted."); }
 function addFolder(){
@@ -2657,18 +2907,31 @@ const NOTE_TEMPLATES = [
     ["Trade Plan","Plan name:\nMarket:\nBias rule:\nEntry criteria:\n1.\n2.\n3.\nRisk per trade:\nExit rules:\nWhen this plan is OFF (news, conditions):\nStats so far (link trades in Journal):"]
   ]}
 ];
+let tplPreview = null; // {group, ix} selected in the template library
 function openTemplates(){
-  openModal('<h3>Template library</h3><div class="small" style="margin-bottom:6px">15 built-in templates. Pick one and it opens as a new note, ready to fill in.</div>'
+  tplPreview = null;
+  openModal('<h3>Template library</h3><div class="small" style="margin-bottom:6px">15 built-in templates. Tap one to preview it first — then use it if it fits.</div>'
     + NOTE_TEMPLATES.map(g=>'<div class="small" style="font-weight:800;margin:14px 0 7px;color:var(--pine)">'+esc(g.group.toUpperCase())+'</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:7px">'+g.items.map((it,ix)=>'<button class="folder-chip" onclick="useTemplate(\''+esc(g.group)+'\','+ix+')">'+esc(it[0])+'</button>').join("")+'</div>').join("")
+      + '<div style="display:flex;flex-wrap:wrap;gap:7px">'+g.items.map((it,ix)=>'<button class="folder-chip" data-tpl="'+esc(g.group)+'|'+ix+'" onclick="previewTemplate(\''+esc(g.group)+'\','+ix+')">'+esc(it[0])+'</button>').join("")+'</div>').join("")
+    + '<div id="tpl-preview-slot"></div>'
     + '<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+function previewTemplate(group, ix){
+  tplPreview = { group:group, ix:ix };
+  const g = NOTE_TEMPLATES.find(x=>x.group===group); if(!g) return;
+  const t = g.items[ix];
+  document.querySelectorAll("[data-tpl]").forEach(b=> b.classList.toggle("on", b.getAttribute("data-tpl")===group+"|"+ix));
+  const slot = document.getElementById("tpl-preview-slot"); if(!slot) return;
+  slot.innerHTML = '<div class="divider"></div><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><strong>'+esc(t[0])+'</strong><span class="chip">'+esc(group)+'</span></div>'
+    + '<div class="tpl-preview">'+esc(t[1])+'</div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="useTemplate(\''+esc(group)+'\','+ix+')">Use this template</button></div>';
 }
 function useTemplate(group, ix){
   const g = NOTE_TEMPLATES.find(x=>x.group===group); if(!g) return;
   const t = g.items[ix];
   const folderName = "Templates";
   if(!DB.folders.includes(folderName)) DB.folders.push(folderName);
-  const n = { id:uid(), title: t[0]+" — "+todayStr(), body: t[1], folder: folderName, pinned:false, updated: todayStr() };
+  const n = { id:uid(), title: t[0]+" — "+todayStr(), body: t[1], folder: folderName, pinned:false, color:"", emoji:"", updated: todayStr() };
   DB.notes.push(n); nbActive = n.id; nbFolder = "All"; nbSearch = "";
   saveDB(); closeModal(); RENDER.notebook(); toast("Template opened — make it yours.");
 }
@@ -2689,23 +2952,145 @@ RENDER.sanctuary = function(){
     + '<div class="card"><h3 style="text-align:center">Meditation timer</h3><div class="card-sub" style="text-align:center">Five quiet minutes beat five revenge trades.</div>'
     + '<div class="timer-wrap"><div class="timer-ring"><svg width="220" height="220"><circle cx="110" cy="110" r="98" fill="none" stroke="var(--bg2)" stroke-width="10"/><circle id="timer-arc" cx="110" cy="110" r="98" fill="none" stroke="var(--pine)" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*98)+'" stroke-dashoffset="'+(2*Math.PI*98*(1 - timerLeft/Math.max(1,timerTotal)))+'"/></svg>'
     + '<div class="timer-time"><div class="tt mono" id="timer-txt">'+fmtTime(timerLeft)+'</div><div class="small" id="timer-state">'+(timerRun?"Breathe…":"Ready")+'</div></div></div>'
-    + '<div class="seg" style="margin:14px 0">'+[60,180,300,600].map(s=>'<button class="'+(timerTotal===s?"on":"")+'" onclick="setTimer('+s+')">'+(s/60)+' min</button>').join("")+'</div>'
-    + '<div style="display:flex;gap:8px"><button class="btn primary" id="timer-btn" onclick="toggleTimer()">'+(timerRun?"Pause":"Start")+'</button><button class="btn" onclick="resetTimer()">Reset</button></div></div>'
+    + '<div class="seg" style="margin:14px 0">'+[60,180,300,600,900,1200].map(s=>'<button class="'+(timerTotal===s?"on":"")+'" onclick="setTimer('+s+')">'+(s/60)+' min</button>').join("")+'</div>'
+    + '<div style="display:flex;gap:8px"><button class="btn primary" id="timer-btn" onclick="toggleTimer()">'+(timerRun?"Pause":"Start")+'</button><button class="btn" onclick="resetTimer()">Reset</button></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px"><span class="small" style="width:100%;text-align:center;font-weight:700">Long-form sits — timer + ambient sound</span>'
+    + [10,15,20].map(m=>'<button class="btn sm" onclick="startLongSit('+m+')">'+m+' min sit</button>').join("")+'</div>'
+    + '<div class="divider"></div>'
+    + '<div class="set-row"><div class="sr-txt"><div class="sr-name">Interval bells</div><div class="sr-sub">A soft bell while the timer runs, to bring your attention back.</div></div><label class="switch"><input type="checkbox" '+(DB.sanctuary.bells?"checked":"")+' onchange="DB.sanctuary.bells=this.checked;saveDB();toast(this.checked?\'Interval bells on.\':\'Interval bells off.\')"><span class="sl"></span></label></div>'
+    + '<div class="set-row"><div class="sr-txt"><div class="sr-name">Bell interval</div></div><div class="seg" id="bell-seg">'+[1,5,10].map(m=>'<button class="'+(DB.sanctuary.bellEvery===m?"on":"")+'" onclick="setBellEvery('+m+')">Every '+m+' min</button>').join("")+'</div></div></div>'
     + '<div class="divider"></div><h3 style="text-align:center">Box breathing</h3><div class="card-sub" style="text-align:center">In 4 · Hold 4 · Out 4 · Hold 4 — for tilt emergencies.</div>'
     + '<div style="text-align:center;margin-top:12px"><div class="mono" id="breath-txt" style="font-size:22px;font-weight:800;color:var(--pine)">—</div><button class="btn mt" id="breath-btn" onclick="toggleBreath()">Start breathing exercise</button></div></div>'
-    + '<div><div class="card"><h3>Daily intention</h3><div class="card-sub">One sentence before the charts open. Today: '+todayStr()+'</div>'
+    + '<div><div class="card"><h3 style="letter-spacing:.04em">TODAY I WILL</h3><div class="card-sub">One intention, set before the charts open. Today: '+todayStr()+'</div>'
     + '<div class="field" style="margin-top:12px"><input class="input" id="intention" placeholder="e.g. Only A+ setups at the London POI. Two trades max." value="'+esc(DB.intentions[todayStr()]||"")+'"></div>'
     + '<button class="btn primary" onclick="saveIntention()">Set intention</button> '
     + (si.today? '<span class="chip green">Checked in today ✓</span>' : '<button class="btn" onclick="checkIn()">Check in for today</button>')
     + '</div>'
+    + '<div class="card mt"><h3>Session stats</h3><div class="card-sub">Your sanctuary practice this week</div>'
+    + '<div class="grid g3 mt" style="gap:10px"><div class="stat-card" style="box-shadow:none"><div class="s-label">This Week Sessions</div><div class="s-value mono">'+weekSessions().length+'</div></div>'
+    + '<div class="stat-card" style="box-shadow:none"><div class="s-label">Minutes This Week</div><div class="s-value mono">'+Math.round(weekSessions().reduce((a,s)=>a+(s.minutes||0),0))+'</div></div>'
+    + '<div class="stat-card" style="box-shadow:none"><div class="s-label">Current Streak</div><div class="s-value mono">'+si.streak+'d</div></div></div>'
+    + '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" onclick="viewSessions()">View Sessions</button><button class="btn sm" onclick="viewAllStats()">View All Stats</button></div></div>'
     + '<div class="card mt"><h3>Mindset streak</h3><div class="card-sub">Show up for your head, the P&amp;L follows.</div>'
     + '<div class="grid g3 mt" style="gap:10px"><div class="stat-card" style="box-shadow:none"><div class="s-label">Current streak</div><div class="s-value mono">'+si.streak+'d</div></div>'
     + '<div class="stat-card" style="box-shadow:none"><div class="s-label">Total check-ins</div><div class="s-value mono">'+si.total+'</div></div>'
     + '<div class="stat-card" style="box-shadow:none"><div class="s-label">This week</div><div style="margin-top:10px" class="streak-dots">'+week.map(d=>'<i class="'+(d.hit?"hit":"")+'">'+d.lbl+'</i>').join("")+'</div></div></div>'
     + '<div class="keybox" style="margin-top:14px"><strong>Pre-session routine (2 min):</strong> read your intention out loud, check the News tab for red folders, confirm guardrails are green, then — and only then — open the chart.</div>'
     + '</div></div></div>'
+    + ambientCardHTML()
     + sanctuaryTracksHTML();
 };
+/* ---- Sanctuary sessions, ambient sound & bells ---- */
+function weekSessions(){ const cut = new Date(); cut.setDate(cut.getDate()-7); const cs = todayStr(cut); return DB.sessions.filter(s=>s.date>=cs); }
+function logSession(minutes, kind){
+  DB.sessions.push({ id:uid(), date:todayStr(), minutes: Math.round(minutes*10)/10, kind:kind, at:new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}) });
+  saveDB();
+}
+function viewSessions(){
+  const list = DB.sessions.slice().reverse();
+  openModal('<h3>Your sessions</h3><div class="small" style="margin-bottom:10px">Every completed meditation timer and guided track, newest first.</div>'
+    + (list.length? list.slice(0,25).map(s=>'<div class="pos-row"><div><strong>'+esc(s.kind)+'</strong><div class="small">'+esc(s.date)+' · '+esc(s.at||"")+'</div></div><span class="mono" style="font-weight:700">'+s.minutes+' min</span></div>').join("")
+      : '<div class="empty"><div class="e-title">No sessions yet</div>Finish a timer or a guided track and it will be logged here.</div>')
+    + '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+function viewAllStats(){
+  const si = streakInfo();
+  const totalMin = DB.sessions.reduce((a,s)=>a+(s.minutes||0),0);
+  const longest = DB.sessions.length? Math.max(...DB.sessions.map(s=>s.minutes||0)) : 0;
+  const row = (l,v)=> '<div class="pos-row"><span class="small" style="font-weight:700">'+l+'</span><strong class="mono">'+v+'</strong></div>';
+  openModal('<h3>All-time sanctuary stats</h3><div style="margin-top:8px">'
+    + row("Total sessions", DB.sessions.length)
+    + row("Total minutes", Math.round(totalMin))
+    + row("Longest session", longest+" min")
+    + row("Guided tracks completed", DB.trackPlays.length)
+    + row("Favourite tracks", DB.trackFavs.length)
+    + row("Check-in days", si.total)
+    + row("Current streak", si.streak+"d")
+    + '</div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Close</button></div>');
+}
+function setBellEvery(m){
+  DB.sanctuary.bellEvery = m; saveDB();
+  document.querySelectorAll("#bell-seg button").forEach((b,i)=> b.classList.toggle("on", [1,5,10][i]===m));
+}
+let ambCtx = null, ambNodes = null;
+function startAmbient(){
+  const kind = DB.sanctuary.ambient;
+  if(!kind || kind==="none"){ stopAmbient(); return; }
+  try{
+    ambCtx = ambCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(ambCtx.state==="suspended") ambCtx.resume();
+    stopAmbientNodes();
+    const len = 2*ambCtx.sampleRate, buf = ambCtx.createBuffer(1, len, ambCtx.sampleRate), d = buf.getChannelData(0);
+    let last = 0;
+    for(let i=0;i<len;i++){ const w = Math.random()*2-1;
+      if(kind==="white") d[i] = w*0.5;
+      else { last = (last + 0.02*w)/1.02; d[i] = last*3.4; } }
+    const src = ambCtx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const filt = ambCtx.createBiquadFilter(); filt.type = "lowpass";
+    filt.frequency.value = kind==="white"? 16000 : kind==="rain"? 1500 : kind==="ocean"? 420 : 850;
+    const gain = ambCtx.createGain(); gain.gain.value = (DB.sanctuary.volume||50)/100 * 0.45;
+    src.connect(filt); filt.connect(gain); gain.connect(ambCtx.destination); src.start();
+    ambNodes = { src:src, filt:filt, gain:gain };
+    if(kind==="ocean"){
+      const lfo = ambCtx.createOscillator(); lfo.frequency.value = 0.08;
+      const lg = ambCtx.createGain(); lg.gain.value = 170;
+      lfo.connect(lg); lg.connect(filt.frequency); lfo.start(); ambNodes.lfo = lfo;
+    }
+    if(kind==="forest"){
+      const lfo2 = ambCtx.createOscillator(); lfo2.frequency.value = 0.23;
+      const lg2 = ambCtx.createGain(); lg2.gain.value = 0.06;
+      lfo2.connect(lg2); lg2.connect(gain.gain); lfo2.start(); ambNodes.lfo2 = lfo2;
+    }
+  }catch(e){ toast("Ambient audio is not available in this browser."); }
+}
+function stopAmbientNodes(){
+  if(!ambNodes) return;
+  try{ ambNodes.src.stop(); }catch(e){}
+  ["lfo","lfo2"].forEach(k=>{ if(ambNodes[k]){ try{ ambNodes[k].stop(); }catch(e){} } });
+  ambNodes = null;
+}
+function stopAmbient(){ stopAmbientNodes(); }
+function setAmbient(kind){
+  DB.sanctuary.ambient = kind; saveDB();
+  if(kind==="none") stopAmbient(); else startAmbient();
+  RENDER.sanctuary();
+}
+function setAmbientVolume(v){
+  DB.sanctuary.volume = +v; saveDB();
+  if(ambNodes) ambNodes.gain.gain.value = (+v)/100 * 0.45;
+  const l = document.getElementById("amb-vol-val"); if(l) l.textContent = v+"%";
+}
+function playBell(){
+  try{
+    ambCtx = ambCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(ambCtx.state==="suspended") ambCtx.resume();
+    const o = ambCtx.createOscillator(), g = ambCtx.createGain();
+    o.type = "sine"; o.frequency.value = 1318;
+    g.gain.setValueAtTime(0.0001, ambCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.22, ambCtx.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ambCtx.currentTime+1.8);
+    o.connect(g); g.connect(ambCtx.destination); o.start(); o.stop(ambCtx.currentTime+1.9);
+  }catch(e){}
+}
+function startLongSit(mins){
+  timerTotal = mins*60; timerLeft = timerTotal;
+  clearInterval(timerRun); timerRun = null;
+  if(DB.sanctuary.ambient==="none"){ DB.sanctuary.ambient = "rain"; saveDB(); }
+  startAmbient();
+  toggleTimer();
+  toast(mins+"-minute sit started with ambient sound. Breathe.");
+}
+function ambientCardHTML(){
+  const opts = [["none","Off"],["white","White Noise"],["rain","Rain"],["ocean","Ocean"],["forest","Forest"]];
+  const cur = DB.sanctuary.ambient || "none";
+  const curLabel = (opts.find(o=>o[0]===cur)||[])[1] || "Off";
+  return '<div class="card mt"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div><h3>Ambient sound</h3><div class="card-sub">Synthesised live in your browser — layer it under the timer, the bells or a guided track.</div></div>'
+    + (cur!=="none"? '<span class="chip green">Playing: '+curLabel+'</span>' : '<span class="chip">Off</span>') + '</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
+    + opts.map(o=>'<button type="button" class="pill-tgl'+(cur===o[0]?" on":"")+'" onclick="setAmbient(\''+o[0]+'\')">'+o[1]+'</button>').join("")
+    + '</div>'
+    + '<div style="display:flex;gap:12px;align-items:center;margin-top:14px"><span class="small" style="font-weight:700">Volume</span><input type="range" class="vol" min="0" max="100" value="'+DB.sanctuary.volume+'" oninput="setAmbientVolume(this.value)"><span class="small mono" id="amb-vol-val">'+DB.sanctuary.volume+'%</span></div></div>';
+}
 /* ---- Guided audio library: 15 recorded tracks in 3 collections ---- */
 const SANCTUARY_TRACKS = [
   { group:"Reboot", sub:"Under two minutes. Reset between trades, before the session, whenever the noise gets loud.", items:[
@@ -2765,7 +3150,7 @@ function toggleTrack(id){
     if(bar && audio.duration) bar.style.width = (audio.currentTime/audio.duration*100)+"%";
     if(tm) tm.textContent = fmtDur(audio.currentTime||0)+" / "+fmtDur(audio.duration||t[3]);
   };
-  audio.onended = ()=>{ nowPlayingId = null; checkIn(true); if(currentView==="sanctuary") RENDER.sanctuary(); toast("Track complete — mindset streak updated."); };
+  audio.onended = ()=>{ nowPlayingId = null; DB.trackPlays.push(todayStr()); logSession(t[3]/60, "Guided audio — "+t[1]); checkIn(true); if(currentView==="sanctuary") RENDER.sanctuary(); toast("Track complete — mindset streak updated."); };
   audio.onpause = ()=> paintTrackButtons();
   audio.onplay = ()=> paintTrackButtons();
   paintTrackButtons();
@@ -2788,7 +3173,9 @@ function toggleTimer(){
     timerLeft--; const arc=$("#timer-arc"), txt=$("#timer-txt");
     if(txt) txt.textContent = fmtTime(Math.max(0,timerLeft));
     if(arc) arc.style.strokeDashoffset = (2*Math.PI*98*(1 - timerLeft/Math.max(1,timerTotal)));
-    if(timerLeft<=0){ clearInterval(timerRun); timerRun=null; checkIn(true); toast("Session complete — streak updated. Trade calm."); if(currentView==="sanctuary") RENDER.sanctuary(); }
+    const elapsed = timerTotal - timerLeft;
+    if(DB.sanctuary.bells && elapsed>0 && timerLeft>0 && elapsed % (DB.sanctuary.bellEvery*60)===0) playBell();
+    if(timerLeft<=0){ clearInterval(timerRun); timerRun=null; logSession(timerTotal/60, "Meditation timer"); checkIn(true); toast("Session complete — streak updated. Trade calm."); if(currentView==="sanctuary") RENDER.sanctuary(); }
   },1000);
   RENDER.sanctuary();
 }
@@ -2910,7 +3297,7 @@ RENDER.pricing = function(){
       + '<div class="price" style="margin-top:8px">$'+priceFor(key)+'<small> / month</small></div>'
       + '<div class="small">'+(key==="free"? "Free forever" : billYearly? "Billed yearly — $"+(priceFor(key)*12)+"/yr" : "Billed monthly — switch to yearly and save ~20%")+'</div>'
       + '<ul class="feat-list">'+feats.map(f=>'<li>'+ICONS.check+'<span>'+esc(f)+'</span></li>').join("")
-      + (key==="free"? '<li class="off">'+ICONS.cross+'<span>Guardrails, Edge, AI Coach &amp; analytics locked</span></li>':"")
+      + (key==="free"? '<li class="off">'+ICONS.cross+'<span>Edge plan builder, AI Coach &amp; analytics locked</span></li>':"")
       + (key==="basic"? '<li class="off">'+ICONS.cross+'<span>AI Coach &amp; Performance analytics (Plus)</span></li>':"")
       + '</ul>'
       + (isCur? '<button class="btn block" disabled>Current plan</button>'
@@ -2993,6 +3380,104 @@ function payNow(){
 
 /* ================= ACCOUNT ================= */
 let pendingAfterSignup = null;
+/* ---- Full settings suite (Account page) ---- */
+const PROFILE_TZS = ["UTC","Asia/Dhaka","Asia/Kolkata","Asia/Dubai","Asia/Tokyo","Australia/Sydney","Europe/London","Europe/Berlin","America/New_York","America/Chicago","America/Los_Angeles"];
+const AVATAR_CHOICES = ["","🦁","🐯","🦊","🐼","🦉","🐺","🌲","🚀"];
+const NOTIF_EVENTS = [["priceAlert","Price alert triggered"],["positionClosed","Position closed"],["dealExecuted","Deal executed"],["pendingFilled","Pending order filled"],["maxTradesWarn","Max trades warning"],["maxProfit","Max profit reached"],["newsBlockWarn","News block warning"],["premarket","Pre-market reminder"],["sessionRemind","Session reminders"],["eodJournal","End-of-day journal reminder"],["weeklyReview","Weekly review ready"]];
+function setToggleRow(name, sub, checked, onchange){
+  return '<div class="set-row"><div class="sr-txt"><div class="sr-name">'+name+'</div>'+(sub? '<div class="sr-sub">'+sub+'</div>' : "")+'</div><label class="switch"><input type="checkbox" '+(checked?"checked":"")+' onchange="'+onchange+'"><span class="sl"></span></label></div>';
+}
+function setProfile(key, val){
+  DB.settings.profile[key] = val;
+  if(key==="name" && DB.user) DB.user.name = val;
+  if(key==="email" && DB.user) DB.user.email = val;
+  saveDB();
+  if(key==="name" || key==="email") buildNav();
+}
+function setTheme(v){
+  DB.settings.profile.theme = v; saveDB(); applyTheme(); renderAll();
+  toast("Theme: "+(v==="system"? "follow device" : v)+".");
+}
+function setAvatar(a){ DB.settings.profile.avatar = a; saveDB(); buildNav(); RENDER.account(); }
+function setRoutineFlag(key, val){ DB.routine[key] = val; saveDB(); renderRoutineBanner(); toast("Routine setting saved."); }
+function setRoutinePref(key, val){ DB.settings.routinePrefs[key] = val; saveDB(); renderRoutineBanner(); }
+function setJournalPref(key, val){ DB.settings.journaling[key] = val; saveDB(); toast("Journaling preference saved."); }
+function setNotifChannel(key, val){ DB.settings.notif.channels[key] = val; saveDB(); }
+function setNotifEvent(key, val){ DB.settings.notif.events[key] = val; saveDB(); }
+function setBrowserNotif(on){
+  if(!on){ DB.settings.notif.browser = false; saveDB(); toast("Browser notifications off."); return; }
+  if(!window.Notification){ toast("This browser does not support notifications."); RENDER.account(); return; }
+  Notification.requestPermission().then(p=>{
+    DB.settings.notif.browser = (p==="granted"); saveDB(); RENDER.account();
+    toast(p==="granted"? "Browser notifications on." : "Permission was not granted — browser notifications stay off.");
+  });
+}
+function changePassword(){
+  const nw = ($("#sec-new")||{}).value || "";
+  if(nw.length<8){ toast("New password needs at least 8 characters."); return; }
+  const c = $("#sec-cur"); if(c) c.value = ""; const n = $("#sec-new"); if(n) n.value = "";
+  toast("Password updated on this device. (Demo accounts are local-only.)");
+}
+function settingsSectionsHTML(){
+  const pr = DB.settings.profile, rp = DB.settings.routinePrefs, jn = DB.settings.journaling, nf = DB.settings.notif;
+  const u = DB.user; const p = PLANS[DB.sub.plan];
+  const dispName = pr.name || (u? u.name : ""), dispEmail = pr.email || (u? u.email : "");
+  const avatarFace = pr.avatar || (dispName? dispName.trim().charAt(0).toUpperCase() : "?");
+  const card = (title, sub, inner)=> '<div class="card"><h3>'+title+'</h3>'+(sub? '<div class="card-sub">'+sub+'</div>' : "")+inner+'</div>';
+  const profile = card("Profile", "Your identity and display preferences across the app.",
+    '<div style="display:flex;gap:13px;align-items:center;margin:14px 0 6px"><div class="avatar" style="width:52px;height:52px;font-size:'+(pr.avatar? "25":"20")+'px">'+esc(avatarFace)+'</div><div><div style="font-weight:800">'+esc(dispName||"—")+'</div><div class="small">'+esc(dispEmail||"Not signed in")+'</div></div></div>'
+    + '<div class="field"><label class="f">Avatar</label><div style="display:flex;gap:7px;flex-wrap:wrap">'+AVATAR_CHOICES.map(a=>'<button type="button" class="folder-chip'+(pr.avatar===a?" on":"")+'" onclick="setAvatar(\''+a+'\')">'+(a||"Initial letter")+'</button>').join("")+'</div></div>'
+    + '<div class="row"><div class="field"><label class="f">Full name</label><input class="input" value="'+esc(dispName)+'" onchange="setProfile(\'name\',this.value)"></div>'
+    + '<div class="field"><label class="f">Phone</label><input class="input" value="'+esc(pr.phone||"")+'" placeholder="+880 1XXX-XXXXXX" onchange="setProfile(\'phone\',this.value)"></div></div>'
+    + '<div class="field"><label class="f">Email</label><input class="input" type="email" value="'+esc(dispEmail)+'" onchange="setProfile(\'email\',this.value)"></div>'
+    + '<div class="row"><div class="field"><label class="f">Timezone</label><select class="input" onchange="setProfile(\'timezone\',this.value)"><option value="">Local device ('+gmtOffsetLabel()+')</option>'+PROFILE_TZS.map(z=>'<option value="'+z+'"'+(pr.timezone===z?" selected":"")+'>'+z+'</option>').join("")+'</select></div>'
+    + '<div class="field"><label class="f">Currency display</label><select class="input" onchange="setProfile(\'currency\',this.value);renderAll()">'+Object.keys(CUR_SYMBOLS).map(c=>'<option value="'+c+'"'+(pr.currency===c?" selected":"")+'>'+c+' ('+CUR_SYMBOLS[c]+')</option>').join("")+'</select></div></div>'
+    + setToggleRow("24-hour time format", "Clocks in the session bar and panels use 24h instead of AM/PM.", !!pr.time24, "setProfile('time24',this.checked)")
+    + '<div class="set-row"><div class="sr-txt"><div class="sr-name">Theme</div><div class="sr-sub">Light, dark, or follow your device setting.</div></div><div class="seg">'+[["system","System"],["light","Light"],["dark","Dark"]].map(t=>'<button type="button" class="'+(pr.theme===t[0]?"on":"")+'" onclick="setTheme(\''+t[0]+'\')">'+t[1]+'</button>').join("")+'</div></div>'
+    + (u? '<div style="margin-top:12px"><button class="btn" onclick="signOut()">Log out</button></div>' : '<div class="small" style="margin-top:10px">Create an account above to attach a name — these settings save on this device either way.</div>'));
+  const routine = card("Pre-Market Routine", "Controls the banner and the start-of-session flow.",
+    setToggleRow("Enable banner", "Show the pre-market routine banner until the routine is done.", DB.routine.enabled, "setRoutineFlag('enabled',this.checked)")
+    + setToggleRow("Start-session prompt", "Show the “Ready to trade today?” prompt on the Trading page before execution.", rp.startPrompt!==false, "setRoutinePref('startPrompt',this.checked)")
+    + setToggleRow("Show banner on all pages", "Pinned — the banner follows you beyond the Dashboard.", DB.routine.pinned, "setRoutineFlag('pinned',this.checked)")
+    + setToggleRow("Auto-hide after completion", "Hide the banner as soon as every step is ticked for the day.", rp.autoHide!==false, "setRoutinePref('autoHide',this.checked)")
+    + '<div class="field" style="margin-top:10px"><label class="f">Daily reset time</label><input class="input" type="time" value="'+esc(rp.resetTime||"04:00")+'" onchange="setRoutinePref(\'resetTime\',this.value)"><div class="small" style="margin-top:5px">A new trading day — and a fresh routine — starts at this time.</div></div>');
+  const journaling = card("Journaling", "How trade reviews are structured on the Add Trade page.",
+    '<div class="field" style="margin-top:12px"><label class="f">Preferred review</label>'
+    + '<label class="flt-check"><input type="radio" name="jr-review" '+(jn.reviewMode!=="charts"?"checked":"")+' onchange="setJournalPref(\'reviewMode\',\'replay\')">Trade Replay — re-walk the trade decision by decision</label>'
+    + '<label class="flt-check"><input type="radio" name="jr-review" '+(jn.reviewMode==="charts"?"checked":"")+' onchange="setJournalPref(\'reviewMode\',\'charts\')">Chart Images — review from the HTF / MTF / LTF screenshots</label></div>'
+    + '<div class="field"><label class="f">Autofill tags — Entry Confluences</label><input class="input" value="'+esc(jn.confTags||"")+'" onchange="setJournalPref(\'confTags\',this.value)"><div class="small" style="margin-top:5px">Comma-separated — they appear as suggestions in the Add Trade confluences field.</div></div>'
+    + '<div class="field"><label class="f">Autofill tags — Mistakes</label><input class="input" value="'+esc(jn.mistakeTags||"")+'" onchange="setJournalPref(\'mistakeTags\',this.value)"><div class="small" style="margin-top:5px">Comma-separated — they appear as suggestions in the Add Trade mistakes field.</div></div>');
+  const notif = card("Notifications", "Pick the channels first, then choose which events reach you.",
+    setToggleRow("Browser notifications", "Let this browser pop system notifications for the events below (asks permission).", !!nf.browser, "setBrowserNotif(this.checked)")
+    + '<div class="small" style="font-weight:800;margin:14px 0 2px">CHANNELS</div>'
+    + setToggleRow("Push", "System / browser push notifications.", nf.channels.push!==false, "setNotifChannel('push',this.checked)")
+    + setToggleRow("In-app", "Toast messages inside the app.", nf.channels.inapp!==false, "setNotifChannel('inapp',this.checked)")
+    + setToggleRow("Email", "A digest to your account email — preference stored, delivery arrives with live accounts.", !!nf.channels.email, "setNotifChannel('email',this.checked)")
+    + '<div class="small" style="font-weight:800;margin:14px 0 2px">EVENTS</div>'
+    + NOTIF_EVENTS.map(e=> setToggleRow(e[1], "", nf.events[e[0]]!==false, "setNotifEvent('"+e[0]+"',this.checked)")).join(""));
+  const dataPriv = card("Data & Privacy", "Everything is stored only in this browser (localStorage) — nothing is uploaded anywhere.",
+    '<div class="grid g3 mt" style="gap:10px"><div class="stat-card" style="box-shadow:none"><div class="s-label">Trades</div><div class="s-value mono">'+DB.trades.length+'</div></div>'
+    + '<div class="stat-card" style="box-shadow:none"><div class="s-label">Notes</div><div class="s-value mono">'+DB.notes.length+'</div></div>'
+    + '<div class="stat-card" style="box-shadow:none"><div class="s-label">Alerts</div><div class="s-value mono">'+DB.alerts.length+'</div></div></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn" onclick="exportCSV()">Export journal (CSV)</button><button class="btn danger" onclick="wipeAll()">Erase all my data</button></div>');
+  const security = card("Security", "Local demo accounts — credentials never leave this device.",
+    '<div class="field" style="margin-top:12px"><label class="f">Current password</label><input class="input" id="sec-cur" type="password" placeholder="••••••••"></div>'
+    + '<div class="field"><label class="f">New password</label><input class="input" id="sec-new" type="password" placeholder="8+ characters"></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" onclick="changePassword()">Change password</button>'
+    + (u? '<button class="btn" onclick="signOut()">Sign out of this device</button>' : "") + '</div>');
+  const billing = card("Billing", "Your current subscription.",
+    '<div class="pos-row"><span class="small" style="font-weight:700">Plan</span><span class="chip '+(DB.sub.plan==="plus"?"pine":"")+'">'+p.name+'</span></div>'
+    + '<div class="pos-row"><span class="small" style="font-weight:700">Billing period</span><span class="mono" style="font-size:13px">'+(DB.sub.plan==="free"? "—" : DB.sub.billing)+'</span></div>'
+    + '<div class="pos-row"><span class="small" style="font-weight:700">Amount</span><span class="mono" style="font-size:13px">'+(DB.sub.plan==="free"? "$0" : "$"+(DB.sub.billing==="yearly"? p.yearly*12 : p.monthly)+" per "+(DB.sub.billing==="yearly"?"year":"month"))+'</span></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn primary" onclick="go(\'pricing\')">Manage plan</button>'
+    + (DB.sub.plan!=="free"? '<button class="btn" onclick="cancelSub()">Cancel subscription</button>' : "") + '</div>');
+  const support = card("Support", "Real humans, trading-hours response.",
+    '<div class="small" style="margin:10px 0 12px">Stuck, found a bug, or want a feature? Email us — include your plan and what you were doing. The Pricing page FAQ answers the common billing questions.</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="mailto:support@edgepine.app">Email support</a><button class="btn" onclick="go(\'pricing\')">Plans &amp; FAQ</button></div>');
+  const about = card("About", "",
+    '<div class="small" style="margin-top:8px"><strong>EdgePine — TradeMind</strong> · Version 2.0<br>Journal, guardrails, paper trading, edge plans, news, notebook, AI coach, sanctuary and performance analytics in one pine-green workspace. Academy is intentionally not part of this app.<br><br>Journaling and discipline software — not financial advice. Your data lives in your browser; export it regularly.</div>');
+  return '<div class="grid g2 mt" style="align-items:start"><div class="side-col">'+profile+routine+journaling+'</div><div class="side-col">'+notif+dataPriv+security+billing+support+about+'</div></div>';
+}
 RENDER.account = function(){
   const el = document.querySelector('[data-view="account"]');
   const u = DB.user; const p = PLANS[DB.sub.plan];
@@ -3004,7 +3489,7 @@ RENDER.account = function(){
       + '<button class="btn primary block" onclick="signUp()">Create free account</button>'
       + '<div class="small" style="margin-top:10px;text-align:center">Demo sign-up: your account is stored only in this browser on this device — there is no server account yet.</div>'
       + '<div class="divider"></div><div style="text-align:center"><span class="small">Already exploring?</span> <button class="btn ghost sm" onclick="signUpDemo()">Continue with a demo name</button></div>'
-      + '</div></div>';
+      + '</div></div>' + settingsSectionsHTML();
     return;
   }
   el.innerHTML = '<div class="grid g2" style="grid-template-columns:1fr 1.2fr;align-items:start">'
@@ -3025,19 +3510,24 @@ RENDER.account = function(){
     + '<div class="divider"></div><h4 style="font-size:13.5px;margin-bottom:6px">Export journal (CSV)</h4><div class="small" style="margin-bottom:10px">Download a copy of every trade — your records should outlive any app.</div>'
     + '<button class="btn" onclick="exportCSV()">Download trades.csv</button>'
     + '<div class="divider"></div><h4 style="font-size:13.5px;color:var(--red);margin-bottom:6px">Danger zone</h4><div class="small" style="margin-bottom:10px">Erase everything on this device: trades, notes, plans, subscription and streaks. This cannot be undone.</div>'
-    + '<button class="btn danger" onclick="wipeAll()">Erase all my data</button></div></div>';
+    + '<button class="btn danger" onclick="wipeAll()">Erase all my data</button></div></div>'
+    + settingsSectionsHTML();
 };
 function signUp(){
   const name = $("#su-name").value.trim(), email = $("#su-email").value.trim(), pass = $("#su-pass").value;
   if(name.length<2){ toast("Enter your name."); return; }
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast("Enter a valid email address."); return; }
   if(pass.length<8){ toast("Password needs at least 8 characters."); return; }
-  DB.user = { name, email, since: todayStr() }; saveDB(); buildNav();
+  DB.user = { name, email, since: todayStr() };
+  DB.settings.profile.name = name; DB.settings.profile.email = email;
+  saveDB(); buildNav();
   toast("Account created — welcome, "+name.split(" ")[0]+".");
   if(pendingAfterSignup){ const f = pendingAfterSignup; pendingAfterSignup=null; f(); } else RENDER.account();
 }
 function signUpDemo(){
-  DB.user = { name:"Demo Trader", email:"demo@edgepine.app", since: todayStr() }; saveDB(); buildNav();
+  DB.user = { name:"Demo Trader", email:"demo@edgepine.app", since: todayStr() };
+  if(!DB.settings.profile.name){ DB.settings.profile.name = "Demo Trader"; DB.settings.profile.email = "demo@edgepine.app"; }
+  saveDB(); buildNav();
   if(pendingAfterSignup){ const f = pendingAfterSignup; pendingAfterSignup=null; f(); } else RENDER.account();
   toast("Demo account ready.");
 }
@@ -3063,6 +3553,7 @@ function exportCSV(){
 $("#tb-date").textContent = new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric", year:"numeric" });
 $("#tb-upgrade").addEventListener("click", ()=> go("pricing"));
 $("#tb-avatar").addEventListener("click", ()=> go("account"));
+applyTheme();
 buildNav(); renderSessionBar(); renderRoutineBanner(); renderLockout(); go("dashboard");
 </script>
 </body>
