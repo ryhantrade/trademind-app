@@ -384,6 +384,11 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .routine-pill:hover{background:var(--pine-deep)}
 .addtrade-layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:1080px){.addtrade-layout{grid-template-columns:1fr}}
+.sym-wrap{position:relative}
+.sym-dd{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--shadow);z-index:60;max-height:232px;overflow-y:auto;display:none;padding:4px}
+.sym-dd.on{display:block}
+.sym-dd button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;border:0;background:transparent;padding:8px 10px;border-radius:7px;font-size:13.5px;color:var(--ink);text-align:left;cursor:pointer;font-family:inherit}
+.sym-dd button:hover{background:var(--pine-soft)}
 .tf-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px}
 .sec-label{font-size:12.5px;font-weight:800;margin:16px 0 8px;color:var(--ink)}
 .up-box{border:1.5px dashed var(--line2);border-radius:12px;background:var(--card2);min-height:126px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;cursor:pointer;color:var(--muted);font-weight:700;font-size:13px;padding:10px;text-align:center;position:relative}
@@ -426,6 +431,22 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .pi-sub{display:block;font-size:11.5px;color:var(--muted)}
 .num-list{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:5px;font-size:14px}
 .model-box{border:1.5px dashed var(--line2);border-radius:12px;padding:26px 16px;text-align:center;color:var(--muted);font-size:13px;background:var(--card2)}
+.plan-wrap{position:relative}
+.plan-item{align-items:center}
+.plan-main{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:0;cursor:pointer;font:inherit}
+.dots-btn{width:28px;height:28px;flex:0 0 28px;border:0;background:transparent;color:var(--muted);font-size:14px;font-weight:800;border-radius:8px;cursor:pointer;padding:0;line-height:1}
+.dots-btn:hover{background:var(--card);color:var(--pine)}
+.pop-menu{position:absolute;top:calc(100% + 4px);right:0;background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--shadow);padding:5px;z-index:60;min-width:168px}
+.pop-menu button{display:flex;width:100%;align-items:center;gap:8px;border:0;background:transparent;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer;font-family:inherit}
+.pop-menu button:hover{background:var(--card2)}
+.pop-menu button.danger{color:var(--red)}
+.newplan-wrap{position:relative;display:inline-block}
+.collapse-btn{width:28px;height:28px;font-size:13px}
+.sec-head{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--ink);margin-bottom:7px}
+.sec-head svg{color:var(--pine);flex:0 0 auto}
+.risk-card{margin-top:20px;border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card2)}
+.crit-ro{display:flex;gap:9px;align-items:center;padding:5px 0;font-size:14px;color:var(--ink)}
+.crit-ro input{width:17px;height:17px;accent-color:var(--pine);flex:0 0 17px;margin:0}
 
 /* ---------- News page (EdgeFlo layout) ---------- */
 .news-layout{display:grid;grid-template-columns:296px minmax(0,1fr);gap:16px;align-items:start}
@@ -653,6 +674,7 @@ const DEFAULTS = {
   trades: [],                                   // journal + closed paper trades
   plans: [],                                    // Edge plans
   activePlanId: null,                           // Edge plan marked Active
+  edgeSeeded: false,                            // starter Edge plan copied in once
   notes: [], folders: ["General","Reviews","Ideas"],
   guardrails: { enabled:true, maxLoss:200, maxProfit:400, maxTrades:5, winStart:"07:00", winEnd:"17:00", newsBlock:true, hardLock:false,
                 marginInvert:false, prompts:true, routineGate:true, riskMode:"pct", riskValue:1, tz:"UTC" },
@@ -731,6 +753,19 @@ const fmtR = n => (n>0?"+":"") + n.toFixed(2) + "R";
 const fmtPct = n => (n>0?"+":"") + n.toFixed(1) + "%";
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const MARKETS = ["BTCUSD","ETHUSD","XAUUSD","EURUSD","GBPUSD","GBPJPY","SOLUSD","USDJPY"];
+/* Contract sizes (units per 1.00 lot) — picking an instrument in Add Trade
+   sets its contract size, and Net PnL / Risk are lots × contract size ×
+   price move. Forex pairs are 100,000; gold 100 oz; silver 5,000 oz;
+   crypto & indices trade 1 unit per lot on this journal's convention. */
+const CONTRACT_SIZES = { XAUUSD:100, XAGUSD:5000, BTCUSD:1, ETHUSD:1, SOLUSD:1, XRPUSD:1, US30:1, NAS100:1, SPX500:1 };
+function contractSizeFor(sym){
+  sym = String(sym||"").trim().toUpperCase();
+  if(CONTRACT_SIZES[sym]!=null) return CONTRACT_SIZES[sym];
+  const row = (typeof WL_INSTRUMENTS!=="undefined")? WL_INSTRUMENTS.find(r=>r[0]===sym) : null;
+  if(row){ if(row[1]==="Forex") return 100000; if(row[1]==="Metals") return 100; return 1; }
+  if(/^[A-Z]{6}$/.test(sym)) return 100000; // an unknown 6-letter symbol reads as a forex pair
+  return 1;
+}
 const SESSIONS = ["London","New York","Asia","Overlap"];
 const EMOTIONS = ["Confident","Calm","Focused","FOMO","Fearful","Greedy","Revenge","Tired"];
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),2800); }
@@ -945,7 +980,7 @@ function backToRoutine(markDone){
 }
 function renderRoutineBanner(){
   const b = $("#routine-banner"); if(!b) return;
-  if(currentView==="trading" || currentView==="dashboard"){ b.className=""; b.innerHTML=""; return; } // Trading carries its own banner; the Dashboard uses the routine pill + modal (EdgeFlo layout)
+  if(currentView==="trading" || currentView==="dashboard" || currentView==="edge"){ b.className=""; b.innerHTML=""; return; } // Trading carries its own banner; the Dashboard uses the routine pill + modal; Edge Plans has no routine banner (EdgeFlo layout)
   const r = DB.routine;
   if(!r.enabled || !r.steps.length){ b.className=""; b.innerHTML=""; return; }
   /* The pinned toggle controls whether the banner follows you onto the
@@ -972,9 +1007,14 @@ function skipRoutineBanner(){ const b=$("#routine-banner"); if(b){ b.className="
 /* The routine lives in a modal now (EdgeFlo dashboard has no routine card):
    the Dashboard pill and the banner both open it. */
 function openRoutineModal(){
+  const complete = routineCompleteToday();
   openModal('<div id="routine-modal"><h3>Pre-Market Routine</h3><div class="small" style="margin-bottom:6px">Tick each step before you trade — or hit <strong>Continue</strong> on a step to jump to where it happens, then come back and tick it off. Progress saves automatically and resets daily.</div>'
     + routineCardHTML()
-    + '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn primary" onclick="closeModal()">Done</button></div></div>');
+    + (complete? '<div class="alert green" style="margin-top:14px"><div><strong>Routine complete — '+routineDoneCount()+'/'+DB.routine.steps.length+'.</strong> Trading is unlocked for today. Take a minute in the Sanctuary to set your intention before the first entry.</div></div>' : "")
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">'
+    + (complete? '<button class="btn" onclick="closeModal()">Done</button><button class="btn primary" onclick="closeModal();go(\'sanctuary\')">Continue to Sanctuary</button>'
+               : '<button class="btn primary" onclick="closeModal()">Done</button>')
+    + '</div></div>');
 }
 function refreshRoutineUI(){
   renderRoutineBanner();
@@ -1515,7 +1555,8 @@ function atDefaultForm(t){
     entryDate: t? t.date : todayStr(), entryTime: t? (t.entryTime||"") : "",
     exitDate: t? (t.exitDate||t.date) : todayStr(), exitTime: t? (t.exitTime||"") : "",
     market: t? t.market : "", dir: t? t.dir : "",
-    lots: t? t.size : "", entry: t? t.entry : "", exit: t? t.exit : "", sl: t? t.sl : "", tp: t? (t.tp||"") : "",
+    contractSize: t? (t.contractSize || (t.lots!=null? contractSizeFor(t.market) : 1)) : 1,
+    lots: t? (t.lots!=null? t.lots : t.size) : "", entry: t? t.entry : "", exit: t? t.exit : "", sl: t? t.sl : "", tp: t? (t.tp||"") : "",
     swap: t? (t.swap||"") : "", commission: t? (t.commission||"") : "",
     planId: t? (t.planId||"") : "", followed: t? (t.followed===undefined? null : t.followed) : null,
     setupQ: t? (t.setupQ||"") : "", execQ: t? (t.execQ||"") : "",
@@ -1549,13 +1590,22 @@ function atNums(){
 }
 function atComputed(){
   const x = atNums(); if(!x.ok) return { net:null, risk:null, ret:null };
-  const gross = (x.exit - x.entry) * x.dirSign * x.lots;
+  const cs = (atForm && atForm.contractSize) || contractSizeFor(atForm && atForm.market);
+  const gross = (x.exit - x.entry) * x.dirSign * x.lots * cs;
   const net = gross - x.swap - x.commission;
-  const risk = isNaN(x.sl)? null : Math.abs(x.entry - x.sl) * x.lots;
+  const risk = isNaN(x.sl)? null : Math.abs(x.entry - x.sl) * x.lots * cs;
   return { net: net, risk: risk, ret: risk? net/risk : null };
+}
+function atContractText(){
+  if(!atForm) return "";
+  const sym = (atForm.market||"").trim().toUpperCase();
+  const cs = atForm.contractSize || contractSizeFor(sym);
+  return sym? "Contract size: "+cs.toLocaleString("en-US")+" units per lot — Net PnL = price move × lots × contract size."
+            : "Pick a suggestion to set the contract size (forex 100,000 · gold 100 · silver 5,000 · crypto 1).";
 }
 function atPaintComputed(){
   atHarvest(); const c = atComputed();
+  const ch = document.getElementById("at-contract"); if(ch) ch.textContent = atContractText();
   const np = document.getElementById("at-netpnl");
   if(np){ np.textContent = c.net===null? "$0.00" : fmt$(c.net); np.className = "mono " + (c.net>0? "pos" : c.net<0? "neg" : ""); }
   const rk = document.getElementById("at-riskr"); if(rk) rk.textContent = c.risk? "1.00R" : "0.00R";
@@ -1595,7 +1645,7 @@ RENDER.addtrade = function(){
     + atFld("Exit Date", '<input class="input" type="date" id="at-exit-date" value="'+f.exitDate+'">')
     + atFld("Exit Time", '<input class="input" type="time" id="at-exit-time" value="'+f.exitTime+'">')
     + '</div><div class="tf-grid">'
-    + atFld("Instrument", '<input class="input" id="at-market" list="at-symbols" placeholder="Search for a symbol" value="'+esc(f.market)+'" autocomplete="off"><datalist id="at-symbols">'+symList.map(s=>'<option value="'+s+'"></option>').join("")+'</datalist>')
+    + atFld("Instrument", '<div class="sym-wrap"><input class="input" id="at-market" placeholder="Search for a symbol" value="'+esc(f.market)+'" autocomplete="off" oninput="atSymInput()" onfocus="atSymInput()" onblur="atSymBlur()"><div class="sym-dd" id="at-sym-dd"></div></div><div class="small" id="at-contract" style="margin-top:5px">'+esc(atContractText())+'</div>')
     + atFld("Direction", '<select class="input" id="at-dir"><option value="">Select</option><option'+(f.dir==="Long"?" selected":"")+'>Long</option><option'+(f.dir==="Short"?" selected":"")+'>Short</option></select>')
     + '</div>'
     + atFld("Lots", '<input class="input mono" type="number" step="any" id="at-lots" placeholder="e.g. 1.00" value="'+f.lots+'" oninput="atPaintComputed()">')
@@ -1656,6 +1706,33 @@ RENDER.addtrade = function(){
   const fi = document.getElementById("at-shot-file");
   if(fi) fi.addEventListener("change", e=>{ const file = e.target.files[0]; if(file) atReadShot(file, atActiveTf); e.target.value = ""; });
 };
+/* ---- Instrument autocomplete (Add Trade): a real suggestion dropdown —
+   the native <datalist> popup does not render reliably in embedded
+   webviews. Picking a suggestion also sets the contract size that drives
+   the Net PnL / Risk maths. ---- */
+function atSymList(){ return Array.from(new Set(MARKETS.concat(WL_INSTRUMENTS.map(r=>r[0])))); }
+function atSymInput(){
+  const inp = document.getElementById("at-market"), dd = document.getElementById("at-sym-dd");
+  if(!inp || !dd) return;
+  const q = (inp.value||"").trim().toUpperCase();
+  if(atForm){ atForm.market = inp.value; if(atSymList().indexOf(q)>=0) atForm.contractSize = contractSizeFor(q); }
+  const ms = atSymList().filter(s=> !q || s.indexOf(q)>=0).slice(0,8);
+  if(!ms.length){ dd.className = "sym-dd"; dd.innerHTML = ""; }
+  else {
+    dd.innerHTML = ms.map(s=>'<button type="button" onmousedown="event.preventDefault();atSymPick(\''+s+'\')"><span class="mono" style="font-weight:800">'+s+'</span><span class="small">Contract '+contractSizeFor(s).toLocaleString("en-US")+'</span></button>').join("");
+    dd.className = "sym-dd on";
+  }
+  atPaintComputed();
+}
+function atSymPick(sym){
+  const inp = document.getElementById("at-market"); if(inp) inp.value = sym;
+  if(atForm){ atForm.market = sym; atForm.contractSize = contractSizeFor(sym); }
+  const dd = document.getElementById("at-sym-dd"); if(dd){ dd.className = "sym-dd"; dd.innerHTML = ""; }
+  atPaintComputed();
+}
+function atSymBlur(){
+  setTimeout(()=>{ const dd = document.getElementById("at-sym-dd"); if(dd){ dd.className = "sym-dd"; dd.innerHTML = ""; } atPaintComputed(); }, 140);
+}
 function atSetPill(group, val){ atHarvest(); atForm[group] = atForm[group]===val? "" : val; RENDER.addtrade(); }
 function atSetFollowed(v){ atHarvest(); atForm.followed = atForm.followed===v? null : v; RENDER.addtrade(); }
 function atTagAppend(id){ const e = document.getElementById(id); if(!e) return; e.value = e.value? e.value.replace(/,\s*$/,"") + ", " : ""; e.focus(); }
@@ -1724,9 +1801,11 @@ function atSaveTrade(){
   if(!x.ok || isNaN(n(f.sl))){ toast("Fill entry, exit, stop loss and lots with numbers."); return; }
   const existing = atEditId? DB.trades.find(t=>t.id===atEditId) : null;
   const plain = (f.noteHtml||"").replace(/<br\s*\/?>/gi,"\n").replace(/<[^>]*>/g,"").trim();
+  const cs = f.contractSize || contractSizeFor(f.market);
   const rec = { id: atEditId || uid(), date: f.entryDate || todayStr(), exitDate: f.exitDate || f.entryDate || todayStr(),
     entryTime: f.entryTime||"", exitTime: f.exitTime||"",
-    market: f.market.trim().toUpperCase(), dir: f.dir, entry: n(f.entry), sl: n(f.sl), exit: n(f.exit), size: n(f.lots),
+    market: f.market.trim().toUpperCase(), dir: f.dir, entry: n(f.entry), sl: n(f.sl), exit: n(f.exit),
+    size: n(f.lots) * cs, lots: n(f.lots), contractSize: cs,
     tp: f.tp===""? "" : n(f.tp), swap: n(f.swap)||0, commission: n(f.commission)||0,
     session: existing? (existing.session||"London") : "London",
     planId: f.planId||"", emotion: f.entryEmotion||"", exitEmotion: f.exitEmotion||"",
@@ -2045,12 +2124,18 @@ function toggleAlertForm(force){
 function createAlert(){
   const sym = $("#al-sym").value, cond = $("#al-cond").value, price = parseFloat($("#al-price").value);
   if(!(price>0)){ toast("Enter a trigger price above zero."); return; }
-  DB.alerts.push({ id:uid(), symbol:sym, condition:cond, price:price, status:"active",
+  const s0 = wlState[sym];
+  DB.alerts.push({ id:uid(), symbol:sym, condition:cond, price:price, status:"active", lastSeen: s0? s0.last : null,
     created: new Date().toLocaleDateString("en-US",{month:"short", day:"numeric"})+" "+new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}), triggeredAt:"" });
   saveDB(); paintAlertsList(); toggleAlertForm(false);
   toast("Alert set — "+sym+" "+(cond==="above"? "≥":"≤")+" "+price+".");
 }
-function rearmAlert(id){ const a = DB.alerts.find(x=>x.id===id); if(!a) return; a.status="active"; a.triggeredAt=""; saveDB(); paintAlertsList(); toast("Alert re-armed for "+a.symbol+"."); }
+function rearmAlert(id){ const a = DB.alerts.find(x=>x.id===id); if(!a) return; const s = wlState[a.symbol];
+  /* Re-arm baselines at the CURRENT price: the alert can only fire on a
+     fresh cross of the level from here — if price is still beyond the
+     level it must first come back across before it can trigger again. */
+  a.status="active"; a.triggeredAt=""; a.lastSeen = s? s.last : null;
+  saveDB(); paintAlertsList(); toast("Alert re-armed for "+a.symbol+" — fires on the next fresh cross of "+a.price+"."); }
 function deleteAlert(id){ DB.alerts = DB.alerts.filter(x=>x.id!==id); saveDB(); paintAlertsList(); }
 function checkPriceAlerts(){
   if(!DB.alerts.length) return;
@@ -2058,8 +2143,14 @@ function checkPriceAlerts(){
   DB.alerts.forEach(a=>{
     if(a.status!=="active") return;
     const s = wlState[a.symbol]; if(!s) return;
-    const hit = a.condition==="above"? s.last>=a.price : s.last<=a.price;
-    if(hit){
+    /* Crossing-only triggers: an alert fires when price moves from the
+       safe side of its level to the trigger side between two ticks. An
+       alert (re)armed while price is already beyond the level baselines
+       at that price and stays quiet until a genuinely new cross. */
+    if(typeof a.lastSeen!=="number"){ a.lastSeen = s.last; return; } // first sighting: set the baseline, never fire
+    const prev = a.lastSeen; a.lastSeen = s.last;
+    const crossed = a.condition==="above"? (prev < a.price && s.last >= a.price) : (prev > a.price && s.last <= a.price);
+    if(crossed){
       a.status = "triggered"; fired = true;
       a.triggeredAt = new Date().toLocaleDateString("en-US",{month:"short", day:"numeric"})+" "+new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
       notifyEvent("priceAlert", "Price alert triggered", a.symbol+" crossed "+(a.condition==="above"? "above":"below")+" "+a.price+" — now "+s.last.toFixed(s.dec));
@@ -2284,13 +2375,14 @@ function grSetRiskMode(m){
   ["pct","usd"].forEach(x=>{ const b = document.getElementById("gr-rm-"+x); if(b) b.classList.toggle("on", x===m); });
   const hint = document.getElementById("gr-risk-hint");
   if(hint) hint.textContent = m==="pct"? "Percent of your paper balance, risked on every trade." : "Fixed dollar amount risked on every trade.";
+  DB.guardrails.riskMode = m; saveDB(); // mode persists immediately, like every other guardrail change
 }
 const GUARDRAIL_TZS = ["UTC","Asia/Dhaka","Asia/Kolkata","Asia/Dubai","Asia/Tokyo","Australia/Sydney","Europe/London","Europe/Berlin","America/New_York","America/Chicago","America/Los_Angeles"];
 RENDER.guardrails = function(){
   const el = document.querySelector('[data-view="guardrails"]');
   const g = DB.guardrails; const st = guardrailStatus();
   grRiskMode = g.riskMode || "pct";
-  const sw = (id, on)=> '<label class="switch"><input type="checkbox" id="'+id+'" '+(on?"checked":"")+'><span class="sl"></span></label>';
+  const sw = (id, on)=> '<label class="switch"><input type="checkbox" id="'+id+'" '+(on?"checked":"")+' onchange="grAutoSave()"><span class="sl"></span></label>';
   const tRow = (id, name, sub, on)=> '<div class="set-row"><div class="sr-txt"><div class="sr-name">'+name+'</div><div class="sr-sub">'+sub+'</div></div>'+sw(id,on)+'</div>';
   el.innerHTML =
     '<div class="grid g3 mb">'
@@ -2308,14 +2400,14 @@ RENDER.guardrails = function(){
     + '</div>'
     + '<div class="divider"></div>'
     + '<div class="field"><label class="f">Fixed Risk Per Trade</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg"><button type="button" id="gr-rm-pct" class="'+(grRiskMode==="pct"?"on":"")+'" onclick="grSetRiskMode(\'pct\')">% of balance</button><button type="button" id="gr-rm-usd" class="'+(grRiskMode==="usd"?"on":"")+'" onclick="grSetRiskMode(\'usd\')">$ fixed</button></div>'
-    + '<input class="input mono" id="gr-risk" type="number" step="any" min="0" value="'+g.riskValue+'" style="max-width:130px"></div>'
+    + '<input class="input mono" id="gr-risk" type="number" step="any" min="0" value="'+g.riskValue+'" style="max-width:130px" oninput="grAutoSave()"></div>'
     + '<div class="small" id="gr-risk-hint" style="margin-top:5px">'+(grRiskMode==="pct"? "Percent of your paper balance, risked on every trade." : "Fixed dollar amount risked on every trade.")+' On your '+fmt$(DB.paper.balance)+' paper balance that is <strong class="mono">'+fmt$(grRiskMode==="pct"? DB.paper.balance*(g.riskValue||0)/100 : (g.riskValue||0))+'</strong> per trade.</div></div>'
-    + '<div class="row"><div class="field"><label class="f">Max Daily Loss ($)</label><input class="input mono" id="gr-maxloss" type="number" value="'+g.maxLoss+'"></div>'
-    + '<div class="field"><label class="f">Max Daily Profit ($)</label><input class="input mono" id="gr-maxprofit" type="number" value="'+g.maxProfit+'"></div>'
-    + '<div class="field"><label class="f">Max Trades Per Day</label><input class="input mono" id="gr-maxtrades" type="number" min="1" value="'+g.maxTrades+'"></div></div>'
-    + '<div class="row"><div class="field"><label class="f">Trading Window — start</label><input class="input" id="gr-start" type="time" value="'+g.winStart+'"></div>'
-    + '<div class="field"><label class="f">Trading Window — end</label><input class="input" id="gr-end" type="time" value="'+g.winEnd+'"></div>'
-    + '<div class="field"><label class="f">Window timezone</label><select class="input" id="gr-tz">'+GUARDRAIL_TZS.map(z=>'<option value="'+z+'"'+(g.tz===z?" selected":"")+'>'+z+'</option>').join("")+'</select></div></div>'
+    + '<div class="row"><div class="field"><label class="f">Max Daily Loss ($)</label><input class="input mono" id="gr-maxloss" type="number" value="'+g.maxLoss+'" oninput="grAutoSave()"></div>'
+    + '<div class="field"><label class="f">Max Daily Profit ($)</label><input class="input mono" id="gr-maxprofit" type="number" value="'+g.maxProfit+'" oninput="grAutoSave()"></div>'
+    + '<div class="field"><label class="f">Max Trades Per Day</label><input class="input mono" id="gr-maxtrades" type="number" min="1" value="'+g.maxTrades+'" oninput="grAutoSave()"></div></div>'
+    + '<div class="row"><div class="field"><label class="f">Trading Window — start</label><input class="input" id="gr-start" type="time" value="'+g.winStart+'" oninput="grAutoSave()" onchange="grAutoSave()"></div>'
+    + '<div class="field"><label class="f">Trading Window — end</label><input class="input" id="gr-end" type="time" value="'+g.winEnd+'" oninput="grAutoSave()" onchange="grAutoSave()"></div>'
+    + '<div class="field"><label class="f">Window timezone</label><select class="input" id="gr-tz" onchange="grAutoSave()">'+GUARDRAIL_TZS.map(z=>'<option value="'+z+'"'+(g.tz===z?" selected":"")+'>'+z+'</option>').join("")+'</select></div></div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px"><button class="btn" onclick="applyGuardrailDefaults()">Apply recommended defaults</button><span style="flex:1"></span><button class="btn" onclick="RENDER.guardrails()">Cancel</button><button class="btn primary" onclick="saveGuardrails()">Save</button></div></div>'
     + '<div class="card"><h3>Rule-break log</h3><div class="card-sub">Every override, on the record. Patterns here are the real leak.</div><div class="mt">'
     + (DB.overrides.length? DB.overrides.slice().reverse().map(o=>'<div class="pos-row"><div><strong>'+esc(o.date)+'</strong> <span class="small">'+esc(o.at||"")+'</span><div class="small">'+esc((o.reasons||[]).join(" · "))+'</div></div><span class="chip red">Override</span></div>').join("")
@@ -2330,6 +2422,20 @@ function applyGuardrailDefaults(){
   set("gr-maxloss", 200); set("gr-maxprofit", 400); set("gr-maxtrades", 5);
   set("gr-start", "07:00"); set("gr-end", "17:00"); set("gr-tz", "UTC");
   toast("Recommended defaults filled in — 1% risk, $200 max loss, $400 target, 5 trades, 07:00–17:00. Hit Save to apply.");
+}
+/* Every guardrail control auto-saves the moment it changes — no setting
+   can be lost by forgetting the Save button or reloading mid-edit. The
+   Save button remains as an explicit confirm (same write + UI refresh). */
+function grAutoSave(){
+  const ge = id=> document.getElementById(id);
+  if(!ge("gr-enabled") || !ge("gr-maxloss")) return;
+  DB.guardrails = { enabled: ge("gr-enabled").checked,
+    maxLoss: Math.abs(parseFloat(ge("gr-maxloss").value)||200), maxProfit: Math.abs(parseFloat(ge("gr-maxprofit").value)||0),
+    maxTrades: Math.max(1, parseInt(ge("gr-maxtrades").value)||5), winStart: ge("gr-start").value||"07:00", winEnd: ge("gr-end").value||"17:00",
+    newsBlock: ge("gr-news").checked, hardLock: ge("gr-hardlock").checked,
+    marginInvert: ge("gr-margininvert").checked, prompts: ge("gr-prompts").checked, routineGate: ge("gr-routinegate").checked,
+    riskMode: grRiskMode, riskValue: Math.max(0, parseFloat(ge("gr-risk").value)||0), tz: ge("gr-tz").value||"UTC" };
+  saveDB(); renderSessionBar(); renderLockout();
 }
 function saveGuardrails(){
   DB.guardrails = { enabled: $("#gr-enabled").checked,
@@ -2349,56 +2455,39 @@ let activePlanRun = null; // {planId, checks:{}}
    clicking "Use this preset" copies it into the user's own plans, where
    it becomes a normal, fully editable plan. */
 const EDGE_PLAN_PRESETS = [
-  { id:"jasons-strategy", name:"Jason's Strategy", type:"Intraday reversal",
-    desc:"Sweep the session liquidity, wait for the shift, take the pullback.",
-    market:"XAUUSD", bias:"Trade with the HTF daily bias — never against it",
-    charting:["Mark the daily & 4H bias and the draw on liquidity","Mark HTF POIs sitting in premium / discount","Note equal highs / lows and session liquidity pools","Wait for price to reach the POI — no chasing in the middle"],
-    criteria:["HTF bias confirmed and draw on liquidity is clear","Liquidity swept beyond the POI extreme","Market structure shift on the LTF after the sweep","Pullback into the displacement, FVG or order block","At least 1:2R available to the opposing liquidity pool"],
-    exitRules:"SL beyond the sweep extreme. TP at the opposing HTF liquidity pool. Set & forget — no mid-trade management." },
-  { id:"london-checklist", name:"London Checklist", type:"Session checklist",
-    desc:"A fixed pre-London routine: prep the levels, then only execute the plan.",
-    market:"GBPUSD", bias:"London open direction, confirmed by the Asia range break",
-    charting:["Mark the Asia range high & low before the open","Mark yesterday's high / low and the daily open","Flag red-folder news due in the London session","Draw the premium / discount of the Asia range"],
-    criteria:["Asia range swept in the first hour of London","Fake-out confirmed — candle closes back inside the range","Entry on the retest of the range edge","No red-folder news within 30 minutes","Target = opposite side of the Asia range or yesterday's extreme"],
-    exitRules:"SL beyond the London sweep wick. TP1 at the range midpoint, TP2 at the far edge. Flat before the New York open." },
-  { id:"weekly-range", name:"Weekly Range", type:"Swing",
-    desc:"Aiming to capture the range of the weekly candle",
-    market:"EURUSD", bias:"Weekly open holds the bias — long above it, short below it",
-    charting:["Mark last week's high, low and closing price","Mark this week's open — the line in the sand","Identify the nearest HTF liquidity above and below","Plan both scenarios before Monday's open"],
-    criteria:["Early-week sweep of one side of last week's range","Rejection back inside the weekly range","Daily candle confirms the reversal direction","Entry targets the opposite side of the weekly range","Position sized for a multi-day hold — no intraday noise exits"],
-    exitRules:"SL beyond the weekly sweep extreme. TP at the opposite side of the weekly range. Hold to target or Friday close — whichever comes first." },
-  { id:"market-mechanics-plan", name:"Market Mechanics Plan", type:"Intraday / Swing",
+  { id:"market-mechanics-plan", name:"Market Mechanics Plan", type:"Failed Reaction LQ Sweep",
     desc:"The Market Mechanics model: map the HTF POIs, drop down the timeframes, execute the entry model.",
-    market:"XAUUSD", bias:"4H bias decides direction — trade with the higher-timeframe draw on liquidity, never against it",
     charting:["Map relevant POIs on 4H","Identify continuation vs pullback on 15min","Wait for 15min POI","Look for Entry Model on 5min"],
     criteria:["Imbalance","Market Shift + LQ Sweep","Breakout Candle"],
-    exitRules:"Move stop to breakeven after 1R. SL beyond the sweep extreme. Exit at the opposing HTF liquidity pool — minimum 1:2R, set & forget." }
-];
-/* Management / exit / notes detail for the built-in presets */
-const PRESET_EXTRA = {
-  "jasons-strategy": {
-    mgmt:"Set & forget by default. If price stalls at internal liquidity for 3+ candles without displacement, tighten the stop to breakeven — never widen it.",
-    exit:"Stop beyond the sweep extreme. Target the opposing HTF liquidity pool; flat if the pool is not reached by session end.",
-    notes:"Best in the London & New York killzones on gold. Skip entries with red-folder USD news inside the entry window." },
-  "london-checklist": {
-    mgmt:"TP1 at the Asia range midpoint banks half and moves the stop to breakeven. No re-entries after 10:30 — the London move is done.",
-    exit:"Stop beyond the London sweep wick. Flat before the New York open, no exceptions.",
-    notes:"Works best Tuesday to Thursday. Monday ranges are often still forming; Friday London fades into profit-taking." },
-  "weekly-range": {
-    mgmt:"Scale in only on confirmation — never average into a weekly sweep that has not rejected. Trail behind daily structure after 2R.",
-    exit:"Stop beyond the weekly sweep extreme. Target the opposite side of the weekly range, or exit at the Friday close — whichever comes first.",
-    notes:"One A+ weekly setup beats five forced ones. If there is no sweep by Wednesday, stand aside — no trade is a position." },
-  "market-mechanics-plan": {
     mgmt:"Move the stop to breakeven after 1R. No partials before the opposing pool unless a same-direction HTF POI blocks the path.",
     exit:"Stop beyond the sweep extreme. Exit at the opposing HTF liquidity pool — minimum 1:2R, set & forget.",
-    notes:"From the Market Mechanics mentorship: rank liquidity, don't just find it. HTF = destination, LTF = path and entry." }
-};
-EDGE_PLAN_PRESETS.forEach(p=> Object.assign(p, PRESET_EXTRA[p.id] || {}));
+    exitRules:"Move stop to breakeven after 1R. SL beyond the sweep extreme. Exit at the opposing HTF liquidity pool — minimum 1:2R, set & forget.",
+    notes:"From the Market Mechanics mentorship: rank liquidity, don't just find it. HTF = destination, LTF = path and entry.",
+    risk:{ maxTrades:3, maxLoss:200, maxProfit:400, risk:1 } },
+  { id:"jasons-strategy", name:"Jason's Strategy", type:"London Checklist",
+    desc:"HTF bias first, then work the London session — Asia range, Frankfurt delivery, entry model in the first two hours.",
+    charting:["Establish the HTF bias — Daily and H4 trend before anything else","Mark Daily structure: swing highs / lows and the draw on liquidity","Mark H4 structure and the H4 POIs sitting in premium / discount","Mark the Asia range high and low","Note the liquidity resting above and below the Asia range","Mark yesterday's high / low and the daily open","Watch the London open — which side of Asia gets swept first","Read Frankfurt delivery: expansion or raid before London commits"],
+    criteria:["Entry model appears in the 1st–2nd hour of London","Asia range or HTF liquidity swept into a marked POI","Market structure shift confirms the reversal / continuation","Entry on the pullback into displacement, FVG or order block","Stop beyond the sweep — target the opposing session liquidity"],
+    mgmt:"Trail stop behind last swing.",
+    exit:"Exit at the opposing HTF liquidity pool. Flat before the New York open if the target is not reached.",
+    exitRules:"Trail stop behind last swing. Exit at the opposing HTF liquidity pool; flat before the New York open.",
+    notes:"Best Tuesday to Thursday in the London session. Skip it when red-folder news lands inside the entry window.",
+    risk:{ maxTrades:2, maxLoss:150, maxProfit:300, risk:1 } },
+  { id:"weekly-range", name:"Weekly Range", type:"Aiming to capture the range of the weekly candle",
+    desc:"One weekly setup: sweep one side of last week's range early, ride the rejection to the other side.",
+    charting:["Mark last week's high, low and closing price","Mark this week's open — the line in the sand","Identify the nearest HTF liquidity above and below","Draw the premium / discount of last week's range","Plan both scenarios before Monday's open"],
+    criteria:["Early-week sweep of one side of last week's range","Rejection back inside the weekly range","Entry targets the opposite side of the weekly range"],
+    mgmt:"Take partial at 1R.",
+    exit:"Add your exit rules so you don't freestyle",
+    exitRules:"Add your exit rules so you don't freestyle",
+    notes:"One A+ weekly setup beats five forced ones. If there is no sweep by Wednesday, stand aside.",
+    risk:{ maxTrades:2, maxLoss:250, maxProfit:500, risk:1 } }
+];
 function edgePresetCardHTML(p){
   const list = (title, items) => '<div style="margin-top:12px"><div class="small" style="font-weight:800;margin-bottom:5px">'+title+'</div>'
     + items.map(s=>'<div style="display:flex;gap:8px;padding:3px 0;font-size:13.5px"><span style="color:var(--pine);font-weight:800">·</span><span>'+esc(s)+'</span></div>').join("") + '</div>';
   return '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><h3>'+esc(p.name)+'</h3><div class="card-sub">'+esc(p.desc)+'</div></div><span class="chip pine">'+esc(p.type)+'</span></div>'
-    + '<div class="small" style="margin-top:8px"><strong>Bias:</strong> '+esc(p.bias)+' · '+esc(p.market)+'</div>'
+    + '<div class="small" style="margin-top:8px"><strong>Plan type:</strong> '+esc(p.type)+'</div>'
     + list("CHARTING PROCESS", p.charting)
     + list("ENTRY CRITERIA", p.criteria)
     + '<div class="divider"></div><div class="small"><strong>Trade management:</strong> '+esc(p.exitRules)+'</div>'
@@ -2407,17 +2496,76 @@ function edgePresetCardHTML(p){
 function useEdgePreset(id){
   const p = EDGE_PLAN_PRESETS.find(x=>x.id===id); if(!p) return;
   if(!canCreatePlan()){ planPaywallModal(); return; }
-  const np = { id:uid(), name:p.name, type:p.type, market:p.market, bias:p.bias,
+  const np = { id:uid(), name:p.name, type:p.type, desc:p.desc||"", market:"", bias:"",
     charting:(p.charting||[]).slice(), criteria:p.criteria.slice(),
-    mgmt:p.mgmt||"", exit:p.exit||"", exitRules:p.exitRules, notes:p.notes||"", modelShot:"" };
+    mgmt:p.mgmt||"", exit:p.exit||"", exitRules:p.exit||"", notes:p.notes||"",
+    risk: p.risk? Object.assign({}, p.risk) : null, modelShot:"" };
   DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id };
   saveDB(); RENDER.edge(); toast("“"+p.name+"” copied to your plans — edit it freely.");
 }
 
 /* ---- Edge page state: viewing is free; creating new plans is a Basic feature ---- */
 let edgeSel = null;              // {kind:"plan"|"preset", id}
-const presetChecks = {};         // presetId -> {index:true} session-only ticks on read-only presets
+let edgeMenuId = null;           // plan id whose "..." menu is open
+let edgeNewOpen = false;         // "+ New Plan" dropdown open
+let edgeMyOpen = true;           // MY PLANS list expanded
 function canCreatePlan(){ return planRank() >= PLANS.basic.rank; }
+function togglePlanMenu(id){ edgeMenuId = edgeMenuId===id? null : id; edgeNewOpen = false; RENDER.edge(); }
+function toggleNewMenu(){ edgeNewOpen = !edgeNewOpen; edgeMenuId = null; RENDER.edge(); }
+function toggleMyPlans(){ edgeMyOpen = !edgeMyOpen; RENDER.edge(); }
+function createBlankPlan(){ edgeNewOpen = false; edgeMenuId = null; RENDER.edge(); newPlanGate(); }
+function createFromPresetModal(){
+  edgeNewOpen = false; edgeMenuId = null; RENDER.edge();
+  if(!canCreatePlan()){ planPaywallModal(); return; }
+  openModal('<h3>Create from preset</h3><div class="small" style="margin-bottom:6px">Pick a preset to copy into your plans — it becomes fully editable.</div>'
+    + EDGE_PLAN_PRESETS.map(p=>'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)"><div style="min-width:0"><div style="font-weight:800">'+esc(p.name)+'</div><div class="small">'+esc(p.type)+'</div></div><button class="btn primary sm" style="flex:0 0 auto" onclick="closeModal();useEdgePreset(\''+p.id+'\')">Use preset</button></div>').join("")
+    + '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Cancel</button></div>');
+}
+function duplicatePlan(id){
+  const p = DB.plans.find(x=>x.id===id); if(!p) return;
+  const np = JSON.parse(JSON.stringify(p)); np.id = uid(); np.name = p.name + " (copy)";
+  DB.plans.push(np); edgeMenuId = null;
+  saveDB(); RENDER.edge(); toast("“"+p.name+"” duplicated.");
+}
+/* Risk controls: a plan's own limits, falling back to the guardrails. */
+function planRisk(p){
+  if(p && p.risk) return p.risk;
+  const g = DB.guardrails;
+  return { maxTrades:g.maxTrades, maxLoss:g.maxLoss, maxProfit:g.maxProfit, risk:g.riskValue };
+}
+function openRiskModal(id){
+  const p = DB.plans.find(x=>x.id===id); if(!p) return; const r = planRisk(p);
+  openModal('<h3>Risk controls — '+esc(p.name)+'</h3><div class="small" style="margin-bottom:14px">The hard limits this plan trades under. They start from your guardrails; tighten them per plan if you like.</div>'
+    + '<div class="row"><div class="field"><label class="f">Max trades per day</label><input class="input" type="number" min="1" step="1" id="rk-trades" value="'+r.maxTrades+'"></div>'
+    + '<div class="field"><label class="f">Risk per trade (%)</label><input class="input" type="number" min="0" step="0.1" id="rk-risk" value="'+r.risk+'"></div></div>'
+    + '<div class="row"><div class="field"><label class="f">Max daily loss</label><input class="input" type="number" min="0" step="1" id="rk-loss" value="'+r.maxLoss+'"></div>'
+    + '<div class="field"><label class="f">Max daily profit</label><input class="input" type="number" min="0" step="1" id="rk-profit" value="'+r.maxProfit+'"></div></div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveRisk(\''+id+'\')">Save risk controls</button></div>');
+}
+function saveRisk(id){
+  const p = DB.plans.find(x=>x.id===id); if(!p) return;
+  p.risk = { maxTrades: Math.max(1, parseInt($("#rk-trades").value,10)||1),
+             maxLoss: Math.max(0, parseFloat($("#rk-loss").value)||0),
+             maxProfit: Math.max(0, parseFloat($("#rk-profit").value)||0),
+             risk: Math.max(0, parseFloat($("#rk-risk").value)||0) };
+  saveDB(); closeModal(); RENDER.edge(); toast("Risk controls saved.");
+}
+/* First run: pre-populate MY PLANS with the Market Mechanics Plan, Active. */
+function seedEdgePlans(){
+  if(DB.edgeSeeded) return;
+  DB.edgeSeeded = true;
+  if(!DB.plans.length){
+    const src = EDGE_PLAN_PRESETS.find(p=>p.id==="market-mechanics-plan");
+    if(src){
+      const np = { id:uid(), name:src.name, type:src.type, desc:src.desc||"", market:"", bias:"",
+        charting:(src.charting||[]).slice(), criteria:src.criteria.slice(),
+        mgmt:src.mgmt||"", exit:src.exit||"", exitRules:src.exit||"", notes:src.notes||"",
+        risk: src.risk? Object.assign({}, src.risk) : null, modelShot:"" };
+      DB.plans.push(np); DB.activePlanId = np.id;
+    }
+  }
+  saveDB();
+}
 function planPaywallModal(){
   openModal('<div style="text-align:center;padding:6px 0"><div class="lock-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>'
     + '<h3>Creating plans is a Basic feature</h3><div class="small" style="max-width:430px;margin:6px auto 16px">Viewing your plans and every preset is free. Creating a new plan — or copying a preset into an editable plan of your own — needs Basic ($44/mo) or Plus.</div>'
@@ -2437,7 +2585,6 @@ function edgeSelection(){
 }
 function selectEdge(kind, id){ edgeSel = { kind:kind, id:id }; RENDER.edge(); }
 function setActivePlan(id){ DB.activePlanId = id; saveDB(); RENDER.edge(); toast("Active plan set — it loads first in the Trading plan tab."); }
-function togglePresetCheck(id, i, val){ if(!presetChecks[id]) presetChecks[id] = {}; presetChecks[id][i] = val; }
 function viewModelShots(kind, id){
   const p = kind==="plan"? DB.plans.find(x=>x.id===id) : EDGE_PLAN_PRESETS.find(x=>x.id===id);
   if(!p) return;
@@ -2450,25 +2597,46 @@ function uploadModelShot(planId, input){
   rd.onload = ()=>{ const p = DB.plans.find(x=>x.id===planId); if(!p) return; p.modelShot = rd.result; saveDB(); RENDER.edge(); toast("Entry model screenshot attached."); };
   rd.readAsDataURL(f);
 }
+/* Section header icons for the plan detail (EdgeFlo style) */
+const SEC_ICONS = {
+  chart:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 6-8"/><path d="M14 6h4v4"/></svg>',
+  criteria:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8.3 9.2l1.1 1.1L11.7 8M13.5 9.3H17M8.3 15.2l1.1 1.1 2.3-2.3M13.5 15.3H17"/></svg>',
+  models:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.4"/><path d="M21 16l-4.5-4.5L9 19"/></svg>',
+  mgmt:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h8M18 7h2M4 17h4M14 17h6"/><circle cx="15" cy="7" r="2.2"/><circle cx="11" cy="17" r="2.2"/><path d="M4 12h16" stroke-dasharray="2.5 3"/></svg>',
+  exit:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21.5v-17"/><path d="M5 4.5h12l-2.6 4L17 12.5H5"/></svg>',
+  notes:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8L19 8.5v12H6z"/><path d="M13.5 3.5v5.5H19M9.2 13h5.6M9.2 16.5h3.6"/></svg>',
+  shield:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.2 8.2-7 10-3.8-1.8-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+  pencil:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L8 20l-5 1 1-5z"/></svg>'
+};
+function riskCardHTML(p, isPlan){
+  const r = planRisk(p);
+  const cell = (label, val)=> '<div><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)">'+label+'</div><div style="font-weight:800;margin-top:2px">'+val+'</div></div>';
+  return '<div class="risk-card"><div style="display:flex;justify-content:space-between;align-items:center"><div class="sec-head" style="margin:0">'+SEC_ICONS.shield+'<span>RISK CONTROLS</span></div>'
+    + '<button class="icon-btn" style="width:30px;height:30px" title="Edit risk controls" onclick="'+(isPlan? "openRiskModal('"+p.id+"')" : "toast('Copy this preset into your plans to edit its risk controls.')")+'">'+SEC_ICONS.pencil+'</button></div>'
+    + '<div class="grid g4" style="gap:12px;margin-top:12px">'
+    + cell("MAX TRADES PER DAY", String(r.maxTrades))
+    + cell("MAX DAILY LOSS", fmt$(r.maxLoss))
+    + cell("MAX DAILY PROFIT", fmt$(r.maxProfit))
+    + cell("RISK PER TRADE", r.risk+"%")
+    + '</div></div>';
+}
 function edgeDetailHTML(sel){
   const isPlan = sel.kind==="plan";
   const p = isPlan? DB.plans.find(x=>x.id===sel.id) : EDGE_PLAN_PRESETS.find(x=>x.id===sel.id);
   if(!p) return '<div class="card"><div class="empty"><div class="e-title">Nothing selected</div>Pick a plan or a preset on the left.</div></div>';
   const charting = p.charting || [], criteria = p.criteria || [];
   const running = isPlan && activePlanRun && activePlanRun.planId===p.id;
-  const checks = isPlan? (running? activePlanRun.checks : {}) : (presetChecks[p.id]||{});
+  const checks = isPlan? (running? activePlanRun.checks : {}) : {};
   const mgmt = p.mgmt || p.exitRules || "", exitTxt = p.exit || p.exitRules || "";
-  const sec = (title, inner)=> '<div style="margin-top:20px"><div class="small" style="font-weight:800;letter-spacing:.05em;margin-bottom:7px">'+title+'</div>'+inner+'</div>';
+  const sec = (icon, title, inner)=> '<div style="margin-top:20px"><div class="sec-head">'+icon+'<span>'+title+'</span></div>'+inner+'</div>';
   const infoCell = (label, val)=> '<div><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)">'+label+'</div><div style="font-weight:700;margin-top:2px">'+esc(val)+'</div></div>';
-  let h = '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="font-size:18px">'+esc(p.name)+'</h3><div class="card-sub">'+esc(p.desc || p.bias || "")+'</div></div>'
+  let h = '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="font-size:18px">'+esc(p.name)+'</h3><div class="card-sub">'+esc(p.desc || "")+'</div></div>'
     + '<div style="display:flex;gap:7px;flex-wrap:wrap">'
     + (isPlan && DB.activePlanId===p.id? '<span class="chip green">Active</span>' : "")
     + (isPlan? "" : '<span class="chip">Preset</span>')
     + '<span class="chip pine">'+esc(p.type || "Custom plan")+'</span></div></div>'
-    + '<div class="grid g3 mt" style="gap:12px">'
+    + '<div class="mt">'
     + infoCell("PLAN TYPE", p.type || "Custom plan")
-    + infoCell("MARKET", p.market || "—")
-    + infoCell("BIAS", p.bias || "—")
     + '</div>';
   if(isPlan){
     const pts = DB.trades.filter(t=>t.planId===p.id); const s = computeStats(pts);
@@ -2478,17 +2646,22 @@ function edgeDetailHTML(sel){
       + '<div><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)">NET P&amp;L</div><div class="mono" style="font-weight:800;margin-top:2px"><span class="'+(s.pnl>=0?"pos":"neg")+'">'+fmt$(s.pnl)+'</span></div></div>'
       + '</div>';
   }
-  h += sec("CHARTING PROCESS", charting.length? '<ol class="num-list">'+charting.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>' : '<div class="small">No charting steps recorded'+(isPlan? ' — add them via Edit.':'.')+'</div>');
-  h += sec("ENTRY CRITERIA", criteria.length? criteria.map((c,i)=>'<label style="display:flex;gap:9px;align-items:center;padding:5px 0;font-size:14px;cursor:pointer"><input type="checkbox" '+(checks[i]?"checked":"")+' onchange="'+(isPlan? 'toggleCheck(\''+p.id+'\','+i+',this.checked)' : 'togglePresetCheck(\''+p.id+'\','+i+',this.checked)')+'" style="width:17px;height:17px;accent-color:var(--pine)">'+esc(c)+'</label>').join("") : '<div class="small">No criteria yet.</div>');
-  h += sec("ENTRY MODELS",
-      (p.modelShot? '<img src="'+p.modelShot+'" alt="Entry model screenshot" style="max-width:100%;border-radius:10px">' : '<div class="model-box">No entry model screenshot yet</div>')
-      + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center"><button class="btn sm" onclick="viewModelShots(\''+sel.kind+'\',\''+p.id+'\')">View All</button>'
-      + (isPlan? '<label class="btn sm" style="cursor:pointer">Upload Image<input type="file" accept="image/*" style="display:none" onchange="uploadModelShot(\''+p.id+'\',this)"></label>'
-               : '<span class="small">Copy this preset to attach your own model screenshots.</span>')
-      + '</div>');
-  h += sec("TRADE MANAGEMENT RULES", mgmt? '<div style="font-size:14px">'+esc(mgmt)+'</div>' : '<div class="small">—</div>');
-  h += sec("EXIT CRITERIA", exitTxt? '<div style="font-size:14px">'+esc(exitTxt)+'</div>' : '<div class="small">—</div>');
-  h += sec("TRADING NOTES", p.notes? '<div style="font-size:14px;white-space:pre-wrap">'+esc(p.notes)+'</div>' : '<div class="small">No notes yet.</div>');
+  h += riskCardHTML(p, isPlan);
+  h += sec(SEC_ICONS.chart, "CHARTING PROCESS", charting.length? '<ol class="num-list">'+charting.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>' : '<div class="small">No charting steps recorded'+(isPlan? ' — add them via Edit.':'.')+'</div>');
+  h += sec(SEC_ICONS.criteria, "ENTRY CRITERIA", criteria.length? (isPlan
+      ? criteria.map((c,i)=>'<label style="display:flex;gap:9px;align-items:center;padding:5px 0;font-size:14px;cursor:pointer"><input type="checkbox" '+(checks[i]?"checked":"")+' onchange="toggleCheck(\''+p.id+'\','+i+',this.checked)" style="width:17px;height:17px;accent-color:var(--pine)">'+esc(c)+'</label>').join("")
+      : criteria.map(c=>'<div class="crit-ro"><input type="checkbox" disabled aria-hidden="true"><span>'+esc(c)+'</span></div>').join(""))
+    : '<div class="small">No criteria yet.</div>');
+  const modelTile = (label, emptyTxt)=> '<div><div class="small" style="font-weight:700;margin-bottom:6px">'+label+'</div>'
+    + (p.modelShot? '<img src="'+p.modelShot+'" alt="'+label+'" style="width:100%;border-radius:10px;display:block">' : '<div class="model-box">'+emptyTxt+'</div>')
+    + '<div style="margin-top:8px"><button class="btn sm" onclick="viewModelShots(\''+sel.kind+'\',\''+p.id+'\')">View All</button></div></div>';
+  h += sec(SEC_ICONS.models, "ENTRY MODELS",
+      '<div class="grid g2" style="gap:14px">' + modelTile("Setup screenshot", "No setup screenshot yet") + modelTile("Entry examples", "No entry examples yet") + '</div>'
+      + (isPlan? '<div style="margin-top:10px"><label class="btn sm" style="cursor:pointer">Upload Image<input type="file" accept="image/*" style="display:none" onchange="uploadModelShot(\''+p.id+'\',this)"></label></div>'
+               : '<div class="small" style="margin-top:10px">Copy this preset to attach your own model screenshots.</div>'));
+  h += sec(SEC_ICONS.mgmt, "TRADE MANAGEMENT RULES", mgmt? '<div style="font-size:14px">'+esc(mgmt)+'</div>' : '<div class="small">—</div>');
+  h += sec(SEC_ICONS.exit, "EXIT CRITERIA", exitTxt? '<div style="font-size:14px">'+esc(exitTxt)+'</div>' : '<div class="small">—</div>');
+  h += sec(SEC_ICONS.notes, "TRADING NOTES", p.notes? '<div style="font-size:14px;white-space:pre-wrap">'+esc(p.notes)+'</div>' : '<div class="small">No notes yet.</div>');
   h += '<div class="divider"></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     + (isPlan
         ? (DB.activePlanId!==p.id? '<button class="btn sm" onclick="setActivePlan(\''+p.id+'\')">Set as active</button>' : "")
@@ -2503,12 +2676,33 @@ RENDER.edge = function(){
   const sel = edgeSelection();
   const planItem = (p)=>{
     const active = DB.activePlanId===p.id;
-    return '<button class="plan-item '+(sel.kind==="plan"&&sel.id===p.id?"sel":"")+'" onclick="selectEdge(\'plan\',\''+p.id+'\')"><span style="flex:1;min-width:0"><span class="pi-name">'+esc(p.name)+'</span><span class="pi-sub">'+esc(p.market||"")+'</span></span>'+(active? '<span class="chip green">Active</span>':"")+'</button>';
+    const menuOpen = edgeMenuId===p.id;
+    return '<div class="plan-wrap">'
+      + '<div class="plan-item '+(sel.kind==="plan"&&sel.id===p.id?"sel":"")+'">'
+      + '<button class="plan-main" onclick="edgeMenuId=null;selectEdge(\'plan\',\''+p.id+'\')"><span class="pi-name">'+esc(p.name)+'</span><span class="pi-sub">'+esc(p.type||"Custom plan")+'</span></button>'
+      + (active? '<span class="chip green">Active</span>' : "")
+      + '<button class="dots-btn" title="Plan actions" aria-label="Plan actions" onclick="togglePlanMenu(\''+p.id+'\')">&bull;&bull;&bull;</button>'
+      + '</div>'
+      + (menuOpen? '<div class="pop-menu">'
+          + (active? "" : '<button onclick="edgeMenuId=null;setActivePlan(\''+p.id+'\')">Set as Active</button>')
+          + '<button onclick="duplicatePlan(\''+p.id+'\')">Duplicate</button>'
+          + '<button class="danger" onclick="edgeMenuId=null;deletePlan(\''+p.id+'\')">Delete</button>'
+        + '</div>' : "")
+      + '</div>';
   };
-  const presetItem = (p)=> '<button class="plan-item '+(sel.kind==="preset"&&sel.id===p.id?"sel":"")+'" onclick="selectEdge(\'preset\',\''+p.id+'\')"><span style="flex:1;min-width:0"><span class="pi-name">'+esc(p.name)+'</span><span class="pi-sub">'+esc(p.type)+'</span></span></button>';
+  const presetItem = (p)=> '<button class="plan-item '+(sel.kind==="preset"&&sel.id===p.id?"sel":"")+'" onclick="edgeMenuId=null;edgeNewOpen=false;selectEdge(\'preset\',\''+p.id+'\')"><span style="flex:1;min-width:0"><span class="pi-name">'+esc(p.name)+'</span><span class="pi-sub">'+esc(p.type)+'</span></span></button>';
   el.innerHTML = '<div class="edge-layout"><div class="card" style="padding:14px">'
-    + '<div style="display:flex;justify-content:space-between;align-items:center"><span class="side-head">MY PLANS</span><button class="icon-btn" title="New plan" onclick="newPlanGate()" style="width:30px;height:30px;font-size:18px">+</button></div>'
-    + (DB.plans.length? DB.plans.map(planItem).join("") : '<div class="small" style="padding:8px 2px">No plans yet — view a preset, then copy it into your plans or create your own with +.</div>')
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="side-head">MY PLANS</span>'
+    + '<span style="display:inline-flex;gap:4px;align-items:center">'
+    + '<span class="newplan-wrap"><button class="btn primary sm" onclick="toggleNewMenu()">+ New Plan</button>'
+    + (edgeNewOpen? '<span class="pop-menu" style="display:block">'
+        + '<button onclick="createBlankPlan()">Create Blank Plan</button>'
+        + '<button onclick="createFromPresetModal()">Create From Preset</button>'
+      + '</span>' : "")
+    + '</span>'
+    + '<button class="icon-btn collapse-btn" title="'+(edgeMyOpen? "Collapse my plans":"Expand my plans")+'" onclick="toggleMyPlans()">'+(edgeMyOpen? "▾" : "▸")+'</button>'
+    + '</span></div>'
+    + (edgeMyOpen? (DB.plans.length? DB.plans.map(planItem).join("") : '<div class="small" style="padding:8px 2px">No plans yet — create one with + New Plan, or copy a preset below.</div>') : "")
     + '<div class="divider" style="margin:12px 0"></div><div class="side-head">PRESETS</div>'
     + EDGE_PLAN_PRESETS.map(presetItem).join("")
     + '<div class="small" style="margin-top:12px">Viewing plans &amp; presets is free — creating new plans is a Basic feature.</div>'
@@ -2538,9 +2732,7 @@ function openPlanModal(id){
   const p = id? DB.plans.find(x=>x.id===id) : null;
   openModal('<h3>'+(p?"Edit plan":"New trade plan")+'</h3><div class="small" style="margin-bottom:14px">Criteria become the pre-trade checklist you must clear before entry — in Edge Plans and in the Trading sidebar.</div>'
     + '<div class="field"><label class="f">Plan name</label><input class="input" id="pf-name" value="'+(p?esc(p.name):"")+'" placeholder="e.g. London sweep reversal"></div>'
-    + '<div class="row"><div class="field"><label class="f">Market</label><select class="input" id="pf-market">'+MARKETS.map(m=>'<option '+(p&&p.market===m?"selected":"")+'>'+m+'</option>').join("")+'</select></div>'
-    + '<div class="field"><label class="f">Plan type</label><input class="input" id="pf-type" value="'+(p?esc(p.type||""):"")+'" placeholder="e.g. Intraday reversal"></div></div>'
-    + '<div class="field"><label class="f">Bias rule</label><input class="input" id="pf-bias" value="'+(p?esc(p.bias||""):"")+'" placeholder="e.g. Only longs above daily open"></div>'
+    + '<div class="field"><label class="f">Plan type</label><input class="input" id="pf-type" value="'+(p?esc(p.type||""):"")+'" placeholder="e.g. Intraday reversal"></div>'
     + '<div class="field"><label class="f">Charting process — one step per line</label><textarea class="input" id="pf-charting" rows="4" placeholder="Mark HTF bias &amp; draw on liquidity&#10;Mark POIs in premium / discount">'+(p?esc((p.charting||[]).join("\n")):"")+'</textarea></div>'
     + '<div class="field"><label class="f">Entry criteria — one per line</label><textarea class="input" id="pf-criteria" rows="5" placeholder="HTF bias confirmed&#10;Liquidity swept at POI&#10;Structure shift on 15m">'+(p?esc(p.criteria.join("\n")):"")+'</textarea></div>'
     + '<div class="field"><label class="f">Trade management rules</label><textarea class="input" id="pf-mgmt" rows="2" placeholder="Breakeven after 1R, no widening the stop…">'+(p?esc(p.mgmt||""):"")+'</textarea></div>'
@@ -2552,11 +2744,13 @@ function savePlan(id){
   const name = $("#pf-name").value.trim(); if(!name){ toast("Give the plan a name."); return; }
   const lines = s=> $(s).value.split("\n").map(x=>x.trim()).filter(Boolean);
   const exitTxt = $("#pf-exit").value.trim();
-  const rec = { id: id||uid(), name, market: $("#pf-market").value, type: $("#pf-type").value.trim(),
-    bias: $("#pf-bias").value.trim(), charting: lines("#pf-charting"),
+  const old = id? DB.plans.find(x=>x.id===id) : null;
+  const rec = { id: id||uid(), name, market: old? (old.market||"") : "", type: $("#pf-type").value.trim(),
+    bias: old? (old.bias||"") : "", desc: old? (old.desc||"") : "", charting: lines("#pf-charting"),
     criteria: lines("#pf-criteria"), mgmt: $("#pf-mgmt").value.trim(),
     exit: exitTxt, exitRules: exitTxt, notes: $("#pf-notes").value.trim(),
-    modelShot: id? (DB.plans.find(x=>x.id===id)||{}).modelShot || "" : "" };
+    risk: old? (old.risk||null) : null,
+    modelShot: old? (old.modelShot||"") : "" };
   if(!rec.criteria.length){ toast("Add at least one checklist criterion."); return; }
   if(id){ const i=DB.plans.findIndex(x=>x.id===id); DB.plans[i]=rec; } else { DB.plans.push(rec); DB.activePlanId = rec.id; edgeSel = { kind:"plan", id: rec.id }; }
   saveDB(); closeModal(); renderAll(); toast("Plan saved.");
@@ -2853,7 +3047,10 @@ function newsCalendarHTML(){
   const base = new Date(); base.setDate(1); base.setMonth(base.getMonth()+newsCalOff);
   const y = base.getFullYear(), m = base.getMonth();
   const startDow = (new Date(y, m, 1).getDay()+6)%7;
-  const evs = newsAllEvents().filter(e=> newsImp[e.impact] && newsCats[e.cat] && (newsCur==="All" || e.cur===newsCur));
+  const wlCurs = newsWlCurrencies();
+  const evs = newsAllEvents().filter(e=> newsImp[e.impact] && newsCats[e.cat] && (newsCur==="All" || e.cur===newsCur)
+    && (!newsWlOnly || wlCurs.includes(e.cur))
+    && (!newsBookOnly || newsIsBookmarked(e)));
   const byDate = {}; evs.forEach(e=>{ (byDate[e.date] = byDate[e.date]||[]).push(e); });
   let cells = "";
   for(let i=0;i<42;i++){
@@ -3649,6 +3846,7 @@ $("#tb-date").textContent = new Date().toLocaleDateString("en-US",{ weekday:"lon
 $("#tb-upgrade").addEventListener("click", ()=> go("pricing"));
 $("#tb-avatar").addEventListener("click", ()=> go("account"));
 applyTheme();
+seedEdgePlans();
 buildNav(); renderSessionBar(); renderRoutineBanner(); renderLockout(); go("dashboard");
 </script>
 </body>
