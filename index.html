@@ -3317,9 +3317,10 @@ function weekEvents(){
 /* ---- News page (EdgeFlo layout) ----
    Built-in economic calendar database: the standard recurring release
    schedule for every major currency, generated across a rolling window
-   (two weeks back, three weeks ahead) so Today / week / month views and
-   the calendar are always fully populated across all 9 categories. The
-   live Forex Factory feed replaces this database whenever it loads.
+   (five weeks back, three months ahead) so Today / week / month views,
+   Next month, custom ranges and the calendar are always fully populated
+   across all 9 categories. The live Forex Factory feed covers the current
+   week only; dates outside its coverage are filled from this database.
    dow: 1=Mon … 7=Sun. Times are local display times. */
 const NEWS_DB_TEMPLATES = [
   /* Monday */
@@ -3406,7 +3407,7 @@ const NEWS_REAL_DAYS = {
 };
 function newsDbEvents(){
   const out = []; const today = new Date();
-  for(let off=-14; off<=21; off++){
+  for(let off=-35; off<=95; off++){
     const d = new Date(today); d.setDate(d.getDate()+off);
     const ds = todayStr(d);
     if(NEWS_REAL_DAYS[ds]){
@@ -3476,13 +3477,6 @@ function newsSavePrefs(){
   const p = DB.newsPrefs; if(!p) return;
   if(p.from) newsFrom = p.from; if(p.to) newsTo = p.to;
   newsRangeKey = p.rangeKey || "";
-  // The live Forex Factory feed covers the current week only — a persisted
-  // "This month"/"Next month" range is misleading, so reset it to the weekly view.
-  if(newsRangeKey==="month" || newsRangeKey==="nextmonth"){
-    var t2 = new Date(); var dow2 = (t2.getDay()+6)%7;
-    var add2 = function(n){ var x = new Date(t2); x.setDate(x.getDate()+n); return x; };
-    newsFrom = todayStr(add2(-dow2)); newsTo = todayStr(add2(6-dow2)); newsRangeKey = "week";
-  }
   if(p.imp) newsImp = Object.assign(newsImp, p.imp);
   if(p.cats) newsCats = Object.assign(newsCats, p.cats);
   if(p.cur) newsCur = p.cur;
@@ -3570,9 +3564,34 @@ function newsFetchLive(){
      the guard keeps News re-renders from stacking duplicate intervals. */
   if(!newsRefreshTimer) newsRefreshTimer = setInterval(()=> newsFetchLive(), 15*60*1000);
 }
+function newsLiveDateSet(){
+  const s = new Set();
+  if(newsLiveEvents) newsLiveEvents.forEach(e=> s.add(e.date));
+  return s;
+}
+/* The live feed covers the current week only. Merge per date: dates the
+   feed covers use live rows; every other date (past weeks, Next week,
+   Next month, custom future ranges) is filled from the built-in
+   recurring calendar database, so no in-window range is ever empty. */
 function newsAllEvents(){
-  if(newsLiveEvents && newsLiveEvents.length) return newsLiveEvents;
-  return newsDbEvents();
+  const db = newsDbEvents();
+  if(!newsLiveEvents || !newsLiveEvents.length) return db;
+  const covered = newsLiveDateSet();
+  return newsLiveEvents.concat(db.filter(e=> !covered.has(e.date)))
+    .sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : a.time<b.time?-1:1);
+}
+/* Which source(s) the currently displayed range [newsFrom, newsTo] draws
+   from: "live", "builtin", or "mixed" — drives the header chip + footer. */
+function newsSourceStatus(){
+  if(!newsLiveEvents || !newsLiveEvents.length) return "builtin";
+  const covered = newsLiveDateSet();
+  let hasLive = false, hasDb = false;
+  const d = new Date(newsFrom+"T12:00:00"), end = new Date(newsTo+"T12:00:00");
+  for(let x = new Date(d); x<=end; x.setDate(x.getDate()+1)){
+    if(covered.has(todayStr(x))) hasLive = true; else hasDb = true;
+    if(hasLive && hasDb) break;
+  }
+  return hasLive && hasDb? "mixed" : hasLive? "live" : "builtin";
 }
 function newsFiltered(){
   const wlCurs = newsWlCurrencies();
@@ -3682,9 +3701,11 @@ function newsListHTML(){
     + '<span style="flex:1"></span><span class="mono" style="font-size:13px;font-weight:700"><span id="news-clock">'+nowT+'</span> <span style="color:var(--muted);font-weight:600">('+newsGmtLabel()+')</span></span></div>'
     + '<div class="ev-head"><span></span><span>Time</span><span>Currency</span><span style="text-align:center">Impact</span><span>Event</span><span style="text-align:right">Actual</span><span></span></div>'
     + body
-    + '<div class="small" style="margin-top:12px">'+(newsLiveEvents
+    + '<div class="small" style="margin-top:12px">'+(newsSourceStatus()==="live"
       ? 'Live economic calendar — Forex Factory weekly feed via the Render API, fetched '+newsLiveUpdated.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'. Times are shown in your local timezone.'
-      : 'Built-in economic calendar — the full recurring release schedule for every major currency. The live Forex Factory feed refreshes this page automatically whenever it can be reached.')+'</div>'
+      : newsSourceStatus()==="mixed"
+        ? 'Mixed sources — live Forex Factory feed for the dates it covers; the remaining dates come from the built-in recurring calendar. The live feed covers the current week only.'
+        : 'Built-in economic calendar — the full recurring release schedule for every major currency. The live Forex Factory feed covers the current week only and refreshes this page automatically whenever it can be reached.')+'</div>'
     + '</div>';
 }
 function newsCalendarHTML(){
@@ -3723,9 +3744,11 @@ RENDER.news = function(){
   const refreshSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>';
   const liveStatus = newsLiveLoading
     ? '<span class="chip pine">Loading live calendar…</span>'
-    : newsLiveEvents
+    : newsLiveEvents && newsSourceStatus()==="live"
       ? '<span class="chip green"><span class="live-dot"></span>Live &middot; Updated '+newsLiveUpdated.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'</span>'
-      : '<span class="chip">Built-in calendar</span>';
+      : newsLiveEvents && newsSourceStatus()==="mixed"
+        ? '<span class="chip green"><span class="live-dot"></span>Live + built-in</span>'
+        : '<span class="chip">Built-in calendar</span>';
   el.innerHTML =
     '<div class="news-head"><h2>News</h2>'+liveStatus+'<span style="flex:1"></span>'
     + '<div class="view-tgl"><button class="'+(newsViewMode==="list"?"on":"")+'" onclick="newsViewMode=\'list\';RENDER.news()">'+listSvg+'List</button><button class="'+(newsViewMode==="calendar"?"on":"")+'" onclick="newsViewMode=\'calendar\';RENDER.news()">'+calSvg+'Calendar</button></div>'
