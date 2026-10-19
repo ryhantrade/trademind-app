@@ -90,14 +90,14 @@ h1,h2,h3,h4{margin:0;color:var(--pine-ink);letter-spacing:-.01em}
 @media (prefers-color-scheme: dark){.plan-card .pc-name{color:var(--ink)}}
 .plan-card .pc-sub{font-size:12px;color:var(--muted);margin:2px 0 10px}
 #main{flex:1;min-width:0;display:flex;flex-direction:column}
-#topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;gap:14px;padding:16px 28px;border-bottom:1px solid var(--line)}
+#topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--line)}
 #topbar h1{font-size:21px;font-weight:800}
 #topbar .tb-sub{font-size:12.5px;color:var(--muted)}
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .plan-badge{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--pine-soft);color:var(--pine)}
 .plan-badge.plus{background:var(--pine);color:#fff}
 .avatar{width:36px;height:36px;border-radius:50%;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border:0}
-#views{padding:24px 28px 60px;max-width:1240px;width:100%;margin:0 auto}
+#views{padding:24px 24px 60px;width:100%}
 .view{display:none}
 .view.on{display:block}
 
@@ -246,7 +246,7 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .folder-chip.on{background:var(--pine);border-color:var(--pine);color:#fff}
 
 /* ---------- Session status bar ---------- */
-#sessionbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 28px;background:var(--card);border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--muted)}
+#sessionbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 24px;background:var(--card);border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--muted)}
 #sessionbar .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:0 0 8px}
 #sessionbar .dot.open{background:var(--green)}
 #sessionbar .dot.closed{background:var(--amber)}
@@ -254,7 +254,7 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 @media (max-width:860px){ #sessionbar{padding:8px 16px} #lockout-slot{padding:0 16px !important} }
 
 /* ---------- Pre-market routine banner ---------- */
-#routine-banner{display:none;margin:14px 28px 0;background:var(--pine-soft);border:1px solid var(--line2);border-radius:12px;padding:11px 16px;align-items:center;gap:12px;flex-wrap:wrap}
+#routine-banner{display:none;margin:14px 24px 0;background:var(--pine-soft);border:1px solid var(--line2);border-radius:12px;padding:11px 16px;align-items:center;gap:12px;flex-wrap:wrap}
 #routine-banner.on{display:flex}
 #routine-banner .rb-title{font-weight:800;font-size:13.5px;color:var(--pine-ink)}
 @media (prefers-color-scheme: dark){ #routine-banner .rb-title{color:var(--ink)} }
@@ -592,7 +592,7 @@ input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px
       </div>
     </header>
     <div id="routine-banner"></div>
-    <div id="lockout-slot" style="padding:0 28px"></div>
+    <div id="lockout-slot" style="padding:0 24px"></div>
 
     <main id="views">
       <section class="view" data-view="dashboard"></section>
