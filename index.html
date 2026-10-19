@@ -1919,13 +1919,13 @@ RENDER.dashboard = function(){
   /* Profit Factor gauge (EdgeFlo): an SVG ring split red-left / green-right
      with a small gap at the top (and bottom); the split follows the gross
      win/loss share, defaulting to an even half when there are no trades. */
-  const pfShare = (s.grossWin+s.grossLoss)>0? s.grossWin/(s.grossWin+s.grossLoss) : 0.5;
+  const pfShare = (s.grossWin+s.grossLoss)>0? (s.grossLoss>0? s.grossWin/(s.grossWin+s.grossLoss) : 0.5) : 0.5;
   const PF_GAP = 14, pfUsable = 360 - 4*PF_GAP;
   const pfGSpan = pfUsable*pfShare, pfRSpan = pfUsable - pfGSpan;
   const pfArc = (a0,a1)=>{ const pt = a=> [32+29*Math.cos(a*Math.PI/180), 32+29*Math.sin(a*Math.PI/180)]; const p0 = pt(a0), p1 = pt(a1);
     return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A29 29 0 "+((a1-a0)>180?1:0)+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); };
   const pfGA0 = -90 + PF_GAP, pfGA1 = pfGA0 + pfGSpan, pfRA0 = 90 + PF_GAP, pfRA1 = pfRA0 + pfRSpan;
-  const pfFace = !s.n? "😐" : (s.pf>=1? "🙂" : "🙁");
+  const pfFace = (!s.n || s.pf===Infinity)? "😐" : (s.pf>=1? "🙂" : "🙁");
   const rMax = Math.max(Math.abs(avgWinR), Math.abs(avgLossR));
   const winBar = wins.length && rMax? Math.round(Math.abs(avgWinR)/rMax*100) : 0;
   const lossBar = losses.length && rMax? Math.round(Math.abs(avgLossR)/rMax*100) : 0;
@@ -1944,11 +1944,11 @@ RENDER.dashboard = function(){
     + kpi("Win Rate", '<div class="k-value mono">'+(s.n? s.winRate.toFixed(2):"0.00")+'%'+wrArrow+'</div>')
     + kpi("Avg R Per Trade", '<div style="display:flex;align-items:center;gap:12px">'
       + '<div class="k-value mono" style="margin-top:0">'+(s.n? String(Math.round(s.avgR)):"0")+avgRArrow+'</div>'
-      + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">'
-      + '<div><div class="mono pos" style="font-size:12px;font-weight:700">+'+Math.abs(avgWinR).toFixed(2)+'R</div><div class="progress green" style="height:4px;margin-top:3px"><i style="width:'+winBar+'%"></i></div></div>'
-      + '<div><div class="mono neg" style="font-size:12px;font-weight:700">-'+Math.abs(avgLossR).toFixed(2)+'R</div><div class="progress red" style="height:4px;margin-top:3px"><i style="width:'+lossBar+'%"></i></div></div>'
+      + '<div style="flex:1;min-width:0;display:flex;flex-direction:row;gap:12px">'
+      + '<div style="flex:1;min-width:0"><div class="mono pos" style="font-size:12px;font-weight:700">+'+Math.abs(avgWinR).toFixed(2)+'R</div><div class="progress green" style="height:4px;margin-top:3px"><i style="width:'+winBar+'%"></i></div></div>'
+      + '<div style="flex:1;min-width:0"><div class="mono neg" style="font-size:12px;font-weight:700">-'+Math.abs(avgLossR).toFixed(2)+'R</div><div class="progress red" style="height:4px;margin-top:3px"><i style="width:'+lossBar+'%"></i></div></div>'
       + '</div></div>')
-    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0">'+(s.n? (s.pf===Infinity?"∞":s.pf.toFixed(2)):"0.00")+' <span style="font-size:20px">'+pfFace+'</span></div>'
+    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0">'+(s.n && s.pf!==Infinity? s.pf.toFixed(2):"0.00")+' <span style="font-size:20px">'+pfFace+'</span></div>'
       + '<svg width="64" height="64" viewBox="0 0 64 64" style="margin-left:auto;flex:0 0 64px" role="img" aria-label="Profit factor gauge">'
       + (pfGSpan>0.5? '<path d="'+pfArc(pfGA0,pfGA1)+'" fill="none" stroke="'+pfGreen+'" stroke-width="5.5" stroke-linecap="round"/>':"")
       + (pfRSpan>0.5? '<path d="'+pfArc(pfRA0,pfRA1)+'" fill="none" stroke="'+pfRed+'" stroke-width="5.5" stroke-linecap="round"/>':"")
@@ -3643,6 +3643,8 @@ function loadTvChart(force){
       style: "1",
       locale: "en",
       hide_side_toolbar: false,
+      hide_top_toolbar: true,
+      hide_legend: true,
       allow_symbol_change: true,
       withdateranges: true,
       hide_volume: true,
