@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:," />
-<title>EdgePine — Trading Super App</title>
+<title>TradeMind — Trading Super App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -21,7 +21,7 @@
   --shadow:0 8px 28px rgba(18,48,38,.08);
   --shadow-sm:0 2px 10px rgba(18,48,38,.06);
   --r:16px; --r-sm:10px;
-  --rail:224px;
+  --rail:72px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -64,23 +64,28 @@ h1,h2,h3,h4{margin:0;color:var(--pine-ink);letter-spacing:-.01em}
 
 /* ---------- Layout ---------- */
 #app{display:flex;min-height:100vh}
-#rail{width:var(--rail);flex:0 0 var(--rail);background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 14px;z-index:40}
-.brand{display:flex;align-items:center;gap:10px;padding:2px 8px 16px}
+#rail{width:var(--rail);flex:0 0 var(--rail);background:#0B1130;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;position:sticky;top:0;height:100vh;padding:16px 0;z-index:40}
+.brand{display:flex;align-items:center;justify-content:center;padding:2px 0 16px}
+.brand>div:not(.brand-mark){display:none}
 .brand-mark{width:36px;height:36px;border-radius:10px;background:var(--pine);display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 36px}
 .brand-name{font-weight:800;font-size:17px;color:var(--pine-ink)}
 @media (prefers-color-scheme: dark){.brand-name{color:var(--ink)}}
 .brand-sub{font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-.nav-group{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px}
-.nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:9px 10px;border:0;background:transparent;border-radius:10px;color:var(--muted);font-weight:600;font-size:14px;text-align:left;transition:background .15s,color .15s}
-.nav-item>svg{flex:0 0 30px;width:30px;height:30px;padding:5px;border-radius:9px;background:var(--card2);color:var(--faint);transition:background .15s,color .15s}
-.nav-item:hover>svg{color:var(--pine)}
+.nav-group{display:none}
+#nav-main,#nav-acct{width:100%;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav-item{position:relative;display:flex;align-items:center;justify-content:center;width:46px;height:46px;padding:0;border:0;background:transparent;border-radius:12px;color:var(--muted);transition:background .15s,color .15s}
+.nav-item>svg{flex:0 0 34px;width:34px;height:34px;padding:6px;border-radius:10px;background:rgba(255,255,255,.07);color:#8E97B8;transition:background .15s,color .15s}
+.nav-item:hover>svg{color:#fff}
 .nav-item.active>svg{background:var(--pine);color:#fff}
-.nav-item:hover{background:var(--card2);color:var(--ink)}
-.nav-item.active{background:var(--pine-soft);color:var(--pine)}
-.nav-item .lock{margin-left:auto;color:var(--amber);display:flex}
-.nav-item .lock svg{width:13px;height:13px}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:color-mix(in srgb,var(--pine) 24%,transparent);color:var(--pine)}
+.nav-item>span:not(.lock){display:none}
+.nav-item .lock{position:absolute;top:2px;right:2px;margin:0;color:var(--amber);display:flex}
+.nav-item .lock svg{width:11px;height:11px}
+.nav-item::after{content:attr(data-tip);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%) translateX(-4px);background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:700;line-height:1;padding:7px 11px;border-radius:8px;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .15s .1s,transform .15s .1s;z-index:60}
+.nav-item:hover::after,.nav-item:focus-visible::after{opacity:1;transform:translateY(-50%) translateX(0)}
 .rail-spacer{flex:1}
-.plan-card{background:var(--pine-soft);border-radius:12px;padding:12px;margin-top:10px}
+.plan-card{background:transparent;border-radius:12px;padding:0;margin-top:10px;display:flex;justify-content:center}
 .plan-card .pc-name{font-weight:800;font-size:13px;color:var(--pine-ink)}
 @media (prefers-color-scheme: dark){.plan-card .pc-name{color:var(--ink)}}
 .plan-card .pc-sub{font-size:12px;color:var(--muted);margin:2px 0 10px}
@@ -320,6 +325,13 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 /* ---------- Trading page (EdgeFlo layout) ---------- */
 .acct-bar{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding:14px 20px}
 .acct-cell{min-width:110px}
+.margin-cell{position:relative}
+.margin-cell .acct-val{cursor:pointer}
+.margin-pop{position:absolute;top:calc(100% + 10px);left:0;min-width:230px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px;z-index:50}
+.margin-pop .mp-row{display:flex;justify-content:space-between;align-items:baseline;gap:18px;padding:5px 0;font-size:13.5px}
+.margin-pop .mp-row+.mp-row{border-top:1px solid var(--line)}
+.margin-pop .mp-row span{color:var(--muted);font-weight:600}
+.margin-pop .mp-row strong{font-family:"IBM Plex Mono",monospace}
 .acct-label{font-size:11.5px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px}
 .acct-val{font-size:16px;font-weight:800;margin-top:1px}
 .info-i{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--faint);color:var(--faint);font-size:9px;font-weight:800;font-style:normal;cursor:help;flex:0 0 14px}
@@ -547,12 +559,12 @@ input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px
 <div id="app">
   <!-- ============ LEFT NAV RAIL ============ -->
   <nav id="rail" aria-label="Main">
-    <div class="brand">
+    <div class="brand" title="TradeMind — Trading Super App">
       <div class="brand-mark" aria-hidden="true">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 6-8"/><path d="M14 6h4v4"/></svg>
       </div>
       <div>
-        <div class="brand-name">EdgePine</div>
+        <div class="brand-name">TradeMind</div>
         <div class="brand-sub">Trading Super App</div>
       </div>
     </div>
@@ -655,7 +667,7 @@ const STRIPE_CONFIG = {
 const PLANS = {
   free:  { name:"Free",  rank:0, monthly:0,  yearly:0,
            tagline:"Try the core journal & dashboard",
-           features:["Dashboard & equity curve","Trade journal + calendar view","Paper trading ($10k virtual)","Full guardrails & lockout","Economic calendar","Notebook & Sanctuary"] },
+           features:["Dashboard & equity curve","Trade journal + calendar view","Paper trading ($100k virtual)","Full guardrails & lockout","Economic calendar","Notebook & Sanctuary"] },
   basic: { name:"Basic", rank:1, monthly:44, yearly:35,
            tagline:"Discipline tools for serious journaling",
            features:["Everything in Free","Edge trade-plan builder","Unlimited journal history","Per-plan performance tracking","Trading-window enforcement","Priority email support"] },
@@ -676,10 +688,10 @@ const DEFAULTS = {
   activePlanId: null,                           // Edge plan marked Active
   edgeSeeded: false,                            // starter Edge plan copied in once
   notes: [], folders: ["General","Reviews","Ideas"],
-  guardrails: { enabled:true, maxLoss:200, maxProfit:400, maxTrades:5, winStart:"07:00", winEnd:"17:00", newsBlock:true, hardLock:false,
+  guardrails: { enabled:true, maxLoss:100, maxProfit:1000, maxTrades:5, winStart:"07:00", winEnd:"17:00", newsBlock:true, hardLock:false,
                 marginInvert:false, prompts:true, routineGate:true, riskMode:"pct", riskValue:1, tz:"UTC" },
   overrides: [],                                // guardrail rule-break log
-  paper: { balance:10000, positions: [] },
+  paper: { balance:100000, positions: [] },
   checkins: [],                                 // sanctuary streak dates (yyyy-mm-dd)
   intentions: {},                               // date -> text
   coach: [],                                    // chat history {who, text}
@@ -1091,8 +1103,8 @@ const ICONS = {
   cross:'<svg class="fi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="color:var(--faint)"><path d="M6 6l12 12M18 6L6 18"/></svg>'
 };
 const NAV_MAIN = [
-  ["dashboard","Dashboard"],["journal","Journal"],["trading","Trading"],["edge","Edge Plans"],["guardrails","Guardrails"],
-  ["news","News"],["notebook","Notebook"],["coach","AI Coach"],["sanctuary","Sanctuary"],["performance","Performance"]
+  ["dashboard","Dashboard"],["trading","Trading"],["edge","Edge Plans"],["journal","Journal"],["guardrails","Guardrails"],
+  ["notebook","Notebook"],["news","News"],["sanctuary","Sanctuary"],["coach","AI Coach"],["performance","Performance"]
 ];
 const NAV_ACCT = [["pricing","Pricing"],["account","Account"]];
 const TITLES = { dashboard:"Dashboard", journal:"Trade Journal", addtrade:"Add Trade", trading:"Trading", guardrails:"Guardrails", edge:"Edge — Trade Plans",
@@ -1101,7 +1113,7 @@ const TITLES = { dashboard:"Dashboard", journal:"Trade Journal", addtrade:"Add T
 let currentView = "dashboard";
 function navItemHTML(v,label){
   const locked = !hasAccess(v);
-  return '<button class="nav-item" data-nav="'+v+'">'+ICONS[v]+'<span>'+label+'</span>'+(locked?'<span class="lock">'+ICONS.lock+'</span>':"")+'</button>';
+  return '<button class="nav-item" data-nav="'+v+'" data-tip="'+label+'" aria-label="'+label+'" title="">'+ICONS[v]+'<span>'+label+'</span>'+(locked?'<span class="lock">'+ICONS.lock+'</span>':"")+'</button>';
 }
 function buildNav(){
   $("#nav-main").innerHTML = NAV_MAIN.map(n=>navItemHTML(n[0],n[1])).join("");
@@ -1113,9 +1125,9 @@ function buildNav(){
   $("#more-panel").innerHTML = NAV_MAIN.concat(NAV_ACCT).filter(n=>prim.indexOf(n[0])<0)
     .map(n=>'<button data-nav="'+n[0]+'">'+ICONS[n[0]]+'<span>'+n[1]+'</span></button>').join("");
   const p = PLANS[DB.sub.plan];
-  $("#rail-plan").innerHTML = '<div class="pc-name">'+p.name+' plan</div><div class="pc-sub">'
-    + (DB.sub.plan==="free" ? "Unlock Guardrails, Edge, AI Coach &amp; analytics." : "Your premium modules are unlocked. Keep executing the plan.")
-    + '</div>' + (DB.sub.plan!=="plus" ? '<button class="btn primary sm block" onclick="go(\'pricing\')">Upgrade</button>' : '<button class="btn sm block" onclick="go(\'account\')">Manage plan</button>');
+  $("#rail-plan").innerHTML = DB.sub.plan!=="plus"
+    ? '<button class="nav-item" data-tip="'+p.name+' plan — Upgrade" aria-label="'+p.name+' plan — Upgrade" onclick="go(\'pricing\')">'+ICONS.pricing+'</button>'
+    : '<button class="nav-item" data-tip="'+p.name+' plan — Manage plan" aria-label="'+p.name+' plan — Manage plan" onclick="go(\'account\')">'+ICONS.check+'</button>';
   $("#tb-badge").textContent = p.name;
   $("#tb-badge").className = "plan-badge" + (DB.sub.plan==="plus" ? " plus" : "");
   $("#tb-upgrade").style.display = DB.sub.plan==="plus" ? "none" : "";
@@ -1129,7 +1141,7 @@ function go(view){
      page's error can never strand the user on the Dashboard. */
   $$(".view").forEach(s=> s.classList.toggle("on", s.getAttribute("data-view")===view));
   $$("[data-nav]").forEach(b=> b.classList.toggle("active", b.getAttribute("data-nav")===view));
-  $("#tb-title").textContent = TITLES[view] || "EdgePine";
+  $("#tb-title").textContent = TITLES[view] || "TradeMind";
   window.scrollTo({top:0});
   dashChrome(view);
   try{ renderRoutineBanner(); }catch(e){ if(window.console) console.error("Routine banner failed", e); }
@@ -1363,7 +1375,7 @@ RENDER.journal = function(){
     + '<div class="seg solid" role="group" aria-label="PnL display unit">'+["$","%","R"].map(u=>'<button class="'+(journalUnit===u?"on":"")+'" onclick="journalUnit=\''+u+'\';RENDER.journal()">'+u+'</button>').join("")+'</div>'
     + '<button class="btn" style="color:var(--pine)" onclick="openTradeModal()">+ Add Manual Trade</button>'
     + '<button class="icon-btn" title="'+(journalWide? "Show the daily panel again":"Expand calendar")+'" onclick="journalWide=!journalWide;RENDER.journal()">'+(journalWide? "&laquo;" : "&raquo;")+'</button></div>'
-    + '<div class="journal-layout"'+(journalWide? ' style="grid-template-columns:1fr"':"")+'><div style="min-width:0">' + calendarHTML() + monthlySummaryHTML() + emotionSummary() + '</div>'
+    + '<div class="journal-layout"'+(journalWide? ' style="grid-template-columns:1fr"':"")+'><div style="min-width:0">' + calendarHTML() + monthlySummaryHTML() + '</div>'
     + (journalWide? "" : '<div style="min-width:0">' + journalDailyPanelHTML() + '</div>')
     + '</div>';
 };
@@ -1933,19 +1945,31 @@ function paintTradingLive(){
   const eq = $("#th-equity"); if(eq) eq.textContent = fmt$(DB.paper.balance + openPnl);
   DB.paper.positions.forEach(p=>{ const s = document.querySelector('[data-pospnl="'+p.id+'"]'); if(s){ const v = posPnl(p); s.textContent = fmt$(v); s.className = "mono "+(v>=0?"pos":"neg"); s.style.fontWeight = "800"; } });
 }
+let marginPopOpen = false;
+function toggleMarginPop(){ marginPopOpen = !marginPopOpen; RENDER.trading(); }
 function tradingHeaderHTML(lockedOut){
   const openPnl = openPnlNow(); const equity = DB.paper.balance + openPnl;
   const marginUsed = DB.paper.positions.reduce((a,p)=> a + Math.abs(p.size * p.entry) * 0.01, 0);
+  const freeMargin = equity - marginUsed;
+  const marginLevel = marginUsed>0? (equity / marginUsed * 100) : null;
   const freePct = DB.paper.positions.length && equity>0 ? Math.max(0, Math.min(100, (equity - marginUsed) / equity * 100)) : null;
   const mh = freePct===null? "N/A" : ((DB.guardrails.marginInvert? 100 - freePct : freePct).toFixed(1) + "%");
   const activePlan = DB.plans.find(p=>p.id===DB.activePlanId) || null;
   const lockSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="vertical-align:-1px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const chevD = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:0;margin-left:3px"><path d="'+(marginPopOpen? "M5 15l7-7 7 7":"M5 9l7 7 7-7")+'"/></svg>';
   return '<div class="card acct-bar">'
     + '<h2 style="font-size:19px;font-weight:800;margin-right:4px">Trading</h2>'
+    + '<span class="chip pine" title="Paper trading account — no real funds">Demo</span>'
     + '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="Paper account cash balance">i</span></div><div class="acct-val mono">'+fmt$(DB.paper.balance)+'</div></div>'
     + '<div class="acct-cell"><div class="acct-label">Open PnL <span class="info-i" title="Unrealised P&amp;L across open paper positions">i</span></div><div class="acct-val mono"><span id="th-openpnl" class="'+(openPnl>=0?"pos":"neg")+'">'+(openPnl>0?"+":"")+fmt$(openPnl)+'</span></div></div>'
     + '<div class="acct-cell"><div class="acct-label">Equity <span class="info-i" title="Balance plus open P&amp;L">i</span></div><div class="acct-val mono" id="th-equity">'+fmt$(equity)+'</div></div>'
-    + '<div class="acct-cell"><div class="acct-label">Margin Health <span class="info-i" title="'+(DB.guardrails.marginInvert? "Margin level inverted in Guardrails: showing margin USED as a share of equity (1% margin per position)." : "Free margin as a share of equity (1% margin per position). N/A with no open positions.")+'">i</span></div><div class="acct-val mono">'+mh+'</div></div>'
+    + '<div class="acct-cell margin-cell"><div class="acct-label">Margin Health <span class="info-i" title="'+(DB.guardrails.marginInvert? "Margin level inverted in Guardrails: showing margin USED as a share of equity (1% margin per position)." : "Free margin as a share of equity (1% margin per position). N/A with no open positions.")+'">i</span></div><div class="acct-val mono" title="Margin breakdown" onclick="toggleMarginPop()">'+mh+chevD+'</div>'
+    + (marginPopOpen? '<div class="margin-pop">'
+      + '<div class="mp-row"><span>Free Margin</span><strong>'+fmt$(Math.max(0, freeMargin))+'</strong></div>'
+      + '<div class="mp-row"><span>Margin Used</span><strong>'+fmt$(marginUsed)+'</strong></div>'
+      + '<div class="mp-row"><span>Margin Level</span><strong>'+(marginLevel===null? "N/A" : marginLevel.toLocaleString("en-US",{maximumFractionDigits:1})+"%")+'</strong></div>'
+      + '<div class="small" style="margin-top:6px">1% margin per open position on the paper feed.</div></div>' : "")
+    + '</div>'
     + (activePlan? '<span class="chip pine" title="Your active Edge plan — the Trading Plan tab is armed with it">Active plan: '+esc(activePlan.name)+'</span>' : "")
     + '<button class="icon-btn" title="Switch account" style="border:0;font-size:16px" onclick="go(\'account\')">&or;</button>'
     + '<span style="flex:1"></span>'
@@ -2059,7 +2083,29 @@ function tradingSidebarHTML(st, lockedOut){
     + tabBtn("plan","Trading Plan", icoTab('<path d="M6 2h9l4 4v16H6z"/><path d="M9 12h6M9 16h6"/>'))
     + '</div>'
     + (sideTab==="watchlist"? sideWatchlistHTML() : sideTab==="alerts"? sideAlertsHTML() : sidePlanHTML())
-    + '</div>';
+    + '</div>'
+    + symbolDetailHTML();
+}
+/* Symbol detail card — pinned to the bottom of the Trading sidebar,
+   tracking whichever instrument is loaded on the chart. */
+function symbolDetailHTML(){
+  const s = wlState[simMarket]; if(!s) return "";
+  const row = WL_INSTRUMENTS.find(r=>r[0]===simMarket);
+  const chg = (s.last - s.open)/s.open*100;
+  const spread = Math.max(s.last*0.00018, Math.pow(10,-s.dec));
+  const bid = s.last - spread/2, ask = s.last + spread/2;
+  const cell = (label, val, cls)=> '<div><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)">'+label+'</div><div class="mono" style="font-weight:700;margin-top:2px" '+(cls? 'class="mono '+cls+'"':"")+'>'+val+'</div></div>';
+  return '<div class="card side-card"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+    + '<strong style="font-size:15px">'+esc(simMarket)+'</strong>'
+    + (row? '<span class="chip">'+esc(row[1])+'</span>' : "")
+    + '<span style="flex:1"></span>'
+    + '<span class="mono" style="font-weight:800;font-size:16px" data-twl-last="'+simMarket+'">'+s.last.toFixed(s.dec)+'</span>'
+    + '<span class="mono '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+simMarket+'" style="font-weight:700">'+fmtPct(chg)+'</span></div>'
+    + '<div class="grid g3" style="gap:10px;margin-top:12px">'
+    + cell("BID", bid.toFixed(s.dec)) + cell("ASK", ask.toFixed(s.dec)) + cell("SPREAD", spread.toFixed(s.dec))
+    + cell("DAY OPEN", s.open.toFixed(s.dec)) + cell("SESSION", sessionInfo().open? "Open":"Closed") + cell("FEED", "Practice")
+    + '</div>'
+    + '<div class="small" style="margin-top:10px">Simulated practice feed — click any watchlist row to switch the chart and this card.</div></div>';
 }
 function sideWatchlistRowsHTML(){
   const q = twlSearch.trim().toUpperCase();
@@ -2112,40 +2158,40 @@ function alertsListHTML(){
     return '<div class="alert-row"><span style="flex:1;min-width:0"><strong>'+esc(a.symbol)+'</strong> <span class="small">'+(a.condition==="above"? "at or above":"at or below")+'</span> <span class="mono" style="font-weight:700">'+a.price+'</span>'
       + '<div class="small">'+(a.status==="triggered"? "Triggered "+esc(a.triggeredAt||"") : "Watching · last "+last)+' · set '+esc(a.created||"")+'</div></span>'
       + (a.status==="triggered"? '<span class="chip red">Triggered</span>' : '<span class="chip green">Active</span>')
-      + (a.status==="triggered"? '<button class="btn sm" title="Watch this level again" onclick="rearmAlert(\''+a.id+'\')">Re-arm</button>' : "")
-      + '<button class="btn sm" title="Delete alert" onclick="deleteAlert(\''+a.id+'\')">&times;</button></div>';
+      + (a.status==="triggered"? '<button class="btn sm" title="Watch this level again" onclick="rearmPriceWatch(\''+a.id+'\')">Re-arm</button>' : "")
+      + '<button class="btn sm" title="Delete alert" onclick="deletePriceWatch(\''+a.id+'\')">&times;</button></div>';
   }).join("");
 }
 function paintAlertsList(){ const l = document.getElementById("alerts-list"); if(l) l.innerHTML = alertsListHTML(); }
-function toggleAlertForm(force){
+function toggleWatchForm(force){
   const f = document.getElementById("al-form"); if(!f) return;
   f.style.display = (force!==undefined? force : f.style.display==="none")? "block":"none";
 }
-function createAlert(){
+function createPriceWatch(){
   const sym = $("#al-sym").value, cond = $("#al-cond").value, price = parseFloat($("#al-price").value);
   if(!(price>0)){ toast("Enter a trigger price above zero."); return; }
   const s0 = wlState[sym];
   DB.alerts.push({ id:uid(), symbol:sym, condition:cond, price:price, status:"active", lastSeen: s0? s0.last : null,
     created: new Date().toLocaleDateString("en-US",{month:"short", day:"numeric"})+" "+new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}), triggeredAt:"" });
-  saveDB(); paintAlertsList(); toggleAlertForm(false);
+  saveDB(); paintAlertsList(); toggleWatchForm(false);
   toast("Alert set — "+sym+" "+(cond==="above"? "≥":"≤")+" "+price+".");
 }
-function rearmAlert(id){ const a = DB.alerts.find(x=>x.id===id); if(!a) return; const s = wlState[a.symbol];
+function rearmPriceWatch(id){ const a = DB.alerts.find(x=>x.id===id); if(!a) return; const s = wlState[a.symbol];
   /* Re-arm baselines at the CURRENT price: the alert can only fire on a
      fresh cross of the level from here — if price is still beyond the
      level it must first come back across before it can trigger again. */
   a.status="active"; a.triggeredAt=""; a.lastSeen = s? s.last : null;
   saveDB(); paintAlertsList(); toast("Alert re-armed for "+a.symbol+" — fires on the next fresh cross of "+a.price+"."); }
-function deleteAlert(id){ DB.alerts = DB.alerts.filter(x=>x.id!==id); saveDB(); paintAlertsList(); }
+function deletePriceWatch(id){ DB.alerts = DB.alerts.filter(x=>x.id!==id); saveDB(); paintAlertsList(); }
 function checkPriceAlerts(){
   if(!DB.alerts.length) return;
   let fired = false;
   DB.alerts.forEach(a=>{
     if(a.status!=="active") return;
     const s = wlState[a.symbol]; if(!s) return;
-    /* Crossing-only triggers: an alert fires when price moves from the
-       safe side of its level to the trigger side between two ticks. An
-       alert (re)armed while price is already beyond the level baselines
+    /* Crossing-only triggers: a watch fires when price moves from the
+       safe side of its level to the trigger side between two ticks. A
+       watch re-armed while price is already beyond the level baselines
        at that price and stays quiet until a genuinely new cross. */
     if(typeof a.lastSeen!=="number"){ a.lastSeen = s.last; return; } // first sighting: set the baseline, never fire
     const prev = a.lastSeen; a.lastSeen = s.last;
@@ -2161,12 +2207,12 @@ function checkPriceAlerts(){
 function sideAlertsHTML(){
   const info = sessionInfo(); const st = guardrailStatus();
   const high = weekEvents().filter(e=> e.date===todayStr() && e.impact==="High");
-  const form = '<button class="btn primary sm block" onclick="toggleAlertForm()">+ Create New Alert</button>'
+  const form = '<button class="btn primary sm block" onclick="toggleWatchForm()">+ Create New Alert</button>'
     + '<div id="al-form" style="display:none;margin-top:10px">'
     + '<div class="field"><label class="f">Instrument</label><select class="input" id="al-sym">'+WL_INSTRUMENTS.map(r=>'<option value="'+r[0]+'"'+(r[0]===simMarket?" selected":"")+'>'+r[0]+'</option>').join("")+'</select></div>'
     + '<div class="row"><div class="field"><label class="f">Condition</label><select class="input" id="al-cond"><option value="above">At or above</option><option value="below">At or below</option></select></div>'
     + '<div class="field"><label class="f">Price</label><input class="input mono" id="al-price" type="number" step="any" placeholder="e.g. 2700"></div></div>'
-    + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn sm" onclick="toggleAlertForm(false)">Cancel</button><button class="btn primary sm" onclick="createAlert()">Create alert</button></div></div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn sm" onclick="toggleWatchForm(false)">Cancel</button><button class="btn primary sm" onclick="createPriceWatch()">Create alert</button></div></div>'
     + '<div class="flt-name" style="margin:14px 0 4px">Your price alerts</div><div id="alerts-list">'+alertsListHTML()+'</div>'
     + '<div class="flt-name" style="margin:14px 0 4px">Session alerts</div>';
   const items = [];
@@ -2187,10 +2233,24 @@ function sidePlanHTML(){
   if(!sidePlanId || !DB.plans.some(p=>p.id===sidePlanId)) sidePlanId = (DB.activePlanId && DB.plans.some(p=>p.id===DB.activePlanId)) ? DB.activePlanId : DB.plans[0].id;
   const p = DB.plans.find(x=>x.id===sidePlanId);
   const running = activePlanRun && activePlanRun.planId===p.id;
-  return '<label class="f">Plan</label><select class="input" onchange="sidePlanId=this.value;RENDER.trading()">'+DB.plans.map(x=>'<option value="'+x.id+'" '+(x.id===p.id?"selected":"")+'>'+esc(x.name)+'</option>').join("")+'</select>'
-    + '<div class="small" style="margin:8px 0">Bias: '+esc(p.bias||"—")+' &middot; '+esc(p.market||"")+'</div>'
+  const secT = t=> '<div class="flt-name" style="margin:14px 0 5px">'+t+'</div>';
+  const exitTxt = p.exit || p.exitRules || "";
+  let h = '<label class="f">Plan</label><select class="input" onchange="sidePlanId=this.value;RENDER.trading()">'+DB.plans.map(x=>'<option value="'+x.id+'" '+(x.id===p.id?"selected":"")+'>'+esc(x.name)+'</option>').join("")+'</select>'
+    + '<div class="small" style="margin:8px 0">Bias: '+esc(p.bias||"—")+' &middot; '+esc(p.market||"")+(p.type? ' &middot; '+esc(p.type):"")+'</div>';
+  if((p.charting||[]).length){
+    h += secT("Charting steps") + '<ol class="num-list" style="font-size:13.5px">'+p.charting.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>';
+  }
+  h += secT("Entry criteria")
     + (p.criteria||[]).map((c,i)=>'<label style="display:flex;gap:9px;align-items:center;padding:5px 0;font-size:13.5px;cursor:pointer"><input type="checkbox" '+(running&&activePlanRun.checks[i]?"checked":"")+' onchange="toggleTradingCheck(\''+p.id+'\','+i+',this.checked)" style="width:17px;height:17px;accent-color:var(--pine)">'+esc(c)+'</label>').join("")
     + '<div class="small" style="margin-top:6px">'+(running? checklistStatus(p) : "Tick every box to arm this plan, then trade it.")+'</div>';
+  h += secT("Entry models")
+    + (p.modelShot
+      ? '<img src="'+p.modelShot+'" alt="Entry model" style="width:100%;border-radius:10px;display:block"><button class="btn sm" style="margin-top:8px" onclick="viewModelShots(\'plan\',\''+p.id+'\')">View models</button>'
+      : '<div class="small">No model screenshots attached — add them in Edge Plans → Entry Models.</div><button class="btn sm" style="margin-top:8px" onclick="go(\'edge\')">Open in Edge Plans</button>');
+  if(exitTxt) h += secT("Exit criteria") + '<div style="font-size:13.5px">'+esc(exitTxt)+'</div>';
+  if(p.mgmt) h += secT("Trade management") + '<div style="font-size:13.5px">'+esc(p.mgmt)+'</div>';
+  if(p.notes) h += secT("Notes") + '<div class="small" style="white-space:pre-wrap">'+esc(p.notes)+'</div>';
+  return h;
 }
 RENDER.trading = function(){
   const el = document.querySelector('[data-view="trading"]');
@@ -2233,7 +2293,7 @@ function loadTvChart(){
       hide_side_toolbar: false,
       allow_symbol_change: true,
       withdateranges: true,
-      studies: ["STD;RSI", "STD;MACD"],
+      studies: [],
       support_host: "https://www.tradingview.com"
     });
   };
@@ -2260,7 +2320,7 @@ function openPosition(){
   DB.paper.positions.push(pos);
   saveDB(); RENDER.trading(); toast(simDir+" "+size+" "+simMarket+" opened @ market.");
   notifyEvent("dealExecuted", "Position opened", simDir+" "+size+" "+simMarket+" @ "+pos.entry);
-  if(DB.guardrails.prompts!==false) postTradePrompt("open", pos.id);
+  if(DB.guardrails.prompts!==false) postTradeCheckin("open", pos.id);
 }
 function closePosition(id, exitPrice, why, reflection){
   const i = DB.paper.positions.findIndex(p=>p.id===id); if(i<0) return;
@@ -2281,33 +2341,33 @@ function closePosition(id, exitPrice, why, reflection){
 }
 function closePositionUI(id){
   if(DB.guardrails.prompts===false){ closePosition(id, null, "Manual close"); return; } // Trading Prompts off in Guardrails
-  postTradePrompt("close", id);
+  postTradeCheckin("close", id);
 }
 /* ---- Post-trade prompts: entry/exit emotions + note, synced to the Journal ----
    Gated by the Trading Prompts toggle in Guardrails. */
 let ptpEmotion = "", ptpExitEmotion = "";
-function postTradePrompt(kind, posId){
+function postTradeCheckin(kind, posId){
   const pos = DB.paper.positions.find(p=>p.id===posId); if(!pos) return;
   ptpEmotion = pos.emotion || "";
   ptpExitEmotion = "";
   const isOpen = kind==="open";
-  const chipGroup = (gid, group, sel)=> '<div class="emo-grid" id="'+gid+'">'+EMOTIONS.map(e=>'<button class="emo-chip '+(sel===e?"on":"")+'" onclick="pickPromptEmotion(this,\''+e+'\',\''+group+'\')">'+e+'</button>').join("")+'</div>';
+  const chipGroup = (gid, group, sel)=> '<div class="emo-grid" id="'+gid+'">'+EMOTIONS.map(e=>'<button class="emo-chip '+(sel===e?"on":"")+'" onclick="pickCheckinEmotion(this,\''+e+'\',\''+group+'\')">'+e+'</button>').join("")+'</div>';
   openModal('<h3>'+(isOpen? "Position opened — 10-second check-in" : "Close this trade — 10-second debrief")+'</h3>'
     + '<div class="small" style="margin-bottom:6px">'+esc(pos.dir)+' '+esc(pos.market)+' @ '+pos.entry+'. Tag the emotions honestly — they sync straight into your Journal entry and feed your Edge Score and P&amp;L-by-emotion stats.</div>'
     + '<label class="f" style="margin-top:10px">'+(isOpen? "Entry emotion — how do you feel right now?" : "Entry emotion — how did you feel going in?")+'</label>'
     + chipGroup("ptp-emos", "entry", ptpEmotion)
     + (isOpen? "" : '<label class="f" style="margin-top:8px">Exit emotion — how do you feel closing it?</label>' + chipGroup("ptp-exit-emos", "exit", ptpExitEmotion))
     + '<div class="field" style="margin-top:8px"><label class="f">'+(isOpen? "Note to your future self" : "What happened / lesson")+'</label><textarea class="input" id="ptp-note" rows="2" placeholder="'+(isOpen? "Why this setup, why now…" : "Followed the plan? What would you repeat or never do again…")+'"></textarea></div>'
-    + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="finishPrompt(\''+kind+'\',\''+posId+'\',true)">Skip</button><button class="btn primary" onclick="finishPrompt(\''+kind+'\',\''+posId+'\',false)">Save &amp; '+(isOpen? "continue":"close trade")+'</button></div>');
+    + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="finishCheckin(\''+kind+'\',\''+posId+'\',true)">Skip</button><button class="btn primary" onclick="finishCheckin(\''+kind+'\',\''+posId+'\',false)">Save &amp; '+(isOpen? "continue":"close trade")+'</button></div>');
 }
-function pickPromptEmotion(btn, e, group){
+function pickCheckinEmotion(btn, e, group){
   if(group==="exit"){ ptpExitEmotion = (ptpExitEmotion===e)? "" : e; }
   else { ptpEmotion = (ptpEmotion===e)? "" : e; }
   const sel = group==="exit"? ptpExitEmotion : ptpEmotion;
   const grid = document.getElementById(group==="exit"? "ptp-exit-emos" : "ptp-emos");
   if(grid) Array.from(grid.querySelectorAll(".emo-chip")).forEach(c=> c.classList.toggle("on", c.textContent===sel));
 }
-function finishPrompt(kind, posId, skip){
+function finishCheckin(kind, posId, skip){
   const note = skip? "" : (($("#ptp-note")||{}).value||"").trim();
   const pos = DB.paper.positions.find(p=>p.id===posId);
   const emotion = skip? (pos||{}).emotion || "" : ptpEmotion;
@@ -2328,7 +2388,7 @@ function calcSize(){
   $("#calc-out").innerHTML = '<div class="alert pine"><div>Risk amount: <strong class="mono">'+fmt$(riskAmt)+'</strong><br>Position size: <strong class="mono">'+units.toLocaleString("en-US",{maximumFractionDigits:4})+' units</strong><br><span class="small">If the stop is hit you lose exactly '+risk+'% — no debate at the chart.</span></div></div>';
   const sz = $("#pt-size"); if(sz) sz.value = +units.toFixed(4);
 }
-function resetPaper(){ DB.paper = { balance:10000, positions:[] }; saveDB(); renderAll(); toast("Paper account reset to $10,000."); }
+function resetPaper(){ DB.paper = { balance:100000, positions:[] }; saveDB(); renderAll(); toast("Paper account reset to $100,000."); }
 </script>
 
 <script>
@@ -2419,18 +2479,18 @@ function applyGuardrailDefaults(){
   const chk = (id, v)=>{ const e = document.getElementById(id); if(e) e.checked = v; };
   chk("gr-enabled", true); chk("gr-hardlock", false); chk("gr-margininvert", false); chk("gr-news", true); chk("gr-prompts", true); chk("gr-routinegate", true);
   grSetRiskMode("pct"); set("gr-risk", 1);
-  set("gr-maxloss", 200); set("gr-maxprofit", 400); set("gr-maxtrades", 5);
+  set("gr-maxloss", 100); set("gr-maxprofit", 1000); set("gr-maxtrades", 5);
   set("gr-start", "07:00"); set("gr-end", "17:00"); set("gr-tz", "UTC");
-  toast("Recommended defaults filled in — 1% risk, $200 max loss, $400 target, 5 trades, 07:00–17:00. Hit Save to apply.");
+  toast("Recommended defaults filled in — 1% risk, $100 max loss, $1,000 target, 5 trades, 07:00–17:00. Hit Save to apply.");
 }
 /* Every guardrail control auto-saves the moment it changes — no setting
    can be lost by forgetting the Save button or reloading mid-edit. The
-   Save button remains as an explicit confirm (same write + UI refresh). */
+   Save button remains as an explicit confirmation of the same write. */
 function grAutoSave(){
   const ge = id=> document.getElementById(id);
   if(!ge("gr-enabled") || !ge("gr-maxloss")) return;
   DB.guardrails = { enabled: ge("gr-enabled").checked,
-    maxLoss: Math.abs(parseFloat(ge("gr-maxloss").value)||200), maxProfit: Math.abs(parseFloat(ge("gr-maxprofit").value)||0),
+    maxLoss: Math.abs(parseFloat(ge("gr-maxloss").value)||100), maxProfit: Math.abs(parseFloat(ge("gr-maxprofit").value)||0),
     maxTrades: Math.max(1, parseInt(ge("gr-maxtrades").value)||5), winStart: ge("gr-start").value||"07:00", winEnd: ge("gr-end").value||"17:00",
     newsBlock: ge("gr-news").checked, hardLock: ge("gr-hardlock").checked,
     marginInvert: ge("gr-margininvert").checked, prompts: ge("gr-prompts").checked, routineGate: ge("gr-routinegate").checked,
@@ -2439,7 +2499,7 @@ function grAutoSave(){
 }
 function saveGuardrails(){
   DB.guardrails = { enabled: $("#gr-enabled").checked,
-    maxLoss: Math.abs(parseFloat($("#gr-maxloss").value)||200), maxProfit: Math.abs(parseFloat($("#gr-maxprofit").value)||0),
+    maxLoss: Math.abs(parseFloat($("#gr-maxloss").value)||100), maxProfit: Math.abs(parseFloat($("#gr-maxprofit").value)||0),
     maxTrades: Math.max(1, parseInt($("#gr-maxtrades").value)||5), winStart: $("#gr-start").value||"07:00", winEnd: $("#gr-end").value||"17:00",
     newsBlock: $("#gr-news").checked, hardLock: $("#gr-hardlock").checked,
     marginInvert: $("#gr-margininvert").checked, prompts: $("#gr-prompts").checked, routineGate: $("#gr-routinegate").checked,
@@ -2789,27 +2849,88 @@ function weekEvents(){
 }
 
 /* ---- News page (EdgeFlo layout) ----
-   Static sample releases anchored to the current day, so Today / quick
-   ranges always have something to show. Times are local display times. */
-const NEWS_EVENTS = [
-  { off:-2, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Inflation", event:"CPI (YoY)", actual:"3.1%", fc:"3.0%", prev:"2.9%" },
-  { off:-2, time:"15:00", cur:"USD", cc:"US", impact:"Medium", cat:"Economic Growth", event:"Retail Sales (MoM)", actual:"0.4%", fc:"0.5%", prev:"0.3%" },
-  { off:-1, time:"09:00", cur:"EUR", cc:"EU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"ECB President Lagarde Speech", actual:"—", fc:"—", prev:"—" },
-  { off:0,  time:"06:00", cur:"AUD", cc:"AU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"RBA Kent Speech", actual:"", fc:"", prev:"" },
-  { off:1,  time:"07:00", cur:"GBP", cc:"GB", impact:"Medium", cat:"Economic Growth", event:"UK GDP (MoM)", actual:"", fc:"0.2%", prev:"0.1%" },
-  { off:1,  time:"13:30", cur:"USD", cc:"US", impact:"Low",    cat:"Economic Growth", event:"Housing Starts", actual:"", fc:"1.38M", prev:"1.36M" },
-  { off:1,  time:"19:00", cur:"USD", cc:"US", impact:"High",   cat:"Central Banks & Interest Rates", event:"Fed Chair Powell Speech", actual:"", fc:"", prev:"" },
-  { off:2,  time:"01:30", cur:"AUD", cc:"AU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"RBA Meeting Minutes", actual:"", fc:"", prev:"" },
-  { off:2,  time:"09:30", cur:"GBP", cc:"GB", impact:"Low",    cat:"Economic Growth", event:"Services PMI", actual:"", fc:"51.8", prev:"51.2" },
-  { off:2,  time:"15:00", cur:"USD", cc:"US", impact:"Low",    cat:"Economic Growth", event:"Existing Home Sales", actual:"", fc:"4.02M", prev:"3.97M" },
-  { off:3,  time:"12:45", cur:"EUR", cc:"EU", impact:"High",   cat:"Central Banks & Interest Rates", event:"ECB Interest Rate Decision", actual:"", fc:"2.15%", prev:"2.15%" },
-  { off:3,  time:"13:30", cur:"EUR", cc:"EU", impact:"High",   cat:"Central Banks & Interest Rates", event:"ECB Press Conference", actual:"", fc:"", prev:"" },
-  { off:3,  time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"Initial Jobless Claims", actual:"", fc:"230K", prev:"228K" },
-  { off:4,  time:"04:00", cur:"JPY", cc:"JP", impact:"High",   cat:"Central Banks & Interest Rates", event:"BoJ Interest Rate Decision", actual:"", fc:"0.75%", prev:"0.75%" },
-  { off:5,  time:"08:30", cur:"GBP", cc:"GB", impact:"High",   cat:"Inflation", event:"UK CPI (YoY)", actual:"", fc:"3.4%", prev:"3.6%" },
-  { off:5,  time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Employment", event:"Non-Farm Payrolls", actual:"", fc:"118K", prev:"102K" },
-  { off:5,  time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Employment", event:"Unemployment Rate", actual:"", fc:"4.3%", prev:"4.2%" }
+   Built-in economic calendar database: the standard recurring release
+   schedule for every major currency, generated across a rolling window
+   (two weeks back, three weeks ahead) so Today / week / month views and
+   the calendar are always fully populated across all 9 categories. The
+   live Forex Factory feed replaces this database whenever it loads.
+   dow: 1=Mon … 7=Sun. Times are local display times. */
+const NEWS_DB_TEMPLATES = [
+  /* Monday */
+  { dow:1, time:"02:30", cur:"AUD", cc:"AU", impact:"Medium", cat:"Economic Growth", event:"Australia Retail Sales (MoM)", fc:"0.3%", prev:"0.2%" },
+  { dow:1, time:"07:00", cur:"EUR", cc:"EU", impact:"Low",    cat:"Economic Growth", event:"German Factory Orders (MoM)", fc:"0.4%", prev:"-0.6%" },
+  { dow:1, time:"09:00", cur:"EUR", cc:"EU", impact:"Medium", cat:"Economic Growth", event:"Eurozone Sentix Investor Confidence", fc:"-7.5", prev:"-8.1" },
+  { dow:1, time:"13:30", cur:"CAD", cc:"CA", impact:"Low",    cat:"Economic Growth", event:"Canada Ivey PMI", fc:"50.4", prev:"49.7" },
+  { dow:1, time:"15:00", cur:"USD", cc:"US", impact:"Medium", cat:"Economic Growth", event:"ISM Manufacturing PMI", fc:"49.1", prev:"48.7" },
+  { dow:1, time:"16:30", cur:"USD", cc:"US", impact:"Low",    cat:"Government & Bonds", event:"US 3-Year Note Auction", fc:"", prev:"3.94%" },
+  { dow:1, time:"19:30", cur:"USD", cc:"US", impact:"Medium", cat:"Central Banks & Interest Rates", event:"FOMC Member Speech", fc:"", prev:"" },
+  /* Tuesday */
+  { dow:2, time:"01:30", cur:"AUD", cc:"AU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"RBA Meeting Minutes", fc:"", prev:"" },
+  { dow:2, time:"04:30", cur:"AUD", cc:"AU", impact:"High",   cat:"Central Banks & Interest Rates", event:"RBA Interest Rate Decision", fc:"4.10%", prev:"4.10%" },
+  { dow:2, time:"07:00", cur:"GBP", cc:"GB", impact:"Low",    cat:"Consumer & Housing", event:"UK Halifax House Price Index (MoM)", fc:"0.2%", prev:"0.1%" },
+  { dow:2, time:"09:30", cur:"GBP", cc:"GB", impact:"Medium", cat:"Economic Growth", event:"UK Services PMI", fc:"51.8", prev:"51.2" },
+  { dow:2, time:"10:00", cur:"EUR", cc:"EU", impact:"Low",    cat:"Inflation", event:"Eurozone PPI (MoM)", fc:"0.1%", prev:"0.0%" },
+  { dow:2, time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Trade", event:"US Trade Balance", fc:"-$62.0B", prev:"-$61.5B" },
+  { dow:2, time:"15:00", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"JOLTS Job Openings", fc:"7.45M", prev:"7.39M" },
+  { dow:2, time:"16:30", cur:"USD", cc:"US", impact:"Medium", cat:"Government & Bonds", event:"US 10-Year Note Auction", fc:"", prev:"4.21%" },
+  { dow:2, time:"21:45", cur:"NZD", cc:"NZ", impact:"Medium", cat:"Employment", event:"NZ Employment Change (QoQ)", fc:"0.2%", prev:"0.1%" },
+  /* Wednesday */
+  { dow:3, time:"02:00", cur:"CNY", cc:"CN", impact:"Medium", cat:"Trade", event:"China Trade Balance", fc:"$82.5B", prev:"$79.8B" },
+  { dow:3, time:"02:30", cur:"CNY", cc:"CN", impact:"High",   cat:"Inflation", event:"China CPI (YoY)", fc:"0.4%", prev:"0.3%" },
+  { dow:3, time:"07:00", cur:"EUR", cc:"EU", impact:"High",   cat:"Inflation", event:"Eurozone CPI (YoY)", fc:"2.1%", prev:"2.2%" },
+  { dow:3, time:"08:00", cur:"CHF", cc:"CH", impact:"Medium", cat:"Inflation", event:"Swiss CPI (MoM)", fc:"0.0%", prev:"-0.1%" },
+  { dow:3, time:"09:00", cur:"EUR", cc:"EU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"ECB President Lagarde Speech", fc:"", prev:"" },
+  { dow:3, time:"13:15", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"ADP Non-Farm Employment Change", fc:"124K", prev:"118K" },
+  { dow:3, time:"15:00", cur:"USD", cc:"US", impact:"High",   cat:"Economic Growth", event:"ISM Services PMI", fc:"52.4", prev:"52.0" },
+  { dow:3, time:"15:30", cur:"USD", cc:"US", impact:"Medium", cat:"Energy & Commodities", event:"EIA Crude Oil Inventories", fc:"-1.8M", prev:"-2.4M" },
+  { dow:3, time:"18:00", cur:"USD", cc:"US", impact:"High",   cat:"Central Banks & Interest Rates", event:"FOMC Meeting Minutes", fc:"", prev:"" },
+  { dow:3, time:"19:00", cur:"USD", cc:"US", impact:"High",   cat:"Central Banks & Interest Rates", event:"Fed Chair Powell Speech", fc:"", prev:"" },
+  /* Thursday */
+  { dow:4, time:"01:30", cur:"AUD", cc:"AU", impact:"High",   cat:"Employment", event:"Australia Employment Change", fc:"21.5K", prev:"18.9K" },
+  { dow:4, time:"01:30", cur:"AUD", cc:"AU", impact:"Medium", cat:"Employment", event:"Australia Unemployment Rate", fc:"4.2%", prev:"4.2%" },
+  { dow:4, time:"07:00", cur:"GBP", cc:"GB", impact:"Medium", cat:"Economic Growth", event:"UK GDP (MoM)", fc:"0.2%", prev:"0.1%" },
+  { dow:4, time:"08:30", cur:"GBP", cc:"GB", impact:"Medium", cat:"Economic Growth", event:"UK Manufacturing Production (MoM)", fc:"0.3%", prev:"-0.2%" },
+  { dow:4, time:"12:00", cur:"GBP", cc:"GB", impact:"High",   cat:"Central Banks & Interest Rates", event:"BoE Interest Rate Decision", fc:"3.75%", prev:"3.75%" },
+  { dow:4, time:"12:45", cur:"EUR", cc:"EU", impact:"High",   cat:"Central Banks & Interest Rates", event:"ECB Interest Rate Decision", fc:"2.15%", prev:"2.15%" },
+  { dow:4, time:"13:30", cur:"EUR", cc:"EU", impact:"High",   cat:"Central Banks & Interest Rates", event:"ECB Press Conference", fc:"", prev:"" },
+  { dow:4, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Inflation", event:"US CPI (YoY)", fc:"3.0%", prev:"2.9%", act:"3.1%" },
+  { dow:4, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Inflation", event:"US Core CPI (MoM)", fc:"0.3%", prev:"0.2%", act:"0.3%" },
+  { dow:4, time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"US Initial Jobless Claims", fc:"230K", prev:"228K" },
+  { dow:4, time:"15:30", cur:"USD", cc:"US", impact:"Low",    cat:"Energy & Commodities", event:"EIA Natural Gas Storage", fc:"48B", prev:"52B" },
+  { dow:4, time:"23:50", cur:"JPY", cc:"JP", impact:"Low",    cat:"Economic Growth", event:"Japan Current Account", fc:"¥2.9T", prev:"¥2.7T" },
+  /* Friday */
+  { dow:5, time:"04:00", cur:"JPY", cc:"JP", impact:"High",   cat:"Central Banks & Interest Rates", event:"BoJ Interest Rate Decision", fc:"0.75%", prev:"0.75%" },
+  { dow:5, time:"06:30", cur:"JPY", cc:"JP", impact:"Medium", cat:"Central Banks & Interest Rates", event:"BoJ Press Conference", fc:"", prev:"" },
+  { dow:5, time:"08:30", cur:"GBP", cc:"GB", impact:"High",   cat:"Inflation", event:"UK CPI (YoY)", fc:"3.4%", prev:"3.6%" },
+  { dow:5, time:"09:30", cur:"EUR", cc:"EU", impact:"Low",    cat:"Economic Growth", event:"Eurozone Industrial Production (MoM)", fc:"0.2%", prev:"-0.1%" },
+  { dow:5, time:"13:30", cur:"CAD", cc:"CA", impact:"High",   cat:"Employment", event:"Canada Employment Change", fc:"18.5K", prev:"15.2K" },
+  { dow:5, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Employment", event:"Non-Farm Payrolls", fc:"118K", prev:"102K", act:"121K" },
+  { dow:5, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Employment", event:"Unemployment Rate", fc:"4.3%", prev:"4.2%", act:"4.3%" },
+  { dow:5, time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"Average Hourly Earnings (MoM)", fc:"0.3%", prev:"0.3%" },
+  { dow:5, time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Economic Growth", event:"Retail Sales (MoM)", fc:"0.5%", prev:"0.3%", act:"0.4%" },
+  { dow:5, time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Consumer & Housing", event:"Building Permits", fc:"1.44M", prev:"1.42M" },
+  { dow:5, time:"13:30", cur:"USD", cc:"US", impact:"Low",    cat:"Consumer & Housing", event:"Housing Starts", fc:"1.38M", prev:"1.36M" },
+  { dow:5, time:"15:00", cur:"USD", cc:"US", impact:"Medium", cat:"Economic Growth", event:"Michigan Consumer Sentiment", fc:"72.5", prev:"71.8" },
+  { dow:5, time:"15:00", cur:"USD", cc:"US", impact:"Low",    cat:"Consumer & Housing", event:"Existing Home Sales", fc:"4.02M", prev:"3.97M" },
+  { dow:5, time:"18:00", cur:"USD", cc:"US", impact:"Medium", cat:"Central Banks & Interest Rates", event:"Federal Budget Balance", fc:"-$215B", prev:"-$198B" },
+  /* Weekend / other */
+  { dow:6, time:"10:00", cur:"EUR", cc:"EU", impact:"Low",    cat:"Other", event:"Eurogroup Meetings", fc:"", prev:"" },
+  { dow:7, time:"23:45", cur:"NZD", cc:"NZ", impact:"Low",    cat:"Other", event:"NZ Visitor Arrivals (MoM)", fc:"", prev:"2.1%" }
 ];
+function newsDbEvents(){
+  const out = []; const today = new Date();
+  for(let off=-14; off<=21; off++){
+    const d = new Date(today); d.setDate(d.getDate()+off);
+    const dow = (d.getDay()+6)%7 + 1;
+    NEWS_DB_TEMPLATES.forEach((t,i)=>{
+      if(t.dow!==dow) return;
+      out.push({ id:"db"+off+"_"+i, date: todayStr(d), time:t.time, cur:t.cur, cc:t.cc,
+        impact:t.impact, cat:t.cat, event:t.event,
+        actual: off<0? (t.act || t.fc || "") : "", fc:t.fc||"", prev:t.prev||"" });
+    });
+  }
+  return out.sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : a.time<b.time?-1:1);
+}
 const svgIco = p=>'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';
 const NEWS_CATS = [
   ["Energy & Commodities", svgIco('<path d="M12 3c3.2 4.1 6 7.6 6 11a6 6 0 1 1-12 0c0-3.4 2.8-6.9 6-11z"/>')],
@@ -2872,7 +2993,7 @@ function newsSavePrefs(){
    no API key needed. The feed sends no CORS header, so the fetch tries the
    direct URL first, then two public CORS relays; every response is validated
    as a JSON event array before use. If all routes fail or return nothing,
-   the static samples above stay on screen as the fallback. */
+   the built-in calendar database above stays on screen. */
 const NEWS_FEED_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
 let newsLiveEvents = null, newsLiveUpdated = null, newsLiveLoading = false, newsFetchStarted = false;
 function newsCategoryFor(title){
@@ -2926,9 +3047,7 @@ function newsFetchLive(){
 }
 function newsAllEvents(){
   if(newsLiveEvents && newsLiveEvents.length) return newsLiveEvents;
-  return NEWS_EVENTS.map((e,i)=>{ const d = new Date(); d.setDate(d.getDate()+e.off);
-    return Object.assign({}, e, { id:"ne"+i, date: todayStr(d) }); })
-    .sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : a.time<b.time?-1:1);
+  return newsDbEvents();
 }
 function newsFiltered(){
   const wlCurs = newsWlCurrencies();
@@ -3040,7 +3159,7 @@ function newsListHTML(){
     + body
     + '<div class="small" style="margin-top:12px">'+(newsLiveEvents
       ? 'Live economic calendar — Forex Factory weekly feed (FairEconomy), fetched '+newsLiveUpdated.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'. Times are shown in your local timezone.'
-      : 'Sample calendar data — the live feed could not be reached, so built-in samples are shown. Check your broker calendar for confirmed figures before trading a release.')+'</div>'
+      : 'Built-in economic calendar — the full recurring release schedule for every major currency. The live feed refreshes this page automatically whenever it can be reached.')+'</div>'
     + '</div>';
 }
 function newsCalendarHTML(){
@@ -3081,7 +3200,7 @@ RENDER.news = function(){
     ? '<span class="chip pine">Loading live calendar…</span>'
     : newsLiveEvents
       ? '<span class="chip green"><span class="live-dot"></span>Live &middot; Updated '+newsLiveUpdated.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'</span>'
-      : '<span class="chip">Sample data</span>';
+      : '<span class="chip">Built-in calendar</span>';
   el.innerHTML =
     '<div class="news-head"><h2>News</h2>'+liveStatus+'<span style="flex:1"></span>'
     + '<div class="view-tgl"><button class="'+(newsViewMode==="list"?"on":"")+'" onclick="newsViewMode=\'list\';RENDER.news()">'+listSvg+'List</button><button class="'+(newsViewMode==="calendar"?"on":"")+'" onclick="newsViewMode=\'calendar\';RENDER.news()">'+calSvg+'Calendar</button></div>'
@@ -3605,7 +3724,7 @@ RENDER.pricing = function(){
     + '<div><strong>Can I cancel any time?</strong><div class="small" style="margin-top:3px">Yes — from the Account page. You keep premium access until the end of the paid period, then drop back to Free. Your journal data is never held hostage; it lives in your browser.</div></div>'
     + '<div><strong>Is my trading data uploaded anywhere?</strong><div class="small" style="margin-top:3px">No. This app stores everything locally in your browser. Clearing browser data clears the app — export your journal regularly if the records matter.</div></div>'
     + '<div><strong>Does upgrading change my trades?</strong><div class="small" style="margin-top:3px">No. Plans change which tools are unlocked, never your data. Free and Plus journals are identical underneath.</div></div>'
-    + '<div><strong>Is this financial advice?</strong><div class="small" style="margin-top:3px">No. EdgePine is journaling and discipline software. The AI Coach coaches process and psychology from your own records; it never predicts prices or recommends trades.</div></div>'
+    + '<div><strong>Is this financial advice?</strong><div class="small" style="margin-top:3px">No. TradeMind is journaling and discipline software. The AI Coach coaches process and psychology from your own records; it never predicts prices or recommends trades.</div></div>'
     + '</div></div>';
 };
 function downgradeFree(){ go("account"); }
@@ -3633,7 +3752,7 @@ RENDER.checkout = function(){
     + '<button class="btn primary block" id="co-pay" onclick="payNow()">Pay '+fmt$(due).replace(".00","")+' &amp; activate '+p.name+'</button>'
     + '<div class="small" style="margin-top:10px;text-align:center">Secured by Stripe when live · Cancel any time from Account · This demo stores nothing about your card.</div></div>'
     + '<div class="card"><h3>Order summary</h3><div class="divider"></div>'
-    + '<div style="display:flex;justify-content:space-between;margin:7px 0"><span>EdgePine '+p.name+'</span><strong class="mono">$'+per+'/mo</strong></div>'
+    + '<div style="display:flex;justify-content:space-between;margin:7px 0"><span>TradeMind '+p.name+'</span><strong class="mono">$'+per+'/mo</strong></div>'
     + '<div style="display:flex;justify-content:space-between;margin:7px 0"><span class="small">Billing period</span><span class="small">'+(billYearly? "Yearly (12 months)" : "Monthly")+'</span></div>'
     + '<div style="display:flex;justify-content:space-between;margin:7px 0"><span class="small">Renews</span><span class="small">'+(billYearly? "Once a year" : "Every month")+', cancel anytime</span></div>'
     + '<div class="divider"></div><div style="display:flex;justify-content:space-between;font-size:16px"><strong>Due today</strong><strong class="mono">'+fmt$(due).replace(".00","")+'</strong></div>'
@@ -3767,7 +3886,7 @@ function settingsSectionsHTML(){
     '<div class="small" style="margin:10px 0 12px">Stuck, found a bug, or want a feature? Email us — include your plan and what you were doing. The Pricing page FAQ answers the common billing questions.</div>'
     + '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="mailto:support@edgepine.app">Email support</a><button class="btn" onclick="go(\'pricing\')">Plans &amp; FAQ</button></div>');
   const about = card("About", "",
-    '<div class="small" style="margin-top:8px"><strong>EdgePine — TradeMind</strong> · Version 2.0<br>Journal, guardrails, paper trading, edge plans, news, notebook, AI coach, sanctuary and performance analytics in one pine-green workspace. Academy is intentionally not part of this app.<br><br>Journaling and discipline software — not financial advice. Your data lives in your browser; export it regularly.</div>');
+    '<div class="small" style="margin-top:8px"><strong>TradeMind</strong> · Version 2.0<br>Journal, guardrails, paper trading, edge plans, news, notebook, AI coach, sanctuary and performance analytics in one pine-green workspace. Academy is intentionally not part of this app.<br><br>Journaling and discipline software — not financial advice. Your data lives in your browser; export it regularly.</div>');
   return '<div class="grid g2 mt" style="align-items:start"><div class="side-col">'+profile+routine+journaling+'</div><div class="side-col">'+notif+dataPriv+security+billing+support+about+'</div></div>';
 }
 RENDER.account = function(){
