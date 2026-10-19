@@ -600,6 +600,10 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .model-drop{border:1.5px dashed var(--line);border-radius:12px;padding:10px;outline:none;transition:border-color .15s,background .15s}
 .model-drop:focus{border-color:var(--pine)}
 .model-drop.drag{border-color:var(--violet);background:rgba(124,93,250,.07)}
+/* Entry-model pictures: both tiles share one fixed frame so the two
+   screenshots line up at the same height whatever their own aspect
+   ratio is; contain keeps the whole chart visible (no cropping). */
+.model-img{width:100%;aspect-ratio:3/2;object-fit:contain;background:var(--bg2);border-radius:10px;display:block;border:1px solid var(--line)}
 #order-panel .row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 #order-panel .field{min-width:0}
 .hero-card .set-row{flex-wrap:wrap;row-gap:8px}
@@ -3170,7 +3174,7 @@ function edgeDetailHTML(sel){
   const modelTile = (slot, label, defImg)=>{
     const val = slot==="setup"? (p.modelShot||"") : (p.modelExamples||"");
     const inner = '<div class="small" style="font-weight:700;margin-bottom:6px">'+label+'</div>'
-      + '<img src="'+(val || defImg)+'" alt="'+label+'" style="width:100%;border-radius:10px;display:block;border:1px solid var(--line)">'
+      + '<img class="model-img" src="'+(val || defImg)+'" alt="'+label+'">'
       + '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" onclick="viewModelShots(\''+sel.kind+'\',\''+p.id+'\')">View All</button>'
       + (isPlan && val? '<button class="btn sm" onclick="removeModelImage(\''+p.id+'\',\''+slot+'\')">Remove</button>' : "")
       + '</div>';
