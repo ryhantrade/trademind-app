@@ -430,6 +430,25 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .pos-body::-webkit-scrollbar{width:8px}
 .pos-body::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}
 .pos-body .empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+/* Wide mode: the sidebar stays in the DOM (so the chart widget is never
+   rebuilt) but drops out of the grid, giving the chart the full row. */
+.trade-grid.wide{grid-template-columns:1fr}
+.trade-grid.wide>.side-col{display:none}
+/* Trading page (desktop): the whole view fits the viewport like the
+   Dashboard — no page scroll; only the positions body, the watchlist rows
+   and the Trading Plan content scroll internally. */
+@media (min-width:1081px){
+  [data-view="trading"].on{display:flex;flex-direction:column;height:calc(100vh - 118px);min-height:600px}
+  [data-view="trading"].on .trade-grid{flex:1;min-height:0;align-items:stretch}
+  [data-view="trading"].on .trade-grid>div{min-height:0;min-width:0}
+  [data-view="trading"].on .trade-leftcol{display:flex;flex-direction:column;min-height:0}
+  [data-view="trading"].on .trade-leftcol .pos-panel{flex:1 1 auto;min-height:140px;overflow:hidden}
+  [data-view="trading"].on .side-col{height:100%;min-height:0;overflow:hidden}
+  [data-view="trading"].on .tabs-card{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden}
+  [data-view="trading"].on .side-tabbody{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  [data-view="trading"].on .side-tabbody>#twl-list{flex:1;min-height:80px;max-height:none}
+  [data-view="trading"].on .plan-scroll{flex:1;min-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+}
 
 /* ---------- Account settings tabs ---------- */
 .acct-tabs{display:flex;flex-wrap:wrap;gap:2px;margin:4px 0 18px;border-bottom:1px solid var(--line);padding:0 2px}
@@ -499,13 +518,18 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 @media (max-width:1080px){.g5{grid-template-columns:repeat(2,1fr)}}
 .dash-main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,1fr);gap:16px;align-items:start}
 @media (max-width:1080px){.dash-main{grid-template-columns:1fr}}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:15px 16px}
-.kpi .k-label{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--faint);text-transform:uppercase;display:flex;gap:5px;align-items:center}
-.kpi .k-value{font-size:21px;font-weight:800;margin-top:5px;letter-spacing:-.01em}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:18px 20px}
+.kpi .k-label{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--faint);text-transform:uppercase;display:flex;gap:5px;align-items:center}
+.kpi .k-value{font-size:26px;font-weight:800;margin-top:6px;letter-spacing:-.01em}
+.kpi .k-arrow{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:800;vertical-align:3px;margin-left:4px}
+.kpi .k-arrow.neg{background:#fdecec;color:#e5484d}
+.kpi .k-arrow.pos{background:#e2f6e9;color:#1d9d55}
 .range-tabs{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden;background:var(--card)}
 .range-tabs button{border:0;background:transparent;padding:7px 13px;font-weight:700;font-size:12.5px;color:var(--muted);border-right:1px solid var(--line)}
 .range-tabs button:last-child{border-right:0}
 .range-tabs button.on{background:var(--pine);color:#fff}
+#tb-range-tabs{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+#tb-range-tabs::-webkit-scrollbar{display:none}
 .routine-pill{display:inline-flex;align-items:center;gap:7px;background:var(--pine);color:#fff;border:0;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:9px}
 .routine-pill:hover{background:var(--pine-deep)}
 .addtrade-layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
@@ -800,7 +824,7 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
   :root{--rail:0px}
   #rail{display:none}
   #views{padding:18px 16px 96px}
-  #topbar{padding:13px 16px}
+  #topbar{padding:13px 16px;flex-wrap:wrap}
   #topbar h1{font-size:18px}
   .g3,.g2{grid-template-columns:1fr}
   .cal-day{min-height:56px;padding:5px 6px}
@@ -1488,12 +1512,38 @@ document.addEventListener("click", e=>{
   if(b){ go(b.getAttribute("data-nav")); const sh = $("#more-sheet"); if(sh) sh.classList.remove("on"); return; }
   if(e.target.id==="more-sheet") e.target.classList.remove("on");
 });
-/* Dashboard header chrome (EdgeFlo layout): on the Dashboard the top bar
-   carries the page subtitle and drops the plan badge / upgrade / avatar;
-   every other page keeps the date line and the full right side. */
+/* Dashboard header chrome (EdgeFlo layout): on the Dashboard the top bar is
+   a single row — page title + subtitle on the left and the time-range tabs
+   on the right — with the plan badge / upgrade / avatar hidden and no bottom
+   border; every other page keeps the date line and the full right side. */
+function rangeTabsHTML(){
+  return [["today","Today"],["7d","7D"],["30d","30D"],["90d","90D"],["ytd","YTD"],["all","ALL"]].map(r=>'<button class="'+(dashRange===r[0]?"on":"")+'" onclick="setRange(\''+r[0]+'\')">'+r[1]+'</button>').join("");
+}
+function rangeTabsEl(){
+  let t = document.getElementById("tb-range-tabs");
+  if(!t){ t = document.createElement("div"); t.id = "tb-range-tabs"; t.className = "range-tabs"; t.setAttribute("role","tablist"); }
+  t.innerHTML = rangeTabsHTML();
+  return t;
+}
 function dashChrome(view){
   const sub = $("#tb-date"), right = document.querySelector(".tb-right");
   const tt = $("#tb-trading"); if(tt) tt.style.display = view==="trading"? "flex":"none";
+  const topbar = $("#topbar"), tabs = document.getElementById("tb-range-tabs");
+  const badge = $("#tb-badge"), upg = $("#tb-upgrade"), av = $("#tb-avatar");
+  if(view==="dashboard"){
+    if(sub) sub.textContent = "Your trading performance at a glance — track your progress, discipline, and daily flow.";
+    if(right){ right.style.display = ""; const t = rangeTabsEl(); t.style.display = ""; right.appendChild(t); }
+    if(badge) badge.style.display = "none";
+    if(upg) upg.style.display = "none";
+    if(av) av.style.display = "none";
+    if(topbar) topbar.style.borderBottom = "none";
+    return;
+  }
+  if(tabs) tabs.style.display = "none";
+  if(topbar) topbar.style.borderBottom = "";
+  if(badge) badge.style.display = "";
+  if(upg) upg.style.display = DB.sub.plan==="plus" ? "none" : "";
+  if(av) av.style.display = "";
   if(view==="edge"){
     if(sub) sub.textContent = "Build and refine your trading playbooks — your rules, biases, and edge in one place.";
     if(right) right.style.display = "none";
@@ -1505,9 +1555,6 @@ function dashChrome(view){
     if(right) right.style.display = "none";
   } else if(view==="sanctuary"){
     if(sub) sub.textContent = "Reset your mind before or after a session.";
-    if(right) right.style.display = "none";
-  } else if(view==="dashboard"){
-    if(sub) sub.textContent = "Your trading performance at a glance — track your progress, discipline, and daily flow.";
     if(right) right.style.display = "none";
   } else {
     if(sub) sub.textContent = new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric", year:"numeric" });
@@ -1568,10 +1615,11 @@ function balanceChartSVG(){
   const w = 680, h = 360, padR = 66, padB = 24, padT = 10, padL = 34; /* padL leaves room for the first date label (middle-anchored) so it is never clipped */
   const iw = w - padR - padL, ih = h - padT - padB;
   const X = ds=> padL + Math.max(0, Math.min(1, (new Date(ds+"T12:00:00") - d0) / ((dEnd - d0)||DAY))) * iw;
-  /* Y domain snapped to $400 steps (EdgeFlo's .40K grid), always showing at
-     least ±$2.80K around the current balance: $97.20K … $102.80K at $100K. */
+  /* Y domain snapped to $400 steps (EdgeFlo's .40K grid) around an adaptive
+     pad: at least ±$1.2K around the balance, wider when the equity curve
+     itself swings further. */
   let lo = Math.min(...pts.map(p=>p.v)), hi = Math.max(...pts.map(p=>p.v));
-  lo = Math.min(lo, bal - 2800); hi = Math.max(hi, bal + 2800);
+  const pad = Math.max(1200, (hi - lo) * 1.2); lo = Math.min(lo, bal - pad); hi = Math.max(hi, bal + pad);
   const min = Math.floor(lo/400)*400, max = Math.ceil(hi/400)*400;
   const Y = v=> padT + (1 - (v-min)/((max-min)||1))*ih;
   const line = pts.map((p,i)=> (i?"L":"M")+X(p.date).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
@@ -1607,37 +1655,38 @@ RENDER.dashboard = function(){
      with a small gap at the top (and bottom); the split follows the gross
      win/loss share, defaulting to an even half when there are no trades. */
   const pfShare = (s.grossWin+s.grossLoss)>0? s.grossWin/(s.grossWin+s.grossLoss) : 0.5;
-  const PF_GAP = 8, pfUsable = 360 - 2*PF_GAP;
+  const PF_GAP = 14, pfUsable = 360 - 4*PF_GAP;
   const pfGSpan = pfUsable*pfShare, pfRSpan = pfUsable - pfGSpan;
-  const pfArc = (a0,a1)=>{ const pt = a=> [30+26*Math.cos(a*Math.PI/180), 30+26*Math.sin(a*Math.PI/180)]; const p0 = pt(a0), p1 = pt(a1);
-    return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A26 26 0 "+((a1-a0)>180?1:0)+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); };
-  const pfGA0 = -90 + PF_GAP, pfGA1 = pfGA0 + pfGSpan, pfRA0 = pfGA1 + PF_GAP, pfRA1 = pfRA0 + pfRSpan;
+  const pfArc = (a0,a1)=>{ const pt = a=> [32+29*Math.cos(a*Math.PI/180), 32+29*Math.sin(a*Math.PI/180)]; const p0 = pt(a0), p1 = pt(a1);
+    return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A29 29 0 "+((a1-a0)>180?1:0)+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); };
+  const pfGA0 = -90 + PF_GAP, pfGA1 = pfGA0 + pfGSpan, pfRA0 = 90 + PF_GAP, pfRA1 = pfRA0 + pfRSpan;
   const pfFace = !s.n? "😐" : (s.pf>=1? "🙂" : "🙁");
   const rMax = Math.max(Math.abs(avgWinR), Math.abs(avgLossR));
-  const winBar = rMax? Math.round(Math.abs(avgWinR)/rMax*100) : 100;
-  const lossBar = rMax? Math.round(Math.abs(avgLossR)/rMax*100) : 100;
+  const winBar = wins.length && rMax? Math.round(Math.abs(avgWinR)/rMax*100) : 0;
+  const lossBar = losses.length && rMax? Math.round(Math.abs(avgLossR)/rMax*100) : 0;
+  /* Zero state: neutral badge arrows only appear once there are trades,
+     and the PF ring renders in neutral gray instead of green/red. */
+  const wrArrow = s.n? '<span class="k-arrow '+(s.winRate>=50?"pos":"neg")+'">'+(s.winRate>=50?"&#8599;":"&#8600;")+'</span>' : "";
+  const avgRArrow = s.n? '<span class="k-arrow '+(s.avgR>0?"pos":"neg")+'">'+(s.avgR>0?"&#8599;":"&#8600;")+'</span>' : "";
+  const pfGreen = s.n? "#1EB987" : "#C9CDD3", pfRed = s.n? "#F26E6E" : "#C9CDD3";
   const acctBal = DB.paper.balance + openPnlNow();
   const kpi = (label, inner)=> '<div class="kpi"><div class="k-label">'+label+'</div>'+inner+'</div>';
   const infoI = t=> ' <span class="info-i" title="'+t+'">i</span>';
   el.innerHTML =
-    '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">'
-    + '<span style="flex:1"></span>'
-    + '<div class="range-tabs" role="tablist">'
-    + [["today","Today"],["7d","7D"],["30d","30D"],["90d","90D"],["ytd","YTD"],["all","ALL"]].map(r=>'<button class="'+(dashRange===r[0]?"on":"")+'" onclick="setRange(\''+r[0]+'\')">'+r[1]+'</button>').join("")
-    + '</div></div>'
-    + '<div class="grid g5">'
+    '<div class="grid g5">'
     + kpi("Account Balance", '<div class="k-value mono">'+bal$(acctBal)+'</div>')
     + kpi("Total Closed Net PnL"+infoI("Net realised P&L from closed trades in the selected range"), '<div class="k-value mono '+(s.pnl>=0?"pos":"neg")+'">'+fmt$(s.pnl)+'</div>')
-    + kpi("Win Rate", '<div class="k-value mono">'+(s.n? s.winRate.toFixed(2):"0.00")+'%'+' <span style="font-size:13px" class="'+((s.n && s.winRate>=50)?"pos":"neg")+'">'+((s.n && s.winRate>=50)?"&#8599;":"&#8600;")+'</span>'+'</div>')
-    + kpi("Avg R Per Trade", '<div class="k-value mono">'+(s.n? String(Math.round(s.avgR)):"0")+' <span style="font-size:13px" class="'+(s.avgR>0?"pos":"neg")+'">'+(s.avgR>0?"&#8599;":"&#8600;")+'</span></div>'
-      + '<div style="margin-top:9px;display:flex;flex-direction:column;gap:7px">'
-      + '<div><div class="mono pos" style="font-size:12.5px;font-weight:700">+'+Math.abs(avgWinR).toFixed(2)+'R</div><div class="progress green" style="height:5px;margin-top:3px"><i style="width:'+winBar+'%"></i></div></div>'
-      + '<div><div class="mono neg" style="font-size:12.5px;font-weight:700">-'+Math.abs(avgLossR).toFixed(2)+'R</div><div class="progress red" style="height:5px;margin-top:3px"><i style="width:'+lossBar+'%"></i></div></div>'
-      + '</div>')
-    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0">'+(s.n? (s.pf===Infinity?"∞":s.pf.toFixed(2)):"0.00")+' <span style="font-size:16px">'+pfFace+'</span></div>'
-      + '<svg width="60" height="60" viewBox="0 0 60 60" style="margin-left:auto;flex:0 0 60px" role="img" aria-label="Profit factor gauge">'
-      + (pfGSpan>0.5? '<path d="'+pfArc(pfGA0,pfGA1)+'" fill="none" stroke="var(--green)" stroke-width="8" stroke-linecap="round"/>':"")
-      + (pfRSpan>0.5? '<path d="'+pfArc(pfRA0,pfRA1)+'" fill="none" stroke="var(--red)" stroke-width="8" stroke-linecap="round"/>':"")
+    + kpi("Win Rate", '<div class="k-value mono">'+(s.n? s.winRate.toFixed(2):"0.00")+'%'+wrArrow+'</div>')
+    + kpi("Avg R Per Trade", '<div style="display:flex;align-items:center;gap:12px">'
+      + '<div class="k-value mono" style="margin-top:0">'+(s.n? String(Math.round(s.avgR)):"0")+avgRArrow+'</div>'
+      + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">'
+      + '<div><div class="mono pos" style="font-size:12px;font-weight:700">+'+Math.abs(avgWinR).toFixed(2)+'R</div><div class="progress green" style="height:4px;margin-top:3px"><i style="width:'+winBar+'%"></i></div></div>'
+      + '<div><div class="mono neg" style="font-size:12px;font-weight:700">-'+Math.abs(avgLossR).toFixed(2)+'R</div><div class="progress red" style="height:4px;margin-top:3px"><i style="width:'+lossBar+'%"></i></div></div>'
+      + '</div></div>')
+    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0">'+(s.n? (s.pf===Infinity?"∞":s.pf.toFixed(2)):"0.00")+' <span style="font-size:20px">'+pfFace+'</span></div>'
+      + '<svg width="64" height="64" viewBox="0 0 64 64" style="margin-left:auto;flex:0 0 64px" role="img" aria-label="Profit factor gauge">'
+      + (pfGSpan>0.5? '<path d="'+pfArc(pfGA0,pfGA1)+'" fill="none" stroke="'+pfGreen+'" stroke-width="5.5" stroke-linecap="round"/>':"")
+      + (pfRSpan>0.5? '<path d="'+pfArc(pfRA0,pfRA1)+'" fill="none" stroke="'+pfRed+'" stroke-width="5.5" stroke-linecap="round"/>':"")
       + '</svg></div>')
     + '</div>'
     + '<div class="dash-main mt"><div style="min-width:0">'
@@ -1673,7 +1722,7 @@ function statCard(label, value, sub, cls){
 function meter(label, value, pct, cls){
   return '<div><div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-weight:700;color:var(--muted)">'+label+'</span><span class="mono" style="font-weight:700">'+value+'</span></div><div class="progress '+(cls||"")+'" style="margin-top:6px"><i style="width:'+pct+'%"></i></div></div>';
 }
-function setRange(r){ dashRange=r; RENDER.dashboard(); }
+function setRange(r){ dashRange=r; const t=document.getElementById("tb-range-tabs"); if(t) t.innerHTML = rangeTabsHTML(); RENDER.dashboard(); }
 
 /* ================= EDGE SCORE (Beta) ================= */
 const EDGE_SCORE_TARGET = 30;
@@ -2313,6 +2362,7 @@ function updateTicker(){
 }
 /* ---- Trading page state (EdgeFlo layout) ---- */
 let posTab = "open", posPanelHidden = false, tradeWide = false, sideTab = "plan", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
+let tradeLockedNow = false; /* last computed tradeLocked (guardrail/routine/window), kept for header repaints */
 /* Bottom positions panel height (px) — user-resizable via the grabber on
    the panel's top edge; 0 = natural height. Persisted across reloads. */
 let posPanelH = 0;
@@ -2353,7 +2403,7 @@ function tvSymbolFor(sym){
   if(cls==="Metals") return "OANDA:"+sym;
   return { US30:"TVC:DJI", NAS100:"NASDAQ:NDX", SPX500:"SP:SPX" }[sym] || "FX:"+sym;
 }
-function setChartSymbol(sym){ simMarket = sym; seedCandles(simMarket); if(!routineLocked()) orderOpen = true; RENDER.trading(); }
+function setChartSymbol(sym){ simMarket = sym; seedCandles(simMarket); if(!routineLocked()) orderOpen = true; RENDER.trading({chart:"reload"}); }
 function openPnlNow(){ return DB.paper.positions.reduce((a,p)=> a + posPnl(p), 0); }
 function paintTradingLive(){
   if(currentView!=="trading") return;
@@ -2387,11 +2437,51 @@ function tradingHeaderHTML(lockedOut){
       + '<div class="mp-row"><span>Margin Level</span><strong>'+(marginLevel===null? "N/A" : marginLevel.toLocaleString("en-US",{maximumFractionDigits:1})+"%")+'</strong></div>'
       + '<div class="small" style="margin-top:6px">1% margin per open position on the paper feed.</div></div>' : "")
     + '</div>'
-    + '<button class="icon-btn" title="'+(lockedOut? "Trading locked":"Quick trade")+'" '+(lockedOut?"disabled":"")+' onclick="openTradePanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
+    + '<button class="icon-btn" title="'+(lockedOut? "One Click Trading (Blocked)":"One Click Trading")+'" '+(lockedOut?"disabled":"")+' onclick="openTradePanel()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
     + '<button class="btn '+(lockedOut?"":"primary")+'" '+(lockedOut?"disabled":"")+' onclick="openTradePanel()">'+lockSvg+' Trade</button>'
-    + '<button class="icon-btn" title="'+(tradeWide?"Show sidebar":"Expand chart")+'" onclick="tradeWide=!tradeWide;RENDER.trading()">'+(tradeWide?"&laquo;":"&raquo;")+'</button>';
+    + '<button class="icon-btn" title="'+(tradeWide?"Show sidebar":"Expand chart")+'" onclick="toggleTradeWide()">'+(tradeWide?"&laquo;":"&raquo;")+'</button>';
 }
 function paintTradingHeader(lockedOut){ const t = $("#tb-trading"); if(t) t.innerHTML = tradingHeaderHTML(lockedOut); }
+/* ---- Targeted trading-page repaints ----
+   The TradingView widget dies if its DOM subtree is rebuilt, so every
+   in-page interaction below repaints only its own panel and never touches
+   the chart mount. Each falls back to a full RENDER.trading() when the
+   panel is not on screen yet. */
+function repaintPositionsPanel(){
+  const pp = document.getElementById("trading-pos-panel"); if(!pp){ RENDER.trading(); return; }
+  const tmp = document.createElement("div"); tmp.innerHTML = positionsPanelHTML();
+  pp.replaceWith(tmp.firstElementChild);
+}
+function setPosTab(t){ posTab = t; repaintPositionsPanel(); }
+function togglePosPanel(){ posPanelHidden = !posPanelHidden; repaintPositionsPanel(); }
+function toggleTradeWide(){
+  tradeWide = !tradeWide;
+  const grid = document.querySelector('[data-view="trading"] .trade-grid');
+  if(grid) grid.classList.toggle("wide", tradeWide);
+  paintTradingHeader(tradeLockedNow);
+}
+function repaintTradingSidebar(){
+  const el = document.querySelector('[data-view="trading"]');
+  const sc = el? el.querySelector(".side-col") : null;
+  if(!sc){ RENDER.trading(); return; }
+  const st = guardrailStatus(); const lockedOut = DB.guardrails.enabled && st.breached && !st.overridden;
+  const rLocked = routineLocked();
+  const btnLocked = lockedOut || rLocked;
+  const tradeLocked = btnLocked || !sessionInfo().open;
+  tradeLockedNow = tradeLocked;
+  paintTradingHeader(btnLocked);
+  const fresh = document.createElement("div"); fresh.className = "side-col";
+  fresh.innerHTML = tradingSidebarHTML(st, tradeLocked);
+  sc.replaceWith(fresh);
+  const alert = document.getElementById("trading-lockout-alert");
+  if(lockedOut && !alert){
+    const grid = el.querySelector(".trade-grid");
+    if(grid) grid.insertAdjacentHTML("beforebegin", tradingLockoutAlertHTML());
+  } else if(!lockedOut && alert){ alert.remove(); }
+}
+function tradingLockoutAlertHTML(){
+  return '<div class="alert red" id="trading-lockout-alert" style="margin-bottom:16px"><div><strong>Guardrails lockout is active.</strong> Paper trading is blocked '+(DB.guardrails.hardLock? '— Hard Lock is ON, so there is no override; trading unlocks tomorrow.' : 'until you override (logged) or the day resets.')+' This is the discipline working as designed.</div></div>';
+}
 /* Trading-page pre-market banner (EdgeFlo style): a violet banner while
    the routine is incomplete — with the hard lock called out while the
    routine gate is on — and a green "Session ready" banner once the
@@ -2424,7 +2514,7 @@ function premarketBannerHTML(){
 function startTradingSession(){ unlockSeenDate = todayStr(); RENDER.trading(); toast("Session started — trade your plan."); }
 function positionsPanelHTML(){
   const open = DB.paper.positions, closed = DB.trades.filter(t=>t.source==="paper").slice().reverse();
-  const tabBtn = (id,label,n)=> '<button class="pos-tab '+(posTab===id?"on":"")+'" onclick="posTab=\''+id+'\';RENDER.trading()">'+label+' <span class="mono">'+n+'</span></button>';
+  const tabBtn = (id,label,n)=> '<button class="pos-tab '+(posTab===id?"on":"")+'" onclick="setPosTab(\''+id+'\')">'+label+' <span class="mono">'+n+'</span></button>';
   let body = "";
   if(posTab==="open"){
     body = open.length? open.map(pos=>{ const p = posPnl(pos);
@@ -2441,13 +2531,13 @@ function positionsPanelHTML(){
       + '</tbody></table></div>'
       : '<div class="empty"><div class="e-title">No closed positions yet</div>Closed paper trades land here — and in your Journal.</div>';
   }
-  return '<div class="card pos-panel"'+(posPanelH && !posPanelHidden? ' style="height:'+posPanelH+'px"':'')+'>'
+  return '<div class="card pos-panel" id="trading-pos-panel"'+(posPanelH && !posPanelHidden? ' style="height:'+posPanelH+'px"':'')+'>'
     + '<div class="pos-resize" onpointerdown="startPosResize(event)" title="Drag to resize chart and positions panel" role="separator" aria-label="Resize chart and positions panel"><span></span></div>'
     + '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)">'
     + tabBtn("open","Open Positions", open.length) + tabBtn("pending","Pending Orders", (DB.paper.orders||[]).length) + tabBtn("closed","Closed Positions", closed.length)
     + '<span style="flex:1"></span>'
     + '<button class="btn sm" '+(open.length?"":"disabled")+' onclick="exitAllPositions()">Exit All</button>'
-    + '<button class="btn sm ghost" onclick="posPanelHidden=!posPanelHidden;RENDER.trading()">'+(posPanelHidden?"Show panel":"Hide panel")+'</button></div>'
+    + '<button class="btn sm ghost" onclick="togglePosPanel()">'+(posPanelHidden?"Show panel":"Hide panel")+'</button></div>'
     + (posPanelHidden? "" : '<div class="pos-body">'+body+'</div>')
     + '<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn ghost sm" onclick="resetPaper()">Reset paper account</button></div></div>';
 }
@@ -2464,15 +2554,62 @@ function exitAllPositions(){
    the feed trades through the trigger. ---- */
 let orderOpen = false;
 const ord = { type:"Market", side:null, unit:"Price", entry:"", sl:"", tp:"", lots:"", risk:null };
+/* ---- Outside Your Trading Window modal (EdgeFlo) ----
+   Shown when Trade / quick-trade is tapped outside the guardrail
+   window and no window override has been logged today. Staying
+   disciplined just closes it; overriding asks for an optional
+   reason, logs the rule break to DB.overrides, then opens the
+   order panel. ---- */
+function windowOverriddenToday(){
+  return DB.overrides.some(o=> o.date===todayStr() && (o.reasons||[]).some(r=> String(r).indexOf("Trading window override")===0));
+}
+function windowClockSVG(size){
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>';
+}
+function windowModalHTML(){
+  const g = DB.guardrails; const now = new Date();
+  const hm = String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+  return '<div style="text-align:center;padding:6px 0">'
+    + '<div class="lock-ico" style="border-radius:50%">'+windowClockSVG(26)+'</div>'
+    + '<h3>Outside Your Trading Window</h3>'
+    + '<div class="small" style="margin:8px auto 16px;max-width:430px;line-height:1.6">Your trading window is currently closed. You set your trading hours to '+esc(g.winStart)+' - '+esc(g.winEnd)+' to help avoid off-plan trades. TradeMind will allow trading again when your next trading window opens at '+esc(g.winStart)+'.</div>'
+    + '<div style="display:flex;align-items:center;gap:12px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;text-align:left;margin-bottom:18px">'
+    + '<span style="color:var(--amber);display:inline-flex;flex:0 0 auto">'+windowClockSVG(22)+'</span>'
+    + '<div style="flex:1;min-width:0"><div style="font-weight:800">Trading window '+esc(g.winStart)+' - '+esc(g.winEnd)+'</div><div class="small" style="margin-top:2px">Current time '+hm+'</div></div>'
+    + '<span class="chip amber" style="flex:0 0 auto">Window closed</span>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" onclick="overrideWindowWithReason()">Override With Reason</button><button class="btn primary" onclick="closeModal()">Stay Disciplined</button></div>'
+    + '</div>';
+}
+function showWindowModal(){ openModal(windowModalHTML()); }
+function overrideWindowWithReason(){
+  const g = DB.guardrails;
+  openModal('<div style="padding:6px 0"><h3>Override With Reason</h3>'
+    + '<div class="small" style="margin:8px 0 12px;line-height:1.6">You are about to trade outside your window ('+esc(g.winStart)+' - '+esc(g.winEnd)+'). This rule break is logged in Guardrails. A reason is optional &mdash; but future-you will want to know why.</div>'
+    + '<div class="field"><label class="f">Reason (optional)</label><textarea class="input" id="win-override-reason" rows="3" placeholder="e.g. A+ setup at the HTF level I planned this morning"></textarea></div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="showWindowModal()">Back</button><button class="btn primary" onclick="confirmWindowOverride()">Log override &amp; trade</button></div></div>');
+  setTimeout(()=>{ const t = $("#win-override-reason"); if(t) t.focus(); }, 50);
+}
+function confirmWindowOverride(){
+  const g = DB.guardrails;
+  const el = $("#win-override-reason"); const reason = el? el.value.trim() : "";
+  DB.overrides.push({ id:uid(), date:todayStr(), reasons:["Trading window override ("+g.winStart+" - "+g.winEnd+")"+(reason? " \u2014 "+reason : "")], at:new Date().toLocaleTimeString() });
+  saveDB(); closeModal();
+  orderOpen = true;
+  if(currentView!=="trading"){ go("trading"); } else repaintTradingSidebar();
+  setTimeout(()=>{ const p = document.getElementById("order-panel"); if(p) p.scrollIntoView({behavior:"smooth", block:"nearest"}); }, 60);
+  toast("Window override logged. Trade the plan, not the impulse.");
+}
 function openTradePanel(){
   if(routineLocked()){ toast("Trading is locked — complete your pre-market routine to unlock trading."); openRoutinePanel(); return; }
   const st = guardrailStatus();
   if(DB.guardrails.enabled && st.breached && !st.overridden){ toast(DB.guardrails.hardLock? "Hard Lock is ON — trading is locked until tomorrow." : "Guardrails lockout — trading blocked."); return; }
+  if(DB.guardrails.enabled && !sessionInfo().open && !windowOverriddenToday()){ showWindowModal(); return; }
   orderOpen = true;
-  if(currentView!=="trading"){ go("trading"); } else RENDER.trading();
+  if(currentView!=="trading"){ go("trading"); } else repaintTradingSidebar();
   setTimeout(()=>{ const p = document.getElementById("order-panel"); if(p) p.scrollIntoView({behavior:"smooth", block:"nearest"}); }, 60);
 }
-function closeOrderPanel(){ orderOpen = false; if(currentView==="trading") RENDER.trading(); }
+function closeOrderPanel(){ orderOpen = false; if(currentView==="trading") repaintTradingSidebar(); }
 function paintOrderPanel(){ const p = document.getElementById("order-panel"); if(p) p.outerHTML = orderPanelHTML(); }
 function setOrderType(t){ ord.type = t; paintOrderPanel(); }
 function setOrderSide(s){ ord.side = s; paintOrderPanel(); }
@@ -2588,7 +2725,7 @@ function tradingSidebarHTML(st, lockedOut){
   const dots = Array.from({length: Math.max(1, g.maxTrades)}, (_,i)=> '<i class="tdot '+(i<used?"on":"")+'"></i>').join("");
   const opensTxt = info.open? "Trading closes at "+g.winEnd
     : (new Date() > hmToDate(g.winEnd, 0)? "Trading opens at "+g.winStart+" tomorrow" : "Trading opens at "+g.winStart);
-  const tabBtn = (id,label,ico)=> '<button class="'+(sideTab===id?"on":"")+'" onclick="setSideTab(\''+id+'\')">'+ico+label+'</button>';
+  const tabBtn = (id,label,ico)=> '<button class="'+(sideTab===id?"on":"")+'" data-stab="'+id+'" onclick="setSideTab(\''+id+'\')">'+ico+label+'</button>';
   const lockSvgS = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" style="vertical-align:-1px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   const clockSvgS = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="vertical-align:-1px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   const icoTab = p=> '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px">'+p+'</svg>';
@@ -2607,13 +2744,14 @@ function tradingSidebarHTML(st, lockedOut){
     + sessionBody
     + '</div>'
     + (orderOpen? orderPanelHTML() : "")
-    + '<div class="card side-card"><div class="side-tabs">'
+    + '<div class="card side-card tabs-card"><div class="side-tabs" id="trading-side-tabs">'
     + tabBtn("watchlist","Watchlist", icoTab('<path d="M12 17v5M9 3h6l-1 7 3 3H7l3-7z"/>'))
     + tabBtn("alerts","Alerts", icoTab('<path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/>'))
     + tabBtn("plan","Trading Plan", icoTab('<path d="M6 2h9l4 4v16H6z"/><path d="M9 12h6M9 16h6"/>'))
     + '</div>'
-    + (sideTab==="watchlist"? sideWatchlistHTML() : sideTab==="alerts"? sideAlertsHTML() : sidePlanHTML())
-    + '</div>'
+    + '<div class="side-tabbody" id="trading-tabs-body">'
+    + (sideTab==="watchlist"? sideWatchlistHTML() : sideTab==="alerts"? sideAlertsHTML() : '<div class="plan-scroll">'+sidePlanHTML()+'</div>')
+    + '</div></div>'
     + symbolDetailHTML();
 }
 /* Symbol detail card — pinned to the bottom of the Trading sidebar,
@@ -2658,7 +2796,7 @@ function sideWatchlistRowsHTML(){
       + '<span class="twl-sym mono">'+s.sym+'</span>'
       + '<span class="mono" data-twl-last="'+s.sym+'">'+s.last.toFixed(s.dec)+'</span>'
       + '<span class="mono '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+s.sym+'" style="min-width:56px;text-align:right">'+fmtPct(chg)+'</span>'
-      + '<button class="wl-pin '+(pinned?"on":"")+'" title="'+(pinned? "Unpin":"Pin to top")+'" onclick="event.stopPropagation();toggleWlPin(\''+s.sym+'\');RENDER.trading()">'+(pinned? "&#9733;":"&#9734;")+'</button></div>';
+      + '<button class="wl-pin '+(pinned?"on":"")+'" title="'+(pinned? "Unpin":"Pin to top")+'" onclick="event.stopPropagation();toggleWlPin(\''+s.sym+'\');refreshSideWatchlist()">'+(pinned? "&#9733;":"&#9734;")+'</button></div>';
   };
   const all = WL_INSTRUMENTS.map(r=> wlState[r[0]]).filter(s=> (!q || s.sym.includes(q)) && (!twlPinnedOnly || DB.wlPins.includes(s.sym)));
   let rows = "";
@@ -2675,13 +2813,24 @@ function sideWatchlistHTML(){
   const pinSvgB = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 3h6l-1 7 3 3H7l3-7z"/></svg>';
   const act = on=> on? ' style="color:var(--pine);border-color:var(--pine)"' : "";
   return '<div style="display:flex;gap:8px;margin-bottom:4px"><input class="input" style="flex:1;min-width:0" placeholder="Search all instruments…" value="'+esc(twlSearch)+'" oninput="twlSearch=this.value;refreshSideWatchlist()">'
-    + '<button class="icon-btn"'+act(twlPinnedOnly)+' title="Filter: pinned instruments only" onclick="twlPinnedOnly=!twlPinnedOnly;RENDER.trading()">'+funnelSvg+'</button>'
-    + '<button class="icon-btn"'+act(twlPinFirst)+' title="Float pinned instruments to the top" onclick="twlPinFirst=!twlPinFirst;RENDER.trading()">'+pinSvgB+'</button></div>'
+    + '<button class="icon-btn"'+act(twlPinnedOnly)+' title="Filter: pinned instruments only" onclick="twlPinnedOnly=!twlPinnedOnly;refreshSideWatchlist();paintWlFilterBtns()">'+funnelSvg+'</button>'
+    + '<button class="icon-btn"'+act(twlPinFirst)+' title="Float pinned instruments to the top" onclick="twlPinFirst=!twlPinFirst;refreshSideWatchlist();paintWlFilterBtns()">'+pinSvgB+'</button></div>'
     + '<div style="display:flex;gap:10px;padding:2px 6px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800"><span style="flex:1">Instrument</span><span>Last</span><span style="min-width:56px;text-align:right">Chg</span><span id="twl-live" title="Live prices — refreshed every 60 seconds" style="display:'+(wlAnyLive? "inline-flex":"none")+';align-items:center;gap:5px;color:var(--green)"><i style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></i>Live</span><span style="width:26px"></span></div>'
     + '<div id="twl-list" class="twl-scroll">'+sideWatchlistRowsHTML()+'</div>'
     + '<div class="small" style="margin-top:8px">'+(wlAnyLive? "Forex, crypto & gold show live prices (refresh 60s); indices & silver use the simulated feed." : "Simulated practice feed.")+' Click a row to load it on the chart; &#9733; pins it here and feeds the News watchlist filter.</div>';
 }
 function refreshSideWatchlist(){ const l = $("#twl-list"); if(l) l.innerHTML = sideWatchlistRowsHTML(); }
+/* Keep the two watchlist filter toggles' active styling in sync after a
+   list-only repaint (the buttons themselves are not rebuilt). */
+function paintWlFilterBtns(){
+  const body = document.getElementById("trading-tabs-body"); if(!body) return;
+  const btns = body.querySelectorAll(".icon-btn[title^='Filter: pinned'], .icon-btn[title^='Float pinned']");
+  btns.forEach(b=>{
+    const on = b.title.indexOf("Filter:")===0? twlPinnedOnly : twlPinFirst;
+    b.style.color = on? "var(--pine)" : "";
+    b.style.borderColor = on? "var(--pine)" : "";
+  });
+}
 function paintTradingWlPrices(){
   if(currentView!=="trading") return;
   WL_INSTRUMENTS.forEach(r=>{ const s = wlState[r[0]];
@@ -2825,35 +2974,64 @@ function sidePlanHTML(){
   }
   return h;
 }
-RENDER.trading = function(){
+RENDER.trading = function(opts){
+  opts = opts || {};
   const el = document.querySelector('[data-view="trading"]');
   const st = guardrailStatus(); const lockedOut = DB.guardrails.enabled && st.breached && !st.overridden;
-  const rLocked = routineLocked(); const tradeLocked = lockedOut || rLocked;
-  paintTradingHeader(tradeLocked);
-  el.innerHTML =
-    (lockedOut? '<div class="alert red" style="margin-bottom:16px"><div><strong>Guardrails lockout is active.</strong> Paper trading is blocked '+(DB.guardrails.hardLock? '— Hard Lock is ON, so there is no override; trading unlocks tomorrow.' : 'until you override (logged) or the day resets.')+' This is the discipline working as designed.</div></div>':"")
-    + '<div class="trade-grid"><div style="min-width:0">'
-    + '<div class="card mb chart-card chart-card-flush">'
-    + '<div class="tv-wrap"'+(chartH? ' style="height:'+chartH+'px"':'')+'><div id="tv-chart-mount"></div></div></div>'
-    + positionsPanelHTML()
-    + '</div>'
-    + (tradeWide? "" : '<div class="side-col">'+tradingSidebarHTML(st, tradeLocked)+'</div>')
-    + '</div>';
-  seedCandles(simMarket);
-  loadTvChart();
+  const rLocked = routineLocked();
+  /* The header Trade button stays enabled while only the window is closed
+     (so it can open the Outside-Window modal); every status display uses
+     the full tradeLocked, which includes the window state. */
+  const winOpen = sessionInfo().open;
+  const btnLocked = lockedOut || rLocked;
+  const tradeLocked = btnLocked || !winOpen;
+  tradeLockedNow = tradeLocked;
+  paintTradingHeader(btnLocked);
+  const grid = el.querySelector(".trade-grid");
+  const needFull = !grid || opts.chart==="reload";
+  if(needFull){
+    el.innerHTML =
+      (lockedOut? tradingLockoutAlertHTML() : "")
+      + '<div class="trade-grid'+(tradeWide? " wide":"")+'"><div class="trade-leftcol" style="min-width:0">'
+      + '<div class="card mb chart-card chart-card-flush">'
+      + '<div class="tv-wrap"'+(chartH? ' style="height:'+chartH+'px"':'')+'><div id="tv-chart-mount"></div></div></div>'
+      + positionsPanelHTML()
+      + '</div>'
+      + '<div class="side-col">'+tradingSidebarHTML(st, tradeLocked)+'</div>'
+      + '</div>';
+    seedCandles(simMarket);
+    loadTvChart(true);
+  } else {
+    /* Surgical repaint: sidebar, positions panel and the lockout alert are
+       refreshed in place — the chart mount (and its live widget) is never
+       touched, so the candles survive tab/filter/toggle clicks. */
+    const alert = document.getElementById("trading-lockout-alert");
+    if(lockedOut && !alert) grid.insertAdjacentHTML("beforebegin", tradingLockoutAlertHTML());
+    else if(!lockedOut && alert) alert.remove();
+    grid.classList.toggle("wide", tradeWide);
+    const sc = el.querySelector(".side-col");
+    if(sc){ const fresh = document.createElement("div"); fresh.className = "side-col"; fresh.innerHTML = tradingSidebarHTML(st, tradeLocked); sc.replaceWith(fresh); }
+    const pp = document.getElementById("trading-pos-panel");
+    if(pp){ const tmp = document.createElement("div"); tmp.innerHTML = positionsPanelHTML(); pp.replaceWith(tmp.firstElementChild); }
+  }
   clearInterval(simTimer); simTimer = setInterval(()=>{ if(currentView==="trading") tickSim(); }, 1600);
 };
 /* ---- TradingView advanced chart (embedded widget, drawing toolbar on) ---- */
 const TV_SYMBOLS = { XAUUSD:"OANDA:XAUUSD", BTCUSD:"BITSTAMP:BTCUSD", ETHUSD:"BITSTAMP:ETHUSD", SOLUSD:"BITSTAMP:SOLUSD",
   EURUSD:"FX:EURUSD", GBPUSD:"FX:GBPUSD", GBPJPY:"FX:GBPJPY", USDJPY:"FX:USDJPY" };
 let tvInterval = "240", tvScriptLoading = false;
-function setTvInterval(iv){ tvInterval = iv; if(currentView==="trading") RENDER.trading(); }
-function loadTvChart(){
+function setTvInterval(iv){ tvInterval = iv; if(currentView==="trading") RENDER.trading({chart:"reload"}); }
+function loadTvChart(force){
   const mount = document.getElementById("tv-chart-mount"); if(!mount) return;
   const dark = isDark();
   const build = ()=>{
-    if(!window.TradingView){ mount.innerHTML = '<div class="empty"><div class="e-title">Chart unavailable offline</div>The TradingView widget needs an internet connection. Your positions panel and paper feed below keep working.</div>'; return; }
-    mount.innerHTML = "";
+    const m = document.getElementById("tv-chart-mount"); if(!m) return;
+    if(!window.TradingView){ m.innerHTML = '<div class="empty"><div class="e-title">Chart unavailable offline</div>The TradingView widget needs an internet connection. Your positions panel and paper feed below keep working.</div>'; return; }
+    /* Hand the widget a pristine mount node: reusing a node that already
+       hosted a widget leaves the old iframe/canvas behind and the new
+       chart renders blank. */
+    const fresh = document.createElement("div"); fresh.id = "tv-chart-mount";
+    m.replaceWith(fresh);
     const w = new TradingView.widget({
       container_id: "tv-chart-mount",
       autosize: true,
