@@ -3482,13 +3482,17 @@ function newsSavePrefs(){
 })();
 
 /* ---- Live economic calendar ----
-   Primary source: the free FairEconomy (Forex Factory) weekly JSON feed —
-   no API key needed. The feed sends no CORS header, so the fetch tries the
-   direct URL first, then two public CORS relays; every response is validated
-   as a JSON event array before use. If all routes fail or return nothing,
-   the built-in calendar database above stays on screen. */
-const NEWS_FEED_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
+   Source: the Forex Factory weekly calendar, served through the Render API
+   (https://playbook-signal-dashboard.onrender.com/api/forex-calendar) with
+   CORS enabled, so the page fetches it directly — no relays. Rows arrive as
+   { date:"Sun Oct 18", time:"5:30pm", currency, impact, event, actual,
+   forecast, previous } and are mapped into the internal event shape below.
+   If the fetch fails or returns nothing usable, the built-in calendar
+   database above stays on screen. The feed re-fetches every 15 minutes
+   (matching the server-side cache) while the app is open. */
+const NEWS_FEED_URL = "https://playbook-signal-dashboard.onrender.com/api/forex-calendar";
 let newsLiveEvents = null, newsLiveUpdated = null, newsLiveLoading = false, newsFetchStarted = false;
+let newsRefreshTimer = null;
 function newsCategoryFor(title){
   const t = " "+String(title||"").toLowerCase()+" ";
   if(/crude|oil inventories|natural gas|gasoline|petroleum/.test(t)) return "Energy & Commodities";
@@ -3502,41 +3506,61 @@ function newsCategoryFor(title){
   return "Other";
 }
 const NEWS_CC = { USD:"US", EUR:"EU", GBP:"GB", JPY:"JP", AUD:"AU", NZD:"NZ", CAD:"CA", CHF:"CH", CNY:"CN" };
+const NEWS_MONTHS = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+function newsParseFeedDate(label){
+  const m = String(label||"").match(/([A-Za-z]{3})\s+(\d{1,2})/);
+  if(!m) return null;
+  const mon = NEWS_MONTHS[m[1].toLowerCase()]; if(mon===undefined) return null;
+  const day = parseInt(m[2], 10); if(!day) return null;
+  const now = new Date();
+  let d = new Date(now.getFullYear(), mon, day);
+  /* Dec/Jan rollover: keep the date within ~6 months either side of today. */
+  const halfYearMs = 183*24*3600*1000;
+  if(d.getTime() - now.getTime() > halfYearMs) d = new Date(now.getFullYear()-1, mon, day);
+  else if(now.getTime() - d.getTime() > halfYearMs) d = new Date(now.getFullYear()+1, mon, day);
+  return todayStr(d);
+}
+function newsParseFeedTime(label){
+  const raw = String(label||"").trim();
+  const m = raw.match(/^(\d{1,2}):(\d{2})\s*([aApP])[mM]$/);
+  if(!m) return raw; /* "", "Day 7", "Tentative" — keep the label, never fake a clock time */
+  let h = parseInt(m[1], 10) % 12;
+  if(/p/i.test(m[3])) h += 12;
+  return String(h).padStart(2,"0")+":"+m[2];
+}
 function newsMapLive(x, i){
-  const d = new Date(x && x.date);
-  if(isNaN(d.getTime())) return null;
-  const cur = String(x.country||"").toUpperCase();
-  return { id:"lv"+i, date: todayStr(d),
-    time: String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),
+  if(!x) return null;
+  const date = newsParseFeedDate(x.date);
+  if(!date) return null;
+  const cur = String(x.currency||"").toUpperCase();
+  return { id:"lv"+i, date: date,
+    time: newsParseFeedTime(x.time),
     cur: cur, cc: cur==="ALL"? "ALL" : (NEWS_CC[cur] || cur.slice(0,2)),
     impact: /high/i.test(x.impact)? "High" : /medium/i.test(x.impact)? "Medium" : "Low",
-    cat: newsCategoryFor(x.title), event: x.title || "—",
+    cat: newsCategoryFor(x.event), event: x.event || "—",
     actual: x.actual || "", fc: x.forecast || "", prev: x.previous || "" };
 }
 function newsFetchLive(){
   if(newsLiveLoading) return;
   newsLiveLoading = true;
   if(currentView==="news") RENDER.news();
-  const urls = [ NEWS_FEED_URL,
-    "https://api.allorigins.win/raw?url="+encodeURIComponent(NEWS_FEED_URL),
-    "https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(NEWS_FEED_URL) ];
-  const attempt = idx=>{
-    if(idx>=urls.length){ newsLiveLoading = false; if(currentView==="news") RENDER.news(); return; }
-    let ctl = null, timer = null;
-    try{ ctl = new AbortController(); timer = setTimeout(()=> ctl.abort(), 12000); }catch(e){}
-    fetch(urls[idx], ctl? { signal: ctl.signal } : undefined)
-      .then(r=>{ if(timer) clearTimeout(timer); if(!r.ok) throw new Error("http "+r.status); return r.json(); })
-      .then(data=>{
-        if(!Array.isArray(data) || !data.length) throw new Error("empty feed");
-        const mapped = data.map(newsMapLive).filter(Boolean);
-        if(!mapped.length) throw new Error("unmappable feed");
-        mapped.sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : a.time<b.time?-1:1);
-        newsLiveEvents = mapped; newsLiveUpdated = new Date(); newsLiveLoading = false;
-        if(currentView==="news") RENDER.news();
-      })
-      .catch(()=>{ if(timer) clearTimeout(timer); attempt(idx+1); });
-  };
-  attempt(0);
+  let ctl = null, timer = null;
+  try{ ctl = new AbortController(); timer = setTimeout(()=> ctl.abort(), 12000); }catch(e){}
+  fetch(NEWS_FEED_URL, ctl? { signal: ctl.signal } : undefined)
+    .then(r=>{ if(timer) clearTimeout(timer); if(!r.ok) throw new Error("http "+r.status); return r.json(); })
+    .then(data=>{
+      const rows = data && Array.isArray(data.events)? data.events : null;
+      if(!rows || !rows.length || (data && data.error)) throw new Error("empty feed");
+      const mapped = rows.map(newsMapLive).filter(Boolean);
+      if(!mapped.length) throw new Error("unmappable feed");
+      mapped.sort((a,b)=> a.date<b.date?-1 : a.date>b.date?1 : a.time<b.time?-1:1);
+      newsLiveEvents = mapped; newsLiveUpdated = new Date(); newsLiveLoading = false;
+      if(currentView==="news") RENDER.news();
+    })
+    .catch(()=>{ if(timer) clearTimeout(timer); newsLiveLoading = false; if(currentView==="news") RENDER.news(); });
+  /* One shared auto-refresh timer (15 min, matching the server cache) —
+     the guard keeps News re-renders from stacking duplicate intervals. */
+  if(!newsRefreshTimer) newsRefreshTimer = setInterval(()=> newsFetchLive(), 15*60*1000);
 }
 function newsAllEvents(){
   if(newsLiveEvents && newsLiveEvents.length) return newsLiveEvents;
@@ -3626,7 +3650,7 @@ function newsListHTML(){
       const open = newsOpenRow===e.id;
       body += '<div class="ev-item"><div class="ev-row'+(past?" past":"")+'">'
         + '<button class="ev-expand" title="Event details" onclick="newsToggleRow(\''+e.id+'\')">'+(open?"&minus;":"+")+'</button>'
-        + '<span class="mono">'+e.time+'</span>'
+        + '<span class="mono">'+(e.time? esc(e.time) : "&mdash;")+'</span>'
         + '<span style="display:flex;align-items:center;gap:7px"><span class="flag-badge">'+e.cc+'</span><strong>'+e.cur+'</strong></span>'
         + '<span style="text-align:center"><span class="imp-dot" style="background:'+NEWS_IMP_COLORS[e.impact]+'"></span></span>'
         + '<span style="font-weight:600">'+esc(e.event)+'</span>'
@@ -3651,8 +3675,8 @@ function newsListHTML(){
     + '<div class="ev-head"><span></span><span>Time</span><span>Currency</span><span style="text-align:center">Impact</span><span>Event</span><span style="text-align:right">Actual</span><span></span></div>'
     + body
     + '<div class="small" style="margin-top:12px">'+(newsLiveEvents
-      ? 'Live economic calendar — Forex Factory weekly feed (FairEconomy), fetched '+newsLiveUpdated.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'. Times are shown in your local timezone.'
-      : 'Built-in economic calendar — the full recurring release schedule for every major currency. The live feed refreshes this page automatically whenever it can be reached.')+'</div>'
+      ? 'Live economic calendar — Forex Factory weekly feed via the Render API, fetched '+newsLiveUpdated.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'. Times are shown in your local timezone.'
+      : 'Built-in economic calendar — the full recurring release schedule for every major currency. The live Forex Factory feed refreshes this page automatically whenever it can be reached.')+'</div>'
     + '</div>';
 }
 function newsCalendarHTML(){
@@ -3699,7 +3723,7 @@ RENDER.news = function(){
     + '<div class="view-tgl"><button class="'+(newsViewMode==="list"?"on":"")+'" onclick="newsViewMode=\'list\';RENDER.news()">'+listSvg+'List</button><button class="'+(newsViewMode==="calendar"?"on":"")+'" onclick="newsViewMode=\'calendar\';RENDER.news()">'+calSvg+'Calendar</button></div>'
     + '<button class="lock-btn'+(plus?" active":"")+'" onclick="newsBlockGate()">'+lockSvg+(plus? "News Block active" : "News Block requires Plus plan")+'</button>'
     + '<button class="icon-btn" title="Refresh live calendar" onclick="newsFetchLive()"><span class="'+(newsLiveLoading? "spin":"")+'" style="display:inline-flex">'+refreshSvg+'</span></button></div>'
-    + (todayHigh.length && DB.guardrails.newsBlock? '<div class="alert amber mb"><div><strong>High-impact news today:</strong> '+todayHigh.map(e=>esc(e.event)+" ("+e.time+")").join(" · ")+'. Your guardrail says: no new entries 30 min either side of the print.</div></div>':"")
+    + (todayHigh.length && DB.guardrails.newsBlock? '<div class="alert amber mb"><div><strong>High-impact news today:</strong> '+todayHigh.map(e=>esc(e.event)+" ("+(e.time||"—")+")").join(" · ")+'. Your guardrail says: no new entries 30 min either side of the print.</div></div>':"")
     + '<div class="news-layout">' + newsFiltersHTML() + (newsViewMode==="list"? newsListHTML() : newsCalendarHTML()) + '</div>';
   if(newsClockTimer) clearInterval(newsClockTimer);
   newsClockTimer = setInterval(()=>{
