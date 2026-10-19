@@ -3438,7 +3438,8 @@ const NEWS_CATS = [
 ];
 const NEWS_IMP_COLORS = { High:"#E5484D", Medium:"#F0A02C", Low:"#B7C0BA" };
 let newsViewMode = "list";
-let newsFrom = todayStr(), newsTo = todayStr(), newsRangeKey = "today";
+let newsFrom, newsTo, newsRangeKey;
+(function newsDefaultWeek(){ var t = new Date(); var dow = (t.getDay()+6)%7; var add = function(n){ var x = new Date(t); x.setDate(x.getDate()+n); return x; }; newsFrom = todayStr(add(-dow)); newsTo = todayStr(add(6-dow)); newsRangeKey = "week"; })();
 let newsImp = { High:true, Medium:true, Low:true };
 let newsCats = {}; NEWS_CATS.forEach(c=> newsCats[c[0]] = true);
 let newsCur = "All";
@@ -3475,6 +3476,13 @@ function newsSavePrefs(){
   const p = DB.newsPrefs; if(!p) return;
   if(p.from) newsFrom = p.from; if(p.to) newsTo = p.to;
   newsRangeKey = p.rangeKey || "";
+  // The live Forex Factory feed covers the current week only — a persisted
+  // "This month"/"Next month" range is misleading, so reset it to the weekly view.
+  if(newsRangeKey==="month" || newsRangeKey==="nextmonth"){
+    var t2 = new Date(); var dow2 = (t2.getDay()+6)%7;
+    var add2 = function(n){ var x = new Date(t2); x.setDate(x.getDate()+n); return x; };
+    newsFrom = todayStr(add2(-dow2)); newsTo = todayStr(add2(6-dow2)); newsRangeKey = "week";
+  }
   if(p.imp) newsImp = Object.assign(newsImp, p.imp);
   if(p.cats) newsCats = Object.assign(newsCats, p.cats);
   if(p.cur) newsCur = p.cur;
