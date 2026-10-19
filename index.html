@@ -307,7 +307,8 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .tgl input{width:17px;height:17px;accent-color:var(--pine)}
 
 /* ---------- Watchlist / TradingView ---------- */
-.tv-wrap{width:100%;height:600px;border-radius:12px;overflow:hidden;background:var(--card2)}
+.tv-wrap{width:100%;height:clamp(500px,calc(100vh - 330px),820px);border-radius:12px;overflow:hidden;background:var(--card2)}
+.chart-card-flush{padding:0;overflow:hidden}
 .tv-wrap>div{height:100%}
 @media (max-width:860px){ .tv-wrap{height:420px} }
 .wl-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -962,7 +963,7 @@ const DEFAULTS = {
   edgeSeeded: false,                            // starter Edge plan copied in once
   edgeSyncV3: false,                            // seeded Market Mechanics plan synced to the EdgeFlo wording/values once
   notes: [], folders: ["General","Reviews","Ideas"],
-  guardrails: { enabled:true, maxLoss:100, maxProfit:1000, maxTrades:5, winStart:"07:00", winEnd:"17:00", newsBlock:true, hardLock:false,
+  guardrails: { enabled:true, maxLoss:100, maxProfit:1000, maxTrades:5, winStart:"08:00", winEnd:"17:00", newsBlock:true, hardLock:false,
                 marginInvert:false, prompts:true, routineGate:true, riskMode:"pct", riskValue:1, tz:"UTC" },
   overrides: [],                                // guardrail rule-break log
   paper: { balance:100000, positions: [], orders: [] },
@@ -1000,6 +1001,9 @@ function loadDB(){
   try{ const raw = localStorage.getItem(DB_KEY); DB = raw ? Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), JSON.parse(raw)) : JSON.parse(JSON.stringify(DEFAULTS)); }
   catch(e){ DB = JSON.parse(JSON.stringify(DEFAULTS)); }
   DB.guardrails = Object.assign({}, DEFAULTS.guardrails, DB.guardrails||{});
+  /* One-time migration: the trading window default moved 07:00 → 08:00 to
+     match EdgeFlo; a stored value of exactly the old default follows it. */
+  if(DB.guardrails.winStart === "07:00") DB.guardrails.winStart = "08:00";
   DB.paper = Object.assign({}, DEFAULTS.paper, DB.paper||{});
   DB.sub = Object.assign({}, DEFAULTS.sub, DB.sub||{});
   DB.routine = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS.routine)), DB.routine||{});
@@ -1564,16 +1568,16 @@ function balanceChartSVG(){
   const w = 680, h = 360, padR = 66, padB = 24, padT = 10, padL = 34; /* padL leaves room for the first date label (middle-anchored) so it is never clipped */
   const iw = w - padR - padL, ih = h - padT - padB;
   const X = ds=> padL + Math.max(0, Math.min(1, (new Date(ds+"T12:00:00") - d0) / ((dEnd - d0)||DAY))) * iw;
-  /* Y domain snapped to $250 steps (EdgeFlo's .25K grid), always showing at
-     least ±$2.75K around the current balance: $97.25K … $102.75K at $100K. */
+  /* Y domain snapped to $400 steps (EdgeFlo's .40K grid), always showing at
+     least ±$2.80K around the current balance: $97.20K … $102.80K at $100K. */
   let lo = Math.min(...pts.map(p=>p.v)), hi = Math.max(...pts.map(p=>p.v));
-  lo = Math.min(lo, bal - 2750); hi = Math.max(hi, bal + 2750);
-  const min = Math.floor(lo/250)*250, max = Math.ceil(hi/250)*250;
+  lo = Math.min(lo, bal - 2800); hi = Math.max(hi, bal + 2800);
+  const min = Math.floor(lo/400)*400, max = Math.ceil(hi/400)*400;
   const Y = v=> padT + (1 - (v-min)/((max-min)||1))*ih;
   const line = pts.map((p,i)=> (i?"L":"M")+X(p.date).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
   const area = line + " L"+X(pts[pts.length-1].date).toFixed(1)+" "+(padT+ih)+" L"+padL+" "+(padT+ih)+" Z";
   let ticks = "";
-  for(let v=min; v<=max; v+=250){ const y = Y(v);
+  for(let v=min; v<=max; v+=400){ const y = Y(v);
     if(Math.abs(v-bal) < 1){ /* current balance gets EdgeFlo's orange axis chip */
       ticks += '<rect x="'+(padL+iw+4)+'" y="'+(y-9)+'" width="58" height="18" rx="4" fill="var(--amber)"/><text x="'+(padL+iw+33)+'" y="'+(y+3.5)+'" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Inter">'+fmtK(v)+'</text>';
     } else {
@@ -1624,7 +1628,7 @@ RENDER.dashboard = function(){
     + '<div class="grid g5">'
     + kpi("Account Balance", '<div class="k-value mono">'+bal$(acctBal)+'</div>')
     + kpi("Total Closed Net PnL"+infoI("Net realised P&L from closed trades in the selected range"), '<div class="k-value mono '+(s.pnl>=0?"pos":"neg")+'">'+fmt$(s.pnl)+'</div>')
-    + kpi("Win Rate", '<div class="k-value mono">'+(s.n? s.winRate.toFixed(2):"0.00")+'%'+(s.n? ' <span style="font-size:13px" class="'+(s.winRate>=50?"pos":"neg")+'">'+(s.winRate>=50?"&#8599;":"&#8600;")+'</span>' : "")+'</div>')
+    + kpi("Win Rate", '<div class="k-value mono">'+(s.n? s.winRate.toFixed(2):"0.00")+'%'+' <span style="font-size:13px" class="'+((s.n && s.winRate>=50)?"pos":"neg")+'">'+((s.n && s.winRate>=50)?"&#8599;":"&#8600;")+'</span>'+'</div>')
     + kpi("Avg R Per Trade", '<div class="k-value mono">'+(s.n? String(Math.round(s.avgR)):"0")+' <span style="font-size:13px" class="'+(s.avgR>0?"pos":"neg")+'">'+(s.avgR>0?"&#8599;":"&#8600;")+'</span></div>'
       + '<div style="margin-top:9px;display:flex;flex-direction:column;gap:7px">'
       + '<div><div class="mono pos" style="font-size:12.5px;font-weight:700">+'+Math.abs(avgWinR).toFixed(2)+'R</div><div class="progress green" style="height:5px;margin-top:3px"><i style="width:'+winBar+'%"></i></div></div>'
@@ -2313,14 +2317,30 @@ let posTab = "open", posPanelHidden = false, tradeWide = false, sideTab = "plan"
    the panel's top edge; 0 = natural height. Persisted across reloads. */
 let posPanelH = 0;
 try{ posPanelH = parseInt(localStorage.getItem("tm-pos-panel-h"), 10) || 0; }catch(e){}
+let chartH = 0;
+try{ chartH = parseInt(localStorage.getItem("tm-chart-h"), 10) || 0; }catch(e){}
 function startPosResize(e){
   e.preventDefault();
   const panel = e.target.closest(".pos-panel"); if(!panel) return;
+  const tvWrap = document.querySelector('[data-view="trading"] .tv-wrap');
   const startY = e.clientY, startH = panel.offsetHeight;
+  const startChartH = tvWrap ? tvWrap.offsetHeight : 0;
   const minH = 120, maxH = Math.max(minH, Math.round(window.innerHeight * 0.6));
-  const move = ev=>{ let h = startH + (startY - ev.clientY); h = Math.max(minH, Math.min(maxH, h)); posPanelH = Math.round(h); panel.style.height = posPanelH + "px"; };
+  const chartMin = 320, chartMax = Math.max(chartMin, Math.round(window.innerHeight * 0.85));
+  const move = ev=>{
+    if(!tvWrap){ let h = startH + (startY - ev.clientY); h = Math.max(minH, Math.min(maxH, h)); posPanelH = Math.round(h); panel.style.height = posPanelH + "px"; return; }
+    const delta = startY - ev.clientY;
+    let ch = Math.max(chartMin, Math.min(chartMax, startChartH - delta));
+    let ph = startH + (startChartH - ch);
+    ph = Math.max(minH, Math.min(maxH, ph));
+    ch = startChartH - (ph - startH);
+    posPanelH = Math.round(ph); chartH = Math.round(ch);
+    panel.style.height = posPanelH + "px";
+    tvWrap.style.height = chartH + "px";
+  };
   const up = ()=>{ document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
-    try{ if(posPanelH) localStorage.setItem("tm-pos-panel-h", String(posPanelH)); }catch(err){} };
+    try{ if(posPanelH) localStorage.setItem("tm-pos-panel-h", String(posPanelH)); }catch(err){}
+    try{ if(chartH) localStorage.setItem("tm-chart-h", String(chartH)); }catch(err){} };
   document.addEventListener("pointermove", move);
   document.addEventListener("pointerup", up);
 }
@@ -2422,7 +2442,7 @@ function positionsPanelHTML(){
       : '<div class="empty"><div class="e-title">No closed positions yet</div>Closed paper trades land here — and in your Journal.</div>';
   }
   return '<div class="card pos-panel"'+(posPanelH && !posPanelHidden? ' style="height:'+posPanelH+'px"':'')+'>'
-    + '<div class="pos-resize" onpointerdown="startPosResize(event)" title="Drag to resize this panel" role="separator" aria-label="Resize positions panel"><span></span></div>'
+    + '<div class="pos-resize" onpointerdown="startPosResize(event)" title="Drag to resize chart and positions panel" role="separator" aria-label="Resize chart and positions panel"><span></span></div>'
     + '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)">'
     + tabBtn("open","Open Positions", open.length) + tabBtn("pending","Pending Orders", (DB.paper.orders||[]).length) + tabBtn("closed","Closed Positions", closed.length)
     + '<span style="flex:1"></span>'
@@ -2813,10 +2833,8 @@ RENDER.trading = function(){
   el.innerHTML =
     (lockedOut? '<div class="alert red" style="margin-bottom:16px"><div><strong>Guardrails lockout is active.</strong> Paper trading is blocked '+(DB.guardrails.hardLock? '— Hard Lock is ON, so there is no override; trading unlocks tomorrow.' : 'until you override (logged) or the day resets.')+' This is the discipline working as designed.</div></div>':"")
     + '<div class="trade-grid"><div style="min-width:0">'
-    + '<div class="card mb chart-card"><div class="chart-bar">'
-    + [["5","5m"],["15","15m"],["240","4h"]].map(([iv,lb])=> '<button class="tf-btn '+(tvInterval===iv?"on":"")+'" onclick="setTvInterval(\''+iv+'\')">'+lb+'</button>').join("")
-    + '<span class="chart-note">'+esc(simMarket)+' &middot; '+(tvInterval==="240"? "4h" : tvInterval+"m")+' &middot; '+(wlState[simMarket]? esc(wlState[simMarket].cls) : "Forex")+'</span></div>'
-    + '<div class="tv-wrap"><div id="tv-chart-mount"></div></div></div>'
+    + '<div class="card mb chart-card chart-card-flush">'
+    + '<div class="tv-wrap"'+(chartH? ' style="height:'+chartH+'px"':'')+'><div id="tv-chart-mount"></div></div></div>'
     + positionsPanelHTML()
     + '</div>'
     + (tradeWide? "" : '<div class="side-col">'+tradingSidebarHTML(st, tradeLocked)+'</div>')
