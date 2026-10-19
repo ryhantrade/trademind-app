@@ -379,8 +379,8 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .icon-btn:disabled:hover{color:var(--muted);border-color:var(--line2)}
 .trade-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
 .side-col{display:flex;flex-direction:column;gap:16px;min-width:0}
-.side-card{padding:16px}
-.pos-tab{border:0;background:transparent;padding:8px 10px;font-weight:700;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent}
+.side-card{padding:12px 14px}
+.pos-tab{border:0;background:transparent;padding:5px 9px;font-weight:700;font-size:13px;color:var(--muted);border-bottom:2px solid transparent}
 .pos-tab.on{color:var(--pine);border-bottom-color:var(--pine)}
 .pnl-slider{margin-top:10px}
 .pnl-track{height:8px;border-radius:99px;background:var(--bg2);position:relative}
@@ -390,10 +390,10 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .tdot{width:13px;height:13px;border-radius:50%;background:var(--bg2);border:1px solid var(--line2);display:inline-block}
 .tdot.on{background:var(--pine);border-color:var(--pine)}
 .side-count{display:flex;justify-content:space-between;align-items:center;background:var(--pine-soft);border-radius:10px;padding:9px 12px;margin-top:12px;font-size:12.5px;font-weight:700;color:var(--pine)}
-.side-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px}
-.side-tabs button{border:0;background:transparent;padding:8px 10px;font-weight:700;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.side-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.side-tabs button{border:0;background:transparent;padding:6px 9px;font-weight:700;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
 .side-tabs button.on{color:var(--pine);border-bottom-color:var(--pine)}
-.twl-row{display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;cursor:pointer;font-size:13px}
+.twl-row{display:flex;align-items:center;gap:10px;padding:5px 6px;border-radius:8px;cursor:pointer;font-size:13px}
 .twl-row:hover{background:var(--card2)}
 .twl-row.sel{background:var(--violet-soft)}
 .twl-scroll{max-height:460px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
@@ -423,7 +423,7 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .plan-num{width:19px;height:19px;flex:0 0 19px;border-radius:50%;background:var(--violet-soft);color:var(--violet);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
 /* Bottom positions panel: user-resizable via the top-edge grabber */
 .pos-panel{display:flex;flex-direction:column}
-.pos-resize{height:13px;margin:-8px 0 1px;cursor:row-resize;display:flex;align-items:center;justify-content:center;touch-action:none;flex:0 0 13px}
+.pos-resize{height:9px;margin:-3px 0 0;cursor:row-resize;display:flex;align-items:center;justify-content:center;touch-action:none;flex:0 0 9px}
 .pos-resize span{width:46px;height:4px;border-radius:99px;background:var(--line2);transition:background .15s}
 .pos-resize:hover span,.pos-resize:active span{background:var(--pine)}
 .pos-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
@@ -442,12 +442,40 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
   [data-view="trading"].on .trade-grid{flex:1;min-height:0;align-items:stretch}
   [data-view="trading"].on .trade-grid>div{min-height:0;min-width:0}
   [data-view="trading"].on .trade-leftcol{display:flex;flex-direction:column;min-height:0}
-  [data-view="trading"].on .trade-leftcol .pos-panel{flex:1 1 auto;min-height:140px;overflow:hidden}
+  [data-view="trading"].on .trade-leftcol .pos-panel{flex:0 0 auto;min-height:0;overflow:hidden}
   [data-view="trading"].on .side-col{height:100%;min-height:0;overflow:hidden}
   [data-view="trading"].on .tabs-card{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden}
   [data-view="trading"].on .side-tabbody{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
   [data-view="trading"].on .side-tabbody>#twl-list{flex:1;min-height:80px;max-height:none}
   [data-view="trading"].on .plan-scroll{flex:1;min-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+}
+
+/* ---------- Trading density pass (EdgeFlo compactness) ----------
+   Tighter chrome, sidebar and positions bar on the Trading view only,
+   so the chart claims every spare pixel. Scoped overrides: the shared
+   .pnl-* / .side-count rules keep their roomier Dashboard form. */
+body.on-trading #topbar{padding:9px 16px}
+body.on-trading #views{padding:12px 14px 16px}
+body.on-trading #lockout-slot{padding:0 14px !important}
+[data-view="trading"] .trade-grid{gap:12px}
+[data-view="trading"] .side-col{gap:10px}
+[data-view="trading"] .chart-card-flush{padding:0}
+[data-view="trading"] .trade-leftcol .chart-card{margin-bottom:8px}
+[data-view="trading"] .pnl-slider{margin-top:6px}
+[data-view="trading"] .pnl-scale{margin-top:4px}
+[data-view="trading"] .side-count{padding:6px 11px;margin-top:8px}
+[data-view="trading"] .pos-panel{padding:6px 14px 8px}
+[data-view="trading"] .pos-body .empty{padding:12px 16px}
+.mini-link{border:0;background:transparent;color:var(--faint);font-size:12px;font-weight:600;padding:2px 4px;cursor:pointer;font-family:inherit}
+.mini-link:hover{color:var(--pine);text-decoration:underline}
+.pos-hide-btn{width:26px;height:26px;flex:0 0 26px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.pos-hide-btn:hover{color:var(--pine);border-color:var(--line2)}
+@media (min-width:1081px){
+  body.on-trading #main{height:100vh}
+  body.on-trading #views{flex:1;min-height:0;display:flex;flex-direction:column}
+  body.on-trading [data-view="trading"].on{flex:1;min-height:0;height:auto}
+  [data-view="trading"].on .trade-leftcol .chart-card{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+  [data-view="trading"].on .trade-leftcol .tv-wrap{flex:1 1 auto;min-height:260px;height:auto}
 }
 
 /* ---------- Account settings tabs ---------- */
@@ -498,7 +526,7 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .legal-row:last-child{border-bottom:0}
 .legal-row:hover{color:var(--pine)}
 .twl-sym{font-weight:800;flex:1}
-.wl-group-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:10px 4px 3px}
+.wl-group-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:7px 4px 2px}
 .alert-row{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 .alert-row:last-child{border-bottom:0}
 
@@ -1530,6 +1558,15 @@ function dashChrome(view){
   const tt = $("#tb-trading"); if(tt) tt.style.display = view==="trading"? "flex":"none";
   const topbar = $("#topbar"), tabs = document.getElementById("tb-range-tabs");
   const badge = $("#tb-badge"), upg = $("#tb-upgrade"), av = $("#tb-avatar");
+  /* Pages whose own content opens with its native heading get NO global
+     title/date/badge bar at all (EdgeFlo has none): the bar is hidden
+     for them, so the page starts directly with its own heading row.
+     Dashboard / Trading / Edge / Sanctuary / Settings keep the bar —
+     theirs carries the range tabs, the account strip or the page's
+     real subtitle, never a date or plan badges. */
+  const BARE_VIEWS = ["journal","addtrade","guardrails","news","notebook","coach","performance","pricing","checkout"];
+  if(topbar) topbar.style.display = BARE_VIEWS.indexOf(view)>=0? "none":"";
+  document.body.classList.toggle("on-trading", view==="trading");
   if(view==="dashboard"){
     if(sub) sub.textContent = "Your trading performance at a glance — track your progress, discipline, and daily flow.";
     if(right){ right.style.display = ""; const t = rangeTabsEl(); t.style.display = ""; right.appendChild(t); }
@@ -1612,21 +1649,25 @@ function balanceChartSVG(){
   const d0s = todayStr(d0);
   if(pts[0].date > d0s) pts.unshift({ date:d0s, v: pts[0].v }); // flat line spans the whole window when there is nothing to plot yet
   if(pts[pts.length-1].date < todayStr()) pts.push({ date: todayStr(), v: pts[pts.length-1].v });
-  const w = 680, h = 360, padR = 66, padB = 24, padT = 10, padL = 34; /* padL leaves room for the first date label (middle-anchored) so it is never clipped */
+  const w = 680, h = 360, padR = 66, padB = 24, padT = 10, padL = 2; /* padL ~0 like EdgeFlo: the first date label is middle-anchored at the plot edge and clips */
   const iw = w - padR - padL, ih = h - padT - padB;
   const X = ds=> padL + Math.max(0, Math.min(1, (new Date(ds+"T12:00:00") - d0) / ((dEnd - d0)||DAY))) * iw;
-  /* Y domain snapped to $400 steps (EdgeFlo's .40K grid) around an adaptive
-     pad: at least ±$1.2K around the balance, wider when the equity curve
-     itself swings further. */
+  /* Y domain SYMMETRIC around the current balance on $400 steps
+     (EdgeFlo's .40K grid): the balance line sits dead centre with
+     equal room above and below — ±$2.8K by default, widening in whole
+     $400 steps only when the equity curve itself swings further. */
   let lo = Math.min(...pts.map(p=>p.v)), hi = Math.max(...pts.map(p=>p.v));
-  const pad = Math.max(1200, (hi - lo) * 1.2); lo = Math.min(lo, bal - pad); hi = Math.max(hi, bal + pad);
-  const min = Math.floor(lo/400)*400, max = Math.ceil(hi/400)*400;
+  const center = Math.round(bal/400)*400;
+  const dev = Math.max(Math.abs(hi - center), Math.abs(lo - center));
+  let half = Math.max(2800, Math.ceil(dev/400)*400);
+  if(half <= dev) half += 400;
+  const min = center - half, max = center + half;
   const Y = v=> padT + (1 - (v-min)/((max-min)||1))*ih;
   const line = pts.map((p,i)=> (i?"L":"M")+X(p.date).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
   const area = line + " L"+X(pts[pts.length-1].date).toFixed(1)+" "+(padT+ih)+" L"+padL+" "+(padT+ih)+" Z";
   let ticks = "";
   for(let v=min; v<=max; v+=400){ const y = Y(v);
-    if(Math.abs(v-bal) < 1){ /* current balance gets EdgeFlo's orange axis chip */
+    if(v === center){ /* the balance tick (centre of the symmetric domain) gets EdgeFlo's orange axis chip */
       ticks += '<rect x="'+(padL+iw+4)+'" y="'+(y-9)+'" width="58" height="18" rx="4" fill="var(--amber)"/><text x="'+(padL+iw+33)+'" y="'+(y+3.5)+'" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Inter">'+fmtK(v)+'</text>';
     } else {
       ticks += '<text x="'+(padL+iw+9)+'" y="'+(y+3.5)+'" font-size="10.5" fill="var(--faint)" font-family="Inter">'+fmtK(v)+'</text>';
@@ -1792,7 +1833,7 @@ RENDER.journal = function(){
   el.innerHTML =
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">'
     + '<h2 style="font-size:20px;font-weight:800">Journal</h2>'
-    + (DB.activePlanId && DB.plans.some(p=>p.id===DB.activePlanId)? '<span class="chip pine" title="Your active Edge plan">Active plan: '+esc(DB.plans.find(p=>p.id===DB.activePlanId).name)+'</span>' : "")
+    + '<span style="font-size:12.5px;color:var(--muted)">Review your trades, emotions, and patterns to build consistency and self-awareness.</span>'
     + '<span style="flex:1"></span>'
     + '<div class="seg solid" role="group" aria-label="PnL display unit">'+["$","%","R"].map(u=>'<button class="'+(journalUnit===u?"on":"")+'" onclick="journalUnit=\''+u+'\';RENDER.journal()">'+u+'</button>').join("")+'</div>'
     + '<button class="btn" style="color:var(--pine)" onclick="openTradeModal()">+ Add Manual Trade</button>'
@@ -2361,7 +2402,7 @@ function updateTicker(){
   t.innerHTML = '<span class="t-price mono">'+p.toFixed(simCandles.dec)+'</span><span class="chip '+(chg>=0?"green":"red")+'">'+fmtPct(chg)+' today (simulated feed)</span>';
 }
 /* ---- Trading page state (EdgeFlo layout) ---- */
-let posTab = "open", posPanelHidden = false, tradeWide = false, sideTab = "plan", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
+let posTab = "open", posPanelHidden = true, tradeWide = false, sideTab = "plan", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
 let tradeLockedNow = false; /* last computed tradeLocked (guardrail/routine/window), kept for header repaints */
 /* Bottom positions panel height (px) — user-resizable via the grabber on
    the panel's top edge; 0 = natural height. Persisted across reloads. */
@@ -2371,6 +2412,7 @@ let chartH = 0;
 try{ chartH = parseInt(localStorage.getItem("tm-chart-h"), 10) || 0; }catch(e){}
 function startPosResize(e){
   e.preventDefault();
+  if(posPanelHidden){ posPanelHidden = false; repaintPositionsPanel(); return; } // first drag on the collapsed bar just expands it
   const panel = e.target.closest(".pos-panel"); if(!panel) return;
   const tvWrap = document.querySelector('[data-view="trading"] .tv-wrap');
   const startY = e.clientY, startH = panel.offsetHeight;
@@ -2531,15 +2573,17 @@ function positionsPanelHTML(){
       + '</tbody></table></div>'
       : '<div class="empty"><div class="e-title">No closed positions yet</div>Closed paper trades land here — and in your Journal.</div>';
   }
+  if(posTab==="closed") body += '<div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="mini-link" onclick="resetPaper()">Reset paper account</button></div>';
+  const chevTgl = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="'+(posPanelHidden? "M5 15l7-7 7 7":"M5 9l7 7 7-7")+'"/></svg>';
   return '<div class="card pos-panel" id="trading-pos-panel"'+(posPanelH && !posPanelHidden? ' style="height:'+posPanelH+'px"':'')+'>'
-    + '<div class="pos-resize" onpointerdown="startPosResize(event)" title="Drag to resize chart and positions panel" role="separator" aria-label="Resize chart and positions panel"><span></span></div>'
+    + '<div class="pos-resize" onpointerdown="startPosResize(event)" title="Drag to resize the chart and positions panel — the chevron at the right of the tabs hides or shows the list" role="separator" aria-label="Resize chart and positions panel"><span></span></div>'
     + '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)">'
     + tabBtn("open","Open Positions", open.length) + tabBtn("pending","Pending Orders", (DB.paper.orders||[]).length) + tabBtn("closed","Closed Positions", closed.length)
     + '<span style="flex:1"></span>'
     + '<button class="btn sm" '+(open.length?"":"disabled")+' onclick="exitAllPositions()">Exit All</button>'
-    + '<button class="btn sm ghost" onclick="togglePosPanel()">'+(posPanelHidden?"Show panel":"Hide panel")+'</button></div>'
+    + '<button class="pos-hide-btn" title="'+(posPanelHidden? "Show the positions list":"Hide the positions list")+'" aria-label="'+(posPanelHidden? "Show panel":"Hide panel")+'" onclick="togglePosPanel()">'+chevTgl+'</button></div>'
     + (posPanelHidden? "" : '<div class="pos-body">'+body+'</div>')
-    + '<div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn ghost sm" onclick="resetPaper()">Reset paper account</button></div></div>';
+    + '</div>';
 }
 function exitAllPositions(){
   const ids = DB.paper.positions.map(p=>p.id);
@@ -2696,7 +2740,7 @@ function submitOrder(){
     const pos = { id:uid(), market:simMarket, dir:ord.side, entry:+px.toFixed(dec), size, sl, tp, planId,
       opened: new Date().toLocaleTimeString(), emotion:"", openNote:"" };
     DB.paper.positions.push(pos);
-    saveDB(); ord.side = null; RENDER.trading();
+    saveDB(); ord.side = null; posPanelHidden = false; RENDER.trading();
     toast(pos.dir+" "+size+" "+simMarket+" opened @ market.");
     notifyEvent("dealExecuted", "Position opened", pos.dir+" "+size+" "+simMarket+" @ "+pos.entry);
     if(DB.guardrails.prompts!==false) postTradeCheckin("open", pos.id);
@@ -2704,7 +2748,7 @@ function submitOrder(){
     DB.paper.orders = DB.paper.orders || [];
     DB.paper.orders.push({ id:uid(), market:simMarket, dir:ord.side, type:ord.type, trigger:+entry.toFixed(dec), size, sl, tp, planId,
       placed: new Date().toLocaleTimeString() });
-    saveDB(); ord.side = null; posTab = "pending"; RENDER.trading();
+    saveDB(); ord.side = null; posTab = "pending"; posPanelHidden = false; RENDER.trading();
     toast(ord.type+" order placed — see Pending Orders.");
     notifyEvent("dealExecuted", "Order placed", ord.type+" "+simMarket+" @ "+entry);
   }
@@ -2731,10 +2775,10 @@ function tradingSidebarHTML(st, lockedOut){
   const icoTab = p=> '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px">'+p+'</svg>';
   const chevS = open=> '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="'+(open? "M5 15l7-7 7 7":"M5 9l7 7 7-7")+'"/></svg>';
   const sessionBody = sideSessionOpen?
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><strong class="mono" style="font-size:19px">'+fmt$(dayPnl)+'</strong><span class="small">Today&rsquo;s Closed PnL <span class="info-i" title="Net closed P&amp;L in your journal for today, against your guardrail limits">i</span></span></div>'
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px"><strong class="mono" style="font-size:19px">'+fmt$(dayPnl)+'</strong><span class="small">Today&rsquo;s Closed PnL <span class="info-i" title="Net closed P&amp;L in your journal for today, against your guardrail limits">i</span></span></div>'
     + '<div class="pnl-slider"><div class="pnl-track"><i style="left:'+pctPos+'%"></i></div>'
     + '<div class="pnl-scale"><span><strong class="mono" style="color:var(--ink)">'+fmt$(lo)+'</strong><br>Max Loss</span><span style="text-align:right"><strong class="mono" style="color:var(--ink)">'+(hi>=1000? "$"+(hi/1000)+"K" : fmt$(hi))+'</strong><br>Max Profit</span></div></div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
     + '<div class="side-count"><span style="flex:1">&#9719; '+opensTxt+'</span><span class="mono tw-count" style="white-space:nowrap">'+fmtCountdownHM(info.target - new Date())+'</span></div>'
     : "";
   return '<div class="card side-card"><div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">'
@@ -2781,10 +2825,10 @@ function symbolDetailHTML(){
     + '<div class="small" style="margin-top:3px">'+esc(SYMBOL_NAMES[simMarket] || simMarket)+'</div>'
     + '<div style="display:flex;align-items:baseline;gap:9px;margin-top:8px;flex-wrap:wrap"><span class="mono" style="font-size:27px;font-weight:800" data-sym-price>'+s.last.toFixed(pd)+'</span><span class="small" style="font-weight:800">USD</span>'
     + '<span class="mono '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+simMarket+'" style="font-weight:700">'+fmtPct(chg)+'</span></div>'
-    + '<div class="grid g3" style="gap:10px;margin-top:12px">'
+    + '<div class="grid g3" style="gap:10px;margin-top:9px">'
     + cell("BID", bid.toFixed(s.dec), "data-sym-bid") + cell("ASK", ask.toFixed(s.dec), "data-sym-ask") + cell("SPREAD", spread.toFixed(s.dec), "data-sym-spread")
     + '</div>'
-    + '<div class="small" style="margin-top:10px">'+(s.live? "Live price — refreshed every 60s. " : "Simulated practice feed — ")+'click any watchlist row to switch the chart and this card.</div></div>';
+    + '<div class="small" style="margin-top:8px">'+(s.live? "Live price — refreshed every 60s. " : "Simulated practice feed — ")+'click any watchlist row to switch the chart and this card.</div></div>';
 }
 function sideWatchlistRowsHTML(){
   const q = twlSearch.trim().toUpperCase();
@@ -2812,12 +2856,12 @@ function sideWatchlistHTML(){
   const funnelSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg>';
   const pinSvgB = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 3h6l-1 7 3 3H7l3-7z"/></svg>';
   const act = on=> on? ' style="color:var(--pine);border-color:var(--pine)"' : "";
-  return '<div style="display:flex;gap:8px;margin-bottom:4px"><input class="input" style="flex:1;min-width:0" placeholder="Search all instruments…" value="'+esc(twlSearch)+'" oninput="twlSearch=this.value;refreshSideWatchlist()">'
+  return '<div style="display:flex;gap:8px;margin-bottom:2px"><input class="input" style="flex:1;min-width:0;padding:7px 11px;font-size:13.5px" placeholder="Search all instruments…" value="'+esc(twlSearch)+'" oninput="twlSearch=this.value;refreshSideWatchlist()">'
     + '<button class="icon-btn"'+act(twlPinnedOnly)+' title="Filter: pinned instruments only" onclick="twlPinnedOnly=!twlPinnedOnly;refreshSideWatchlist();paintWlFilterBtns()">'+funnelSvg+'</button>'
     + '<button class="icon-btn"'+act(twlPinFirst)+' title="Float pinned instruments to the top" onclick="twlPinFirst=!twlPinFirst;refreshSideWatchlist();paintWlFilterBtns()">'+pinSvgB+'</button></div>'
-    + '<div style="display:flex;gap:10px;padding:2px 6px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800"><span style="flex:1">Instrument</span><span>Last</span><span style="min-width:56px;text-align:right">Chg</span><span id="twl-live" title="Live prices — refreshed every 60 seconds" style="display:'+(wlAnyLive? "inline-flex":"none")+';align-items:center;gap:5px;color:var(--green)"><i style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></i>Live</span><span style="width:26px"></span></div>'
+    + '<div style="display:flex;gap:10px;padding:1px 6px 2px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800"><span style="flex:1">Instrument</span><span>Last</span><span style="min-width:56px;text-align:right">Chg</span><span id="twl-live" title="Live prices — refreshed every 60 seconds" style="display:'+(wlAnyLive? "inline-flex":"none")+';align-items:center;gap:5px;color:var(--green)"><i style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></i>Live</span><span style="width:26px"></span></div>'
     + '<div id="twl-list" class="twl-scroll">'+sideWatchlistRowsHTML()+'</div>'
-    + '<div class="small" style="margin-top:8px">'+(wlAnyLive? "Forex, crypto & gold show live prices (refresh 60s); indices & silver use the simulated feed." : "Simulated practice feed.")+' Click a row to load it on the chart; &#9733; pins it here and feeds the News watchlist filter.</div>';
+    + '<div class="small" style="margin-top:6px">'+(wlAnyLive? "Forex, crypto & gold show live prices (refresh 60s); indices & silver use the simulated feed." : "Simulated practice feed.")+' Click a row to load it on the chart; &#9733; pins it here and feeds the News watchlist filter.</div>';
 }
 function refreshSideWatchlist(){ const l = $("#twl-list"); if(l) l.innerHTML = sideWatchlistRowsHTML(); }
 /* Keep the two watchlist filter toggles' active styling in sync after a
@@ -3078,7 +3122,7 @@ function openPosition(){
   const pos = { id:uid(), market:simMarket, dir:simDir, entry:+curPrice().toFixed(simCandles.dec), size,
     sl: isNaN(sl)?null:sl, tp: isNaN(tp)?null:tp, planId: $("#pt-plan").value, opened: new Date().toLocaleTimeString(), emotion:"", openNote:"" };
   DB.paper.positions.push(pos);
-  saveDB(); RENDER.trading(); toast(simDir+" "+size+" "+simMarket+" opened @ market.");
+  saveDB(); posPanelHidden = false; RENDER.trading(); toast(simDir+" "+size+" "+simMarket+" opened @ market.");
   notifyEvent("dealExecuted", "Position opened", simDir+" "+size+" "+simMarket+" @ "+pos.entry);
   if(DB.guardrails.prompts!==false) postTradeCheckin("open", pos.id);
 }
@@ -4521,22 +4565,33 @@ function setTimerInput(v){
   setTimer(Math.min(7200, Math.max(10, (+(m[1]||0))*60 + (+m[2]))));
 }
 let ambCtx = null, ambNodes = null;
+/* Create/resume the shared AudioContext. Browsers only let a context
+   actually produce sound when it is created/resumed inside a real user
+   gesture (the Start button click, the ambient dropdown). A context
+   first touched from a setInterval callback stays "suspended" forever —
+   which is why the interval bells never sounded. */
+function primeAudio(){
+  try{
+    ambCtx = ambCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(ambCtx.state==="suspended") ambCtx.resume();
+  }catch(e){}
+  return ambCtx;
+}
 function startAmbient(){
   const kind = DB.sanctuary.ambient;
   if(!kind || kind==="none"){ stopAmbient(); return; }
   try{
-    ambCtx = ambCtx || new (window.AudioContext||window.webkitAudioContext)();
-    if(ambCtx.state==="suspended") ambCtx.resume();
+    primeAudio(); if(!ambCtx) return;
     stopAmbientNodes();
     const len = 2*ambCtx.sampleRate, buf = ambCtx.createBuffer(1, len, ambCtx.sampleRate), d = buf.getChannelData(0);
     let last = 0;
     for(let i=0;i<len;i++){ const w = Math.random()*2-1;
       if(kind==="white") d[i] = w*0.5;
-      else { last = (last + 0.02*w)/1.02; d[i] = last*3.4; } }
+      else { last = (last + 0.02*w)/1.02; d[i] = last*4.6; } }
     const src = ambCtx.createBufferSource(); src.buffer = buf; src.loop = true;
     const filt = ambCtx.createBiquadFilter(); filt.type = "lowpass";
     filt.frequency.value = kind==="white"? 16000 : kind==="rain"? 1500 : kind==="ocean"? 420 : kind==="fireplace"? 480 : 850;
-    const gain = ambCtx.createGain(); gain.gain.value = (DB.sanctuary.volume||50)/100 * 0.45;
+    const gain = ambCtx.createGain(); gain.gain.value = (DB.sanctuary.volume||50)/100 * 0.5;
     src.connect(filt); filt.connect(gain); gain.connect(ambCtx.destination); src.start();
     ambNodes = { src:src, filt:filt, gain:gain };
     if(kind==="ocean"){
@@ -4570,19 +4625,19 @@ function setAmbient(kind){
 }
 function setAmbientVolume(v){
   DB.sanctuary.volume = +v; saveDB();
-  if(ambNodes) ambNodes.gain.gain.value = (+v)/100 * 0.45;
+  if(ambNodes) ambNodes.gain.gain.value = (+v)/100 * 0.5;
   const l = document.getElementById("amb-vol-val"); if(l) l.textContent = v+"%";
 }
-function playBell(){
+function playBell(delay){
   try{
-    ambCtx = ambCtx || new (window.AudioContext||window.webkitAudioContext)();
-    if(ambCtx.state==="suspended") ambCtx.resume();
+    primeAudio(); if(!ambCtx) return;
+    const t0 = ambCtx.currentTime + (delay||0);
     const o = ambCtx.createOscillator(), g = ambCtx.createGain();
     o.type = "sine"; o.frequency.value = 1318;
-    g.gain.setValueAtTime(0.0001, ambCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.22, ambCtx.currentTime+0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, ambCtx.currentTime+1.8);
-    o.connect(g); g.connect(ambCtx.destination); o.start(); o.stop(ambCtx.currentTime+1.9);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.22, t0+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+1.8);
+    o.connect(g); g.connect(ambCtx.destination); o.start(t0); o.stop(t0+1.9);
   }catch(e){}
 }
 function ambientCardHTML(){
@@ -4706,18 +4761,25 @@ function paintTrackButtons(){
   }));
 }
 function fmtTime(s){ return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
-function setTimer(s){ timerTotal=s; timerLeft=s; clearInterval(timerRun); timerRun=null; RENDER.sanctuary(); }
-function resetTimer(){ timerLeft=timerTotal; clearInterval(timerRun); timerRun=null; RENDER.sanctuary(); }
+function setTimer(s){ timerTotal=s; timerLeft=s; clearInterval(timerRun); timerRun=null; stopAmbient(); RENDER.sanctuary(); }
+function resetTimer(){ timerLeft=timerTotal; clearInterval(timerRun); timerRun=null; stopAmbient(); RENDER.sanctuary(); }
 function toggleTimer(){
-  if(timerRun){ clearInterval(timerRun); timerRun=null; RENDER.sanctuary(); return; }
+  if(timerRun){ clearInterval(timerRun); timerRun=null; stopAmbient(); RENDER.sanctuary(); return; }
   if(timerLeft<=0) timerLeft=timerTotal;
+  /* Start was clicked — that click is the user gesture the browser
+     requires before any audio may play. Unlock the AudioContext now and
+     start the chosen ambient sound together with the session; before
+     this, Start only ran the countdown and the session stayed silent
+     unless the ambient dropdown itself was changed. */
+  primeAudio();
+  startAmbient();
   timerRun = setInterval(()=>{
     timerLeft--; const arc=$("#timer-arc"), txt=$("#timer-txt");
     if(txt) txt.value = fmtTime(Math.max(0,timerLeft));
     if(arc) arc.style.width = (100*(1 - timerLeft/Math.max(1,timerTotal)))+"%";
     const elapsed = timerTotal - timerLeft;
     if(DB.sanctuary.bells && elapsed>0 && timerLeft>0 && elapsed % (DB.sanctuary.bellEvery*60)===0) playBell();
-    if(timerLeft<=0){ clearInterval(timerRun); timerRun=null; logSession(timerTotal/60, "Meditation timer"); checkIn(true); toast("Session complete — streak updated. Trade calm."); if(currentView==="sanctuary") RENDER.sanctuary(); }
+    if(timerLeft<=0){ clearInterval(timerRun); timerRun=null; stopAmbient(); playBell(0); playBell(1.1); playBell(2.2); logSession(timerTotal/60, "Meditation timer"); checkIn(true); toast("Session complete — streak updated. Trade calm."); if(currentView==="sanctuary") RENDER.sanctuary(); }
   },1000);
   RENDER.sanctuary();
 }
