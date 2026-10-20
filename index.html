@@ -213,9 +213,13 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .pos-row:last-child{border-bottom:0}
 /* Open-position SL / TP / entry lines overlaid on the TradingView chart.
    The overlay is a sibling of #tv-chart-mount inside .tv-wrap — the widget
-   subtree itself is never touched. pointer-events:none so the chart stays
-   fully interactive underneath. */
+   subtree itself is never touched. The container is pointer-events:none so
+   the chart stays fully interactive underneath, but the SL / TP lines opt
+   back into pointer events (rule below) so they can be dragged vertically
+   to adjust the level; entry lines stay non-interactive. */
 .tv-wrap>.pos-lines{position:absolute;inset:0;height:auto;pointer-events:none;z-index:6}
+.pl-line.sl,.pl-line.tp{pointer-events:auto;cursor:ns-resize;touch-action:none}
+.pl-line.sl::before,.pl-line.tp::before{content:"";position:absolute;left:0;right:0;top:-8px;height:16px;cursor:ns-resize}
 .pl-line{position:absolute;left:0;right:0;height:0}
 .pl-line.sl{border-top:2px dashed var(--red)}
 .pl-line.tp{border-top:2px dashed var(--green)}
@@ -2633,7 +2637,7 @@ function loadSampleData(){
 const BASE_PRICE = { BTCUSD:101250, ETHUSD:3380, XAUUSD:2688.5, EURUSD:1.0882, GBPUSD:1.2698, GBPJPY:192.65, SOLUSD:218.4, USDJPY:154.32 };
 let simMarket = "EURUSD", simCandles = [], simTimer = null;
 function seedCandles(market){
-  let p = BASE_PRICE[market]; const dec = p<10?4:(p<300?2:2); simCandles = [];
+  let p = (typeof wlState!=="undefined" && wlState[market] && wlState[market].last>0)? wlState[market].last : BASE_PRICE[market]; const dec = p<10?4:(p<300?2:2); simCandles = [];
   for(let i=0;i<60;i++){ const o=p; const drift=(Math.random()-0.48)*p*0.0016; const c=o+drift;
     const h=Math.max(o,c)+Math.random()*p*0.0007, l=Math.min(o,c)-Math.random()*p*0.0007;
     simCandles.push({o,h,l,c}); p=c; }
@@ -2641,7 +2645,10 @@ function seedCandles(market){
 }
 function tickSim(){
   const last = simCandles[simCandles.length-1]; const p = last.c;
-  const drift=(Math.random()-0.49)*p*0.0011; const c=p+drift;
+  const livePx = (typeof wlState!=="undefined" && wlState[simMarket])? (wlState[simMarket].last||0) : 0;
+  let c;
+  if(livePx>0){ c = p + (livePx-p)*0.3 + (Math.random()-0.5)*p*0.0006; }
+  else { const drift=(Math.random()-0.49)*p*0.0011; c = p+drift; }
   simCandles.push({o:p, h:Math.max(p,c)+Math.random()*p*0.0004, l:Math.min(p,c)-Math.random()*p*0.0004, c});
   if(simCandles.length>60) simCandles.shift();
   drawChart(); updateTicker(); paintTradingLive();
@@ -2747,6 +2754,8 @@ function paintTradingLive(){
   const openPnl = openPnlNow();
   const op = $("#th-openpnl"); if(op){ op.textContent = (openPnl>=0?"+":"")+fmt$(openPnl); op.className = openPnl>=0? "pos":"neg"; }
   const eq = $("#th-equity"); if(eq) eq.textContent = bal$(activePaperBalance().amount + openPnl);
+  const bc = $("#th-balance"); if(bc) bc.textContent = bal$(activePaperBalance().amount);
+  if(Date.now() - brokerStatusAt > 60000){ try{ loadBrokerStatus(); }catch(e){} }
   DB.paper.positions.forEach(p=>{ const s = document.querySelector('[data-pospnl="'+p.id+'"]'); if(s){ const v = posPnl(p); s.textContent = fmt$(v); s.className = "mono "+(v>=0?"pos":"neg"); s.style.fontWeight = "800"; } });
   DB.paper.positions.forEach(p=>{ const c = document.querySelector('[data-poscur="'+p.id+'"]'); if(c) c.textContent = fmtPx(p.market, posCurPrice(p)); });
   paintPosLines();
@@ -2775,7 +2784,7 @@ function tradingHeaderHTML(lockedOut){
   /* EdgeFlo header: the page title + subtitle sit on the left of the top
      bar; these account stats + Trade controls fill its right side — no
      separate account card inside the page. */
-  return '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="'+(pb.connected? "Connected Paper Trading account balance" : "Paper account cash balance (local simulator)")+'">i</span></div><div class="acct-val mono">'+bal$(pb.amount)+'</div></div>'
+  return '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="'+(pb.connected? "Connected Paper Trading account balance" : "Paper account cash balance (local simulator)")+'">i</span></div><div class="acct-val mono" id="th-balance">'+bal$(pb.amount)+'</div></div>'
     + '<div class="acct-cell hide-m"><div class="acct-label">Open PnL <span class="info-i" title="Unrealised P&amp;L across open paper positions">i</span></div><div class="acct-val mono"><span id="th-openpnl" class="'+(openPnl>=0?"pos":"neg")+'">'+(openPnl>=0?"+":"")+fmt$(openPnl)+'</span></div></div>'
     + '<div class="acct-cell hide-m"><div class="acct-label">Equity <span class="info-i" title="Balance plus open P&amp;L">i</span></div><div class="acct-val mono" id="th-equity">'+bal$(equity)+'</div></div>'
     + '<div class="acct-cell margin-cell"><div class="acct-label">Margin Health <span class="info-i" title="'+(DB.guardrails.marginInvert? "Margin level inverted in Guardrails: showing margin USED as a share of equity (1% margin per position)." : "Free margin as a share of equity (1% margin per position). N/A with no open positions.")+'">i</span></div><div class="acct-val mono" title="Margin breakdown" onclick="toggleMarginPop()">'+mh+chevD+'</div>'
@@ -2920,7 +2929,7 @@ function exitAllPositions(){
    opening a trade (positionGate mirrors openTradePanel). ---- */
 function dispDec(sym){ const s = wlState[sym]; if(!s) return 2; if(s.cls==="Indices") return 0; return Math.max(2, Math.min(4, s.dec)); }
 function fmtPx(sym, v){ if(v==null || isNaN(v)) return "—"; const d = dispDec(sym); return Number(v).toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d}); }
-function posCurPrice(pos){ return pos.market===simMarket? curPrice() : pos.entry; }
+function posCurPrice(pos){ if(pos.market===simMarket) return curPrice(); const m = liveMark(pos.market); return m!=null? m : pos.entry; }
 function posLots(pos){ return pos.size / contractSizeFor(pos.market); }
 function posOpenedMs(pos){
   if(pos.openedAt) return pos.openedAt;
@@ -2947,23 +2956,62 @@ function posOpenedLabel(pos){
    rebuilt or touched). Price → Y uses the practice feed's visible range —
    the same scale the built-in candle renderer uses. Dollar risk / reward
    use the app's position math: |entry − level| × size (size is units). */
-function paintPosLines(){
-  const ov = document.getElementById("pos-lines"); if(!ov) return;
-  const poss = DB.paper.positions.filter(p=>p.market===simMarket);
-  if(!poss.length || !simCandles.length){ if(ov.innerHTML) ov.innerHTML = ""; return; }
+function posLineScale(){
+  const ov = document.getElementById("pos-lines"); if(!ov) return null;
   const H = ov.clientHeight || 400;
   let min=Infinity, max=-Infinity; simCandles.forEach(c=>{ min=Math.min(min,c.l); max=Math.max(max,c.h); });
   const pad=(max-min)*0.12||1; min-=pad; max+=pad;
   const Y = v=> H-18 - ((v-min)/(max-min))*(H-36);
+  const P = y=> min + ((H-18-y)/(H-36))*(max-min);
+  return { ov, H, min, max, Y, P };
+}
+let plDrag = null;
+function paintPosLines(){
+  const ov = document.getElementById("pos-lines"); if(!ov) return;
+  if(plDrag) return;
+  const poss = DB.paper.positions.filter(p=>p.market===simMarket);
+  if(!poss.length || !simCandles.length){ if(ov.innerHTML) ov.innerHTML = ""; return; }
+  const sc = posLineScale(); if(!sc) return;
+  const min = sc.min, max = sc.max, Y = sc.Y;
   ov.innerHTML = poss.map(pos=>{
     const pnl = posPnl(pos);
-    const line = (v, cls, tag)=> (v==null || isNaN(v) || v<min || v>max)? "" :
-      '<div class="pl-line '+cls+'" style="top:'+Y(v).toFixed(1)+'px"><span class="pl-tag">'+tag+'</span></div>';
-    return line(pos.sl, "sl", "SL "+fmt$(-Math.abs(pos.entry-pos.sl)*pos.size))
-      + line(pos.tp, "tp", "TP +"+fmt$(Math.abs(pos.tp-pos.entry)*pos.size))
+    const line = (v, cls, tag, key)=> (v==null || isNaN(v) || v<min || v>max)? "" :
+      '<div class="pl-line '+cls+'"'+(key? ' data-pl="'+key+'" data-posid="'+pos.id+'"' : "")+' style="top:'+Y(v).toFixed(1)+'px"><span class="pl-tag">'+tag+'</span></div>';
+    return line(pos.sl, "sl", "SL "+fmt$(-Math.abs(pos.entry-pos.sl)*pos.size), "sl")
+      + line(pos.tp, "tp", "TP +"+fmt$(Math.abs(pos.tp-pos.entry)*pos.size), "tp")
       + line(pos.entry, "entry", posLots(pos).toFixed(2)+' lots <span class="'+(pnl>=0?"pos":"neg")+'">'+(pnl>=0?"+":"")+fmt$(pnl)+'</span>');
   }).join("");
 }
+function posLineDragStart(e){
+  const ln = e.target.closest("[data-pl]"); if(!ln) return;
+  const pos = DB.paper.positions.find(p=>p.id===ln.getAttribute("data-posid")); if(!pos) return;
+  if(!positionGate()) return;
+  const sc = posLineScale(); if(!sc) return;
+  e.preventDefault();
+  const s = (typeof wlState!=="undefined")? wlState[pos.market] : null;
+  const r = Math.pow(10, (s && s.dec!=null)? s.dec+1 : 3);
+  plDrag = { pos: pos, key: ln.getAttribute("data-pl") };
+  const move = ev=>{
+    if(!plDrag) return;
+    const rect = sc.ov.getBoundingClientRect();
+    let v = sc.P(ev.clientY - rect.top);
+    v = Math.max(sc.min, Math.min(sc.max, v));
+    v = Math.round(v*r)/r;
+    pos[plDrag.key] = v;
+    ln.style.top = sc.Y(v).toFixed(1)+"px";
+    const tag = ln.querySelector(".pl-tag");
+    if(tag) tag.textContent = plDrag.key==="sl"? "SL "+fmt$(-Math.abs(pos.entry-pos.sl)*pos.size) : "TP +"+fmt$(Math.abs(pos.tp-pos.entry)*pos.size);
+  };
+  const up = ()=>{
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", up);
+    const was = plDrag; plDrag = null;
+    if(was){ saveDB(); repaintPositionsPanel(); paintPosLines(); }
+  };
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", up);
+}
+document.addEventListener("pointerdown", e=>{ if(e.target && e.target.closest && e.target.closest("#pos-lines [data-pl]")) posLineDragStart(e); });
 function positionGate(){
   if(routineLocked()){ showRoutineModal(); return false; }
   const st = guardrailStatus();
@@ -4059,7 +4107,8 @@ function loadTvChart(force){
 }
 let simDir = "Long";
 function setDir(d){ simDir=d; const l=$("#dir-long"), s=$("#dir-short"); if(l&&s){ l.classList.toggle("on", d==="Long"); s.classList.toggle("on", d==="Short"); } }
-function posPnl(pos){ const px = pos.market===simMarket? curPrice() : pos.entry; const dir = pos.dir==="Long"?1:-1; return (px - pos.entry)*dir*pos.size; }
+function liveMark(sym){ const s = (typeof wlState!=="undefined")? wlState[sym] : null; return (s && s.last>0)? s.last : null; }
+function posPnl(pos){ let px = pos.market===simMarket? curPrice() : liveMark(pos.market); if(px==null) px = pos.entry; const dir = pos.dir==="Long"?1:-1; return (px - pos.entry)*dir*pos.size; }
 function openPosition(){
   if(routineLocked()){ showRoutineModal(); return; }
   const st = guardrailStatus();
