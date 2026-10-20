@@ -225,6 +225,13 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .lw-chip button{pointer-events:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--pine);background:var(--card);color:var(--pine);font-size:15px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:var(--shadow-sm)}
 .lw-chip button:hover{background:var(--red);border-color:var(--red);color:#fff}
 #lw-chart-mount{touch-action:none}
+/* In-chart position edit bar: floats over the top of the chart while a
+   position's SL/TP lines are being modified; Save commits, Cancel
+   restores. Never intercepts chart gestures outside its own buttons. */
+.lw-editbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;width:max-content;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 16px);background:var(--card);border:1.5px solid var(--pine);border-radius:999px;padding:6px 8px 6px 14px;box-shadow:0 0 0 3px rgba(1,121,111,.18),var(--shadow);font-size:13px;font-weight:700;color:var(--ink)}
+.tv-wrap>.lw-editbar{height:auto}
+.lw-editbar .eb-sub{color:var(--muted);font-weight:600}
+.lw-editbar .eb-vals{color:var(--muted);font-weight:700;font-size:12.5px}
 /* Open Positions table + row action buttons */
 table.pos-tbl td,table.pos-tbl th{white-space:nowrap}
 .pos-act{width:28px;height:28px;border-radius:8px;border:1px solid var(--line2);background:var(--card);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;vertical-align:middle;font-size:15px;font-weight:800;line-height:1}
@@ -2750,8 +2757,10 @@ function startPosResize(e){
 }
 let sideSessionOpen = true, twlPinnedOnly = false, twlPinFirst = false;
 function setChartSymbol(sym){
+  /* Pair selection ONLY: switch the chart symbol in place. Clicking a
+     pair never opens the Trading page and never opens the order panel —
+     the trade flow belongs to the Trade button (openTradePanel). */
   simMarket = sym; seedCandles(simMarket);
-  if(!routineLocked()) orderOpen = true;
   RENDER.trading();
   /* Same chart instance throughout: refetch the new symbol's candles
      and re-sync the native lines (a full render above already inited
@@ -3272,6 +3281,7 @@ function lwRemovePosLines(id){
    ghost lines where a level is missing. Called on every tick and after
    every position change, so chart, table and header never disagree. */
 function paintPosLines(){
+  paintEditBar();
   if(!lwSeries || !lwChart){ lwPaintChips(); return; }
   const c = lwThemeColors();
   const LS = LightweightCharts.LineStyle;
@@ -3281,26 +3291,36 @@ function paintPosLines(){
     seen[pos.id] = true;
     let r = lwPosLines[pos.id];
     if(!r) r = lwPosLines[pos.id] = { entry: null, sl: null, tp: null, ghostSl: null, ghostTp: null };
-    const eOpts = { price: pos.entry, color: c.entry, lineWidth: 2, lineStyle: LS.Solid, axisLabelVisible: true, title: lwLineTitle(pos, "entry", pos.entry) };
+    /* While this position is in in-chart edit mode its SL/TP lines show
+       the uncommitted draft prices (from lwEdit) in a highlighted,
+       thicker style; the position record itself is untouched until
+       Save. Ghost lines of the edited position become fully opaque so
+       they read as draggable too. */
+    const editing = !!(lwEdit && lwEdit.id === pos.id);
+    const eOpts = { price: pos.entry, color: c.entry, lineWidth: editing? 3 : 2, lineStyle: LS.Solid, axisLabelVisible: true, title: lwLineTitle(pos, "entry", pos.entry) };
     if(r.entry) r.entry.applyOptions(eOpts); else r.entry = lwSeries.createPriceLine(eOpts);
     const hasSl = pos.sl != null && pos.sl !== "" && +pos.sl > 0;
     if(hasSl){
       if(r.ghostSl){ try{ lwSeries.removePriceLine(r.ghostSl); }catch(e){} r.ghostSl = null; }
-      const o = { price: +pos.sl, color: c.sl, lineWidth: 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: lwLineTitle(pos, "sl", +pos.sl) };
+      const px = (editing && lwEdit.sl != null)? lwEdit.sl : +pos.sl;
+      const o = { price: px, color: c.sl, lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: lwLineTitle(pos, "sl", px) };
       if(r.sl) r.sl.applyOptions(o); else r.sl = lwSeries.createPriceLine(o);
     } else {
       if(r.sl){ try{ lwSeries.removePriceLine(r.sl); }catch(e){} r.sl = null; }
-      const o = { price: lwGhostPrice(pos, "sl"), color: c.ghostSl, lineWidth: 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: "＋ Set SL" };
+      const px = (editing && lwEdit.sl != null)? lwEdit.sl : lwGhostPrice(pos, "sl");
+      const o = { price: px, color: editing? c.sl : c.ghostSl, lineWidth: editing? 2 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set SL — drag me" : "＋ Set SL" };
       if(r.ghostSl) r.ghostSl.applyOptions(o); else r.ghostSl = lwSeries.createPriceLine(o);
     }
     const hasTp = pos.tp != null && pos.tp !== "" && +pos.tp > 0;
     if(hasTp){
       if(r.ghostTp){ try{ lwSeries.removePriceLine(r.ghostTp); }catch(e){} r.ghostTp = null; }
-      const o = { price: +pos.tp, color: c.tp, lineWidth: 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: lwLineTitle(pos, "tp", +pos.tp) };
+      const px = (editing && lwEdit.tp != null)? lwEdit.tp : +pos.tp;
+      const o = { price: px, color: c.tp, lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: lwLineTitle(pos, "tp", px) };
       if(r.tp) r.tp.applyOptions(o); else r.tp = lwSeries.createPriceLine(o);
     } else {
       if(r.tp){ try{ lwSeries.removePriceLine(r.tp); }catch(e){} r.tp = null; }
-      const o = { price: lwGhostPrice(pos, "tp"), color: c.ghostTp, lineWidth: 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: "＋ Set TP" };
+      const px = (editing && lwEdit.tp != null)? lwEdit.tp : lwGhostPrice(pos, "tp");
+      const o = { price: px, color: editing? c.tp : c.ghostTp, lineWidth: editing? 2 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set TP — drag me" : "＋ Set TP" };
       if(r.ghostTp) r.ghostTp.applyOptions(o); else r.ghostTp = lwSeries.createPriceLine(o);
     }
   });
@@ -3338,7 +3358,9 @@ function lwPaintChips(){
    line; the chart's own scrolling/scaling is suspended while dragging.
    Moves convert through series.coordinateToPrice and update the price
    line live (price + $ in the title); release rounds to the symbol's
-   decimals and persists through the same save path as the Edit panel. */
+   decimals and persists through the position save path. While the
+   in-chart edit mode is active for a position, a drag instead updates
+   only that position's draft (lwEdit) and commits on Save. */
 function lwPointerDown(e){
   if(!lwSeries || !lwChart || !lwMountEl) return;
   if(e.pointerType === "mouse" && e.button != null && e.button !== 0) return;
@@ -3354,6 +3376,9 @@ function lwPointerDown(e){
     if(d <= 16 && (!best || d < best.d)) best = { d: d, line: line, pos: pos, key: key, ghost: ghost, cur: price };
   };
   Object.keys(lwPosLines).forEach(id=>{
+    /* In edit mode only the edited position's lines are draggable —
+       every other position's lines stay non-editable. */
+    if(lwEdit && id !== lwEdit.id) return;
     const pos = DB.paper.positions.find(p=> p.id === id); if(!pos) return;
     const r = lwPosLines[id];
     consider(r.sl, pos, "sl", false); consider(r.ghostSl, pos, "sl", true);
@@ -3369,9 +3394,13 @@ function lwPointerDown(e){
     lwDragTo(e);
     return;
   }
-  /* Entry lines are not draggable; a clean click on one opens Edit. */
+  /* Entry lines are not draggable; a clean click on one opens Edit.
+     While editing, clicking the edited position's own entry line is a
+     no-op; clicking another position's entry line starts editing that
+     one (openEditPosition cancels the current edit cleanly first). */
   let cand = null;
   Object.keys(lwPosLines).forEach(id=>{
+    if(lwEdit && lwEdit.id === id) return;
     const pos = DB.paper.positions.find(p=> p.id === id); if(!pos) return;
     const cy = lwSeries.priceToCoordinate(pos.entry);
     if(cy != null && Math.abs(cy - y) <= 16) cand = { pos: pos, x: e.clientX, y: e.clientY };
@@ -3384,6 +3413,9 @@ function lwDragTo(e){
   const price = lwSeries.coordinateToPrice(e.clientY - rect.top);
   if(price == null || !(price > 0)) return;
   lwDrag.cur = price;
+  /* In edit mode the drag only moves a draft — the position record is
+     not touched until Save on the edit bar. */
+  if(lwEdit && lwDrag.pos && lwDrag.pos.id === lwEdit.id) lwEdit[lwDrag.key] = price;
   const pos = lwDrag.pos, key = lwDrag.key;
   const title = lwDrag.ghost
     ? (key === "sl"? "Set SL @ " : "Set TP @ ") + fmtPx(pos.market, price)
@@ -3396,6 +3428,13 @@ function lwDragEnd(){
   if(lwMountEl) lwMountEl.style.touchAction = "";
   if(lwChart){ try{ lwChart.applyOptions({ handleScroll: true, handleScale: true }); }catch(err){} }
   if(!d || d.cur == null){ paintPosLines(); return; }
+  /* Edit mode: releasing a drag does NOT commit — the draft stays on
+     the lines (via lwEdit) until Save or Cancel on the edit bar. */
+  if(lwEdit && d.pos && d.pos.id === lwEdit.id){
+    lwEdit[d.key] = d.cur;
+    paintPosLines(); paintEditBar();
+    return;
+  }
   const pos = d.pos, key = d.key;
   const s = (typeof wlState !== "undefined")? wlState[pos.market] : null;
   const r = Math.pow(10, (s && s.dec != null)? s.dec + 1 : 3);
@@ -3420,46 +3459,71 @@ function positionGate(){
   if(DB.guardrails.enabled && !sessionInfo().open && !windowOverriddenToday()){ showWindowModal(); return false; }
   return true;
 }
-let editPosId = "";
+/* ---- In-chart position edit mode (replaces the old Edit popup) ----
+   Clicking Edit — the pencil in Open Positions, or a clean click on the
+   entry line — never opens a modal. It switches the chart to the
+   position's symbol when needed and puts that position's SL / TP lines
+   (including the "＋ Set SL / ＋ Set TP" ghost lines) into an editing
+   state: highlighted lines plus a floating bar over the chart. Dragging
+   moves an uncommitted draft only; Save commits through the normal
+   position save path (record, persistence, table, line tags), Cancel
+   restores the original values. lwEdit is mirrored on window so the
+   state is inspectable. */
+let lwEdit = null;   /* { id, origSl, origTp, sl, tp } — sl/tp hold the latest dragged draft price, null while untouched */
+function syncLwEditGlobal(){ try{ window.lwEdit = lwEdit; }catch(e){} }
 function openEditPosition(id){
   if(!positionGate()) return;
   const pos = DB.paper.positions.find(p=>p.id===id); if(!pos) return;
-  editPosId = id;
-  const CC2 = { EUR:"EU", GBP:"GB", USD:"US", JPY:"JP", AUD:"AU", NZD:"NZ", CAD:"CA", CHF:"CH", BTC:"BT", ETH:"ET", SOL:"SO", XRP:"XR", XAU:"XA", XAG:"XG", NAS:"NA", SPX:"SP" };
-  const isSell = pos.dir==="Short";
-  const numField = (label, key, val)=> '<div class="field"><label class="f">'+label+'</label><div class="op-num"><button type="button" onclick="stepEdit(\''+key+'\',-1)" aria-label="Decrease">&minus;</button><input class="mono" id="ep-'+key+'" type="number" step="any" placeholder="None" value="'+(val==null?"":val)+'"><button type="button" onclick="stepEdit(\''+key+'\',1)" aria-label="Increase">+</button></div></div>';
-  openModal('<div style="display:flex;gap:9px;align-items:center;margin-bottom:14px"><span class="flag-badge">'+(CC2[pos.market.slice(0,3)] || pos.market.slice(0,2))+'</span>'
-    + '<h3 style="margin:0;flex:1">Edit '+esc(pos.market)+' '+(isSell? "&#8595; Sell" : "&#8593; Buy")+'</h3>'
-    + '<button class="icon-btn" title="Close" aria-label="Close" onclick="closeModal()">&times;</button></div>'
-    + '<div class="row"><div class="field"><label class="f">Entry Price</label><div class="input mono" style="background:var(--bg2)">'+fmtPx(pos.market, pos.entry)+'</div></div>'
-    + '<div class="field"><label class="f">Lot Size</label><div class="input mono" style="background:var(--bg2)">'+posLots(pos).toFixed(2)+'</div></div></div>'
-    + '<div class="row">'+numField("Stop Loss","sl",pos.sl)+numField("Take Profit","tp",pos.tp)+'</div>'
-    + '<button class="btn block" style="width:100%" onclick="setBreakevenInput()">Set Breakeven</button>'
-    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveEditPosition()">Save Changes</button></div>');
+  if(lwEdit && lwEdit.id !== id) cancelPosEdit();   /* starting another edit cancels the current one cleanly */
+  if(lwEdit && lwEdit.id === id){ paintPosLines(); paintEditBar(); return; }
+  if(pos.market !== simMarket) setChartSymbol(pos.market);
+  lwEdit = { id: id,
+    origSl: (pos.sl == null || pos.sl === ""? null : +pos.sl),
+    origTp: (pos.tp == null || pos.tp === ""? null : +pos.tp),
+    sl: null, tp: null };
+  syncLwEditGlobal();
+  paintPosLines(); paintEditBar();
 }
-function stepEdit(key, d){
-  const pos = DB.paper.positions.find(p=>p.id===editPosId); if(!pos) return;
-  const s = wlState[pos.market]; if(!s) return;
-  const inp = document.getElementById("ep-"+key); if(!inp) return;
-  const pip = Math.pow(10,-s.dec);
-  let v = parseFloat(inp.value);
-  if(!(v>0)) v = pos.entry;
-  v = Math.max(0, v + d*pip);
-  inp.value = String(+v.toFixed(s.dec+1));
+function paintEditBar(){
+  const bar = document.getElementById("lw-editbar"); if(!bar) return;
+  if(lwEdit && !DB.paper.positions.some(p=> p.id === lwEdit.id)){ lwEdit = null; syncLwEditGlobal(); }
+  if(!lwEdit){ if(bar.style.display !== "none"){ bar.style.display = "none"; bar.innerHTML = ""; bar._sig = ""; } return; }
+  const pos = DB.paper.positions.find(p=> p.id === lwEdit.id); if(!pos){ bar.style.display = "none"; return; }
+  const slV = lwEdit.sl != null? lwEdit.sl : (pos.sl == null || pos.sl === ""? null : +pos.sl);
+  const tpV = lwEdit.tp != null? lwEdit.tp : (pos.tp == null || pos.tp === ""? null : +pos.tp);
+  const slTxt = slV == null? "none" : fmtPx(pos.market, slV);
+  const tpTxt = tpV == null? "none" : fmtPx(pos.market, tpV);
+  const sig = pos.id + "|" + slTxt + "|" + tpTxt + "|" + pos.dir;
+  if(bar._sig !== sig){
+    bar._sig = sig;
+    bar.innerHTML = '<span>Editing <strong>' + esc(pos.market) + ' ' + esc(pos.dir) + '</strong> <span class="eb-sub">&mdash; drag SL/TP lines</span></span>'
+      + '<span class="eb-vals mono">SL ' + slTxt + ' &middot; TP ' + tpTxt + '</span>'
+      + '<button type="button" class="btn sm" onclick="cancelPosEdit()">Cancel</button>'
+      + '<button type="button" class="btn primary sm" onclick="savePosEdit()">Save</button>';
+  }
+  bar.style.display = "flex";
 }
-function setBreakevenInput(){
-  const pos = DB.paper.positions.find(p=>p.id===editPosId); if(!pos) return;
-  const inp = document.getElementById("ep-sl"); if(inp) inp.value = String(pos.entry);
-  toast("Breakeven set — stop loss at entry "+fmtPx(pos.market, pos.entry)+". Save Changes to apply.");
+function savePosEdit(){
+  if(!lwEdit) return;
+  const ed = lwEdit;
+  const pos = DB.paper.positions.find(p=> p.id === ed.id);
+  lwEdit = null; syncLwEditGlobal();
+  if(pos){
+    const s = (typeof wlState !== "undefined")? wlState[pos.market] : null;
+    const r = Math.pow(10, (s && s.dec != null)? s.dec + 1 : 3);
+    if(ed.sl != null) pos.sl = Math.round(ed.sl * r) / r;
+    if(ed.tp != null) pos.tp = Math.round(ed.tp * r) / r;
+    saveDB(); repaintPositionsPanel();
+    toast(pos.market + " SL/TP updated — SL " + (pos.sl == null? "none" : fmtPx(pos.market, pos.sl)) + " · TP " + (pos.tp == null? "none" : fmtPx(pos.market, pos.tp)) + ".");
+  }
+  paintPosLines(); paintEditBar();
 }
-function saveEditPosition(){
-  const pos = DB.paper.positions.find(p=>p.id===editPosId); if(!pos){ closeModal(); return; }
-  const slv = parseFloat(($("#ep-sl")||{}).value), tpv = parseFloat(($("#ep-tp")||{}).value);
-  pos.sl = isNaN(slv)? null : slv;
-  pos.tp = isNaN(tpv)? null : tpv;
-  saveDB(); closeModal();
-  repaintPositionsPanel(); paintPosLines();
-  toast(pos.market+" updated — SL "+(pos.sl==null?"none":fmtPx(pos.market,pos.sl))+" · TP "+(pos.tp==null?"none":fmtPx(pos.market,pos.tp))+".");
+function cancelPosEdit(){
+  if(!lwEdit) return;
+  lwEdit = null; syncLwEditGlobal();
+  /* The position record was never touched, so repainting the lines from
+     it restores the original SL/TP (and ghost) positions. */
+  paintPosLines(); paintEditBar();
 }
 function breakevenPosition(id){
   if(!positionGate()) return;
@@ -3479,10 +3543,10 @@ function confirmEndSession(){
   toast("Session ended — trading is locked until you start a new session.");
 }
 /* ---- Order entry panel (right sidebar, EdgeFlo style) — replaces the old
-   Trade modal. Opens from the Trade button, the quick-trade bolt, or by
-   selecting an instrument. Market orders fill on the practice feed at
-   once; Limit / Stop orders rest in the Pending Orders tab and fill when
-   the feed trades through the trigger. ---- */
+   Trade modal. Opens from the Trade button or the quick-trade bolt only;
+   selecting an instrument never opens it. Market orders fill on the
+   practice feed at once; Limit / Stop orders rest in the Pending Orders
+   tab and fill when the feed trades through the trigger. ---- */
 let orderOpen = false;
 const ord = { type:"Market", side:null, unit:"Price", entry:"", expiry:"GTC", sl:"", tp:"", lots:"", risk:null };
 /* ---- Outside Your Trading Window modal (EdgeFlo) ----
@@ -4224,7 +4288,7 @@ RENDER.trading = function(opts){
       + '<div class="card mb chart-card chart-card-flush">'
       + chartToolbarHTML()
       + symBarHTML()
-      + '<div class="tv-wrap"'+(chartH? ' style="height:'+chartH+'px"':'')+'><div id="lw-chart-mount"></div><div class="lw-chips" id="lw-chips"></div>'+octFloatHTML()+'</div></div>'
+      + '<div class="tv-wrap"'+(chartH? ' style="height:'+chartH+'px"':'')+'><div id="lw-chart-mount"></div><div class="lw-chips" id="lw-chips"></div><div class="lw-editbar" id="lw-editbar" style="display:none"></div>'+octFloatHTML()+'</div></div>'
       + positionsPanelHTML()
       + '</div>'
       + '<div class="side-col">'+tradingSidebarHTML(st, tradeLocked)+'</div>'
