@@ -237,6 +237,9 @@ table.pos-tbl td,table.pos-tbl th{white-space:nowrap}
 .pos-act{width:28px;height:28px;border-radius:8px;border:1px solid var(--line2);background:var(--card);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;vertical-align:middle;font-size:15px;font-weight:800;line-height:1}
 .pos-act:hover{color:var(--pine);border-color:var(--pine)}
 .pos-act.danger:hover{color:var(--red);border-color:var(--red)}
+/* Open Positions pair cell: click shows that pair's chart in place */
+table.pos-tbl td.pos-pair{cursor:pointer}
+table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underline}
 
 /* ---------- Chat ---------- */
 .chat-box{display:flex;flex-direction:column;height:520px}
@@ -1395,6 +1398,28 @@ function hasAccess(view){ const need = MODULE_PLAN[view]; if(!need) return true;
 /* ---------------- Trade math & stats ---------------- */
 function tradePnl(t){ const dir = t.dir==="Long"?1:-1; return (t.exit - t.entry) * dir * t.size; }
 function tradeR(t){ const risk = Math.abs(t.entry - t.sl) * t.size; if(!risk) return 0; return tradePnl(t)/risk; }
+/* Newest-first trade ordering, by CLOSE time: the close date
+   (exitDate for manual trades, the record date for paper closes),
+   then the stamped close moment (closedAt, written when a position
+   closes or a manual trade is first saved; a manual exit time when
+   present), then insertion order — later records are newer. Used by
+   the Dashboard Recent Trades, the Journal day lists and the Closed
+   Positions tab so every surface shows the same order. */
+function tradeCloseMs(t){
+  if(t.closedAt) return +t.closedAt || 0;
+  const d = t.exitDate || t.date || "";
+  if(d && t.exitTime){ const ms = Date.parse(d + "T" + t.exitTime); if(!isNaN(ms)) return ms; }
+  return 0;
+}
+function tradesNewestFirst(list){
+  return list.map((t,i)=>({ t:t, i:i })).sort((a,b)=>{
+    const da = a.t.exitDate || a.t.date || "", db = b.t.exitDate || b.t.date || "";
+    if(da !== db) return da < db ? 1 : -1;
+    const ma = tradeCloseMs(a.t), mb = tradeCloseMs(b.t);
+    if(mb !== ma) return mb - ma;
+    return b.i - a.i;
+  }).map(x=>x.t);
+}
 function computeStats(trades){
   const s = { n:trades.length, pnl:0, wins:0, losses:0, grossWin:0, grossLoss:0, sumR:0, best:-Infinity, worst:Infinity };
   trades.forEach(t=>{ const p=tradePnl(t), r=tradeR(t); s.pnl+=p; s.sumR+=r;
@@ -1983,7 +2008,12 @@ RENDER.dashboard = function(){
   if(Date.now() - brokerStatusAt > 15000){ try{ loadBrokerStatus(); }catch(e){} }
   const el = document.querySelector('[data-view="dashboard"]');
   const tr = rangeTrades(); const s = computeStats(tr);
-  const recent = DB.trades.slice().sort((a,b)=> b.date<a.date?-1:1).slice(0,6);
+  /* Recent Trades reads the SAME real trade records as the Journal and
+     the Closed Positions tab (DB.trades), newest close at the top.
+     Sample trades are labelled demo data: once any real trade exists
+     they never appear here. */
+  const realTrades = DB.trades.filter(t=> t.source !== "sample");
+  const recent = tradesNewestFirst(realTrades.length? realTrades : DB.trades).slice(0,6);
   const st = guardrailStatus();
   const wins = tr.filter(t=>tradePnl(t)>0), losses = tr.filter(t=>tradePnl(t)<0);
   const avgWinR = wins.length? wins.reduce((a,t)=>a+tradeR(t),0)/wins.length : 0;
@@ -2142,7 +2172,7 @@ RENDER.journal = function(){
 function dailyNoteRec(ds){ const d = ds || todayStr(); if(!DB.dailyNotes[d]) DB.dailyNotes[d] = { text:"", voices:[] }; return DB.dailyNotes[d]; }
 function journalDailyPanelHTML(){
   const d = journalDay; const rec = dailyNoteRec(d);
-  const list = DB.trades.filter(t=>t.date===d);
+  const list = tradesNewestFirst(DB.trades.filter(t=>t.date===d));
   const s = computeStats(list);
   const vDay = DB.overrides.filter(o=>o.date===d);
   const planFollowed = list.filter(t=>t.planId).length;
@@ -2585,6 +2615,7 @@ function atSaveTrade(){
     confluences: f.confluences||"", mgmt: f.mgmt||"", mistakes: f.mistakes||"",
     notes: plain, notesHtml: f.noteHtml||"",
     shot: f.shots.HTF || f.shots.MTF || f.shots.LTF || "", shots: f.shots, voices: f.voices,
+    closedAt: existing? (existing.closedAt || 0) : Date.now(),
     source: existing? (existing.source||"journal") : "journal" };
   if(atEditId){ const i = DB.trades.findIndex(t=>t.id===atEditId); if(i>=0) DB.trades[i] = rec; else DB.trades.push(rec); }
   else DB.trades.push(rec);
@@ -2916,14 +2947,14 @@ function premarketBannerHTML(){
 }
 function startTradingSession(){ unlockSeenDate = todayStr(); RENDER.trading(); toast("Session started — trade your plan."); }
 function positionsPanelHTML(){
-  const open = DB.paper.positions, closed = DB.trades.filter(t=>t.source==="paper").slice().reverse();
+  const open = DB.paper.positions, closed = tradesNewestFirst(DB.trades.filter(t=>t.source==="paper"));
   const tabBtn = (id,label,n)=> '<button class="pos-tab '+(posTab===id?"on":"")+'" onclick="setPosTab(\''+id+'\')">'+label+' <span class="mono">'+n+'</span></button>';
   let body = "";
   if(posTab==="open"){
     const pencil = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>';
     body = open.length? '<div style="overflow-x:auto"><table class="tbl pos-tbl"><thead><tr><th>Instrument</th><th>Direction</th><th>Size</th><th>Entry / Current Price</th><th>Stop Loss</th><th>Take Profit</th><th>PnL</th><th>Time Opened</th><th>Actions</th></tr></thead><tbody>'
       + open.map(pos=>{ const p = posPnl(pos);
-        return '<tr><td><strong>'+esc(pos.market)+'</strong></td>'
+        return '<tr><td class="pos-pair" title="Show '+esc(pos.market)+' on the chart" onclick="posPairShow(\''+pos.id+'\')"><strong>'+esc(pos.market)+'</strong></td>'
         + '<td><span class="chip '+(pos.dir==="Long"?"green":"red")+'">'+pos.dir+'</span></td>'
         + '<td class="mono">'+posLots(pos).toFixed(2)+'</td>'
         + '<td class="mono">'+fmtPx(pos.market, pos.entry)+' &rarr; <span data-poscur="'+pos.id+'">'+fmtPx(pos.market, posCurPrice(pos))+'</span></td>'
@@ -2957,6 +2988,18 @@ function positionsPanelHTML(){
     + '<button class="pos-hide-btn" title="'+(posPanelHidden? "Show the positions list":"Hide the positions list")+'" aria-label="'+(posPanelHidden? "Show panel":"Hide panel")+'" onclick="togglePosPanel()">'+chevTgl+'</button></div>'
     + (posPanelHidden? "" : '<div class="pos-body">'+body+'</div>')
     + '</div>';
+}
+/* Open Positions pair click: show that pair's chart IN PLACE on the
+   Trading page — the same selection-only switch as a watchlist pair
+   click (setChartSymbol). Never navigates, never opens the order
+   panel, never starts an edit. Clicking the pair already on the chart
+   is a no-op. The row's action buttons live in their own cell with
+   their own handlers and never trigger this switch. */
+function posPairShow(id){
+  const pos = DB.paper.positions.find(p=>p.id===id); if(!pos) return;
+  if(pos.market === simMarket) return;
+  if(lwEdit) cancelPosEdit();   /* chart is leaving the edited symbol — drop the uncommitted draft; the record keeps its original SL/TP */
+  setChartSymbol(pos.market);
 }
 function exitAllPositions(){
   const ids = DB.paper.positions.map(p=>p.id);
@@ -3018,9 +3061,24 @@ function lwThemeColors(){
   const dark = tvThemeOverride? tvThemeOverride==="dark" : isDark();
   return dark
     ? { bg:"#172720", text:"#9DB3A7", grid:"rgba(157,179,167,.13)", border:"#2C463A",
-        entry:"#2DB3A4", sl:"#F07676", tp:"#3ECF8E", ghostSl:"rgba(240,118,118,.55)", ghostTp:"rgba(62,207,142,.55)", draft:"#9A86F5" }
+        entry:"#2DB3A4", sl:"#F07676", tp:"#3ECF8E", ghostSl:"rgba(240,118,118,.55)", ghostTp:"rgba(62,207,142,.55)", draft:"#9A86F5",
+        entryHot:"#2EE6D6", slHot:"#FF4D4D", tpHot:"#3DFFA2" }
     : { bg:"#F7FAF4", text:"#5D7167", grid:"rgba(11,43,37,.09)", border:"#CBDAC6",
-        entry:"#01796F", sl:"#D64545", tp:"#1E9E62", ghostSl:"rgba(214,69,69,.55)", ghostTp:"rgba(30,158,98,.55)", draft:"#6C4CE0" };
+        entry:"#01796F", sl:"#D64545", tp:"#1E9E62", ghostSl:"rgba(214,69,69,.55)", ghostTp:"rgba(30,158,98,.55)", draft:"#6C4CE0",
+        entryHot:"#00BFA5", slHot:"#E62117", tpHot:"#00C853" };
+}
+/* Re-emit a theme color (#RRGGBB or rgba(...)) at a given opacity —
+   used to dim non-edited positions while an edit is active and to
+   build the translucent glow halo under the edited position's lines. */
+function lwWithAlpha(col, a){
+  if(!col) return col;
+  if(col.charAt(0) === "#"){
+    const n = parseInt(col.slice(1), 16);
+    return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
+  }
+  const m = String(col).match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/);
+  if(m) return "rgba(" + m[1] + "," + m[2] + "," + m[3] + "," + a + ")";
+  return col;
 }
 function lwApplyTheme(){
   if(!lwChart) return;
@@ -3270,7 +3328,7 @@ function lwGhostPrice(pos, key){
 }
 function lwRemovePosLines(id){
   const r = lwPosLines[id]; if(!r) return;
-  ["entry", "sl", "tp", "ghostSl", "ghostTp"].forEach(k=>{
+  ["entry", "sl", "tp", "ghostSl", "ghostTp", "slGlow", "tpGlow", "ghostSlGlow", "ghostTpGlow"].forEach(k=>{
     if(r[k] && lwSeries){ try{ lwSeries.removePriceLine(r[k]); }catch(e){} }
   });
   delete lwPosLines[id];
@@ -3290,37 +3348,61 @@ function paintPosLines(){
   poss.forEach(pos=>{
     seen[pos.id] = true;
     let r = lwPosLines[pos.id];
-    if(!r) r = lwPosLines[pos.id] = { entry: null, sl: null, tp: null, ghostSl: null, ghostTp: null };
+    if(!r) r = lwPosLines[pos.id] = { entry: null, sl: null, tp: null, ghostSl: null, ghostTp: null, slGlow: null, tpGlow: null, ghostSlGlow: null, ghostTpGlow: null };
     /* While this position is in in-chart edit mode its SL/TP lines show
-       the uncommitted draft prices (from lwEdit) in a highlighted,
-       thicker style; the position record itself is untouched until
-       Save. Ghost lines of the edited position become fully opaque so
-       they read as draggable too. */
+       the uncommitted draft prices (from lwEdit); the position record
+       itself is untouched until Save. The edited trade is unmistakable:
+       hot full-saturation colors, bright axis tags, a wider stroke and
+       a translucent halo line riding the same price (the glow) — while
+       EVERY other position on this chart dims to ~30% opacity for the
+       duration of the edit, and lwPointerDown refuses to start a drag
+       on any line but the edited trade's. Ghost lines of the edited
+       position get the same hot treatment so they read as draggable. */
     const editing = !!(lwEdit && lwEdit.id === pos.id);
-    const eOpts = { price: pos.entry, color: c.entry, lineWidth: editing? 3 : 2, lineStyle: LS.Solid, axisLabelVisible: true, title: lwLineTitle(pos, "entry", pos.entry) };
+    const dimmed = !!lwEdit && !editing;
+    const syncGlow = (glowKey, px, hot)=>{
+      if(editing && px){
+        const g = { price: px, color: lwWithAlpha(hot, .38), lineWidth: 4, lineStyle: LS.Dashed, axisLabelVisible: false, title: "" };
+        if(r[glowKey]) r[glowKey].applyOptions(g); else r[glowKey] = lwSeries.createPriceLine(g);
+      } else if(r[glowKey]){ try{ lwSeries.removePriceLine(r[glowKey]); }catch(e){} r[glowKey] = null; }
+    };
+    const eOpts = { price: pos.entry, color: editing? c.entryHot : (dimmed? lwWithAlpha(c.entry, .32) : c.entry), lineWidth: editing? 3 : 2, lineStyle: LS.Solid, axisLabelVisible: true, title: lwLineTitle(pos, "entry", pos.entry) };
+    if(editing) eOpts.axisLabelColor = c.entryHot;
     if(r.entry) r.entry.applyOptions(eOpts); else r.entry = lwSeries.createPriceLine(eOpts);
     const hasSl = pos.sl != null && pos.sl !== "" && +pos.sl > 0;
     if(hasSl){
       if(r.ghostSl){ try{ lwSeries.removePriceLine(r.ghostSl); }catch(e){} r.ghostSl = null; }
+      syncGlow("ghostSlGlow", 0, c.slHot);
       const px = (editing && lwEdit.sl != null)? lwEdit.sl : +pos.sl;
-      const o = { price: px, color: c.sl, lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: lwLineTitle(pos, "sl", px) };
+      syncGlow("slGlow", px, c.slHot);
+      const o = { price: px, color: editing? c.slHot : (dimmed? lwWithAlpha(c.sl, .3) : c.sl), lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: lwLineTitle(pos, "sl", px) };
+      if(editing) o.axisLabelColor = c.slHot;
       if(r.sl) r.sl.applyOptions(o); else r.sl = lwSeries.createPriceLine(o);
     } else {
       if(r.sl){ try{ lwSeries.removePriceLine(r.sl); }catch(e){} r.sl = null; }
+      syncGlow("slGlow", 0, c.slHot);
       const px = (editing && lwEdit.sl != null)? lwEdit.sl : lwGhostPrice(pos, "sl");
-      const o = { price: px, color: editing? c.sl : c.ghostSl, lineWidth: editing? 2 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set SL — drag me" : "＋ Set SL" };
+      syncGlow("ghostSlGlow", px, c.slHot);
+      const o = { price: px, color: editing? c.slHot : (dimmed? lwWithAlpha(c.ghostSl, .16) : c.ghostSl), lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set SL — drag me" : "＋ Set SL" };
+      if(editing) o.axisLabelColor = c.slHot;
       if(r.ghostSl) r.ghostSl.applyOptions(o); else r.ghostSl = lwSeries.createPriceLine(o);
     }
     const hasTp = pos.tp != null && pos.tp !== "" && +pos.tp > 0;
     if(hasTp){
       if(r.ghostTp){ try{ lwSeries.removePriceLine(r.ghostTp); }catch(e){} r.ghostTp = null; }
+      syncGlow("ghostTpGlow", 0, c.tpHot);
       const px = (editing && lwEdit.tp != null)? lwEdit.tp : +pos.tp;
-      const o = { price: px, color: c.tp, lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: lwLineTitle(pos, "tp", px) };
+      syncGlow("tpGlow", px, c.tpHot);
+      const o = { price: px, color: editing? c.tpHot : (dimmed? lwWithAlpha(c.tp, .3) : c.tp), lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: lwLineTitle(pos, "tp", px) };
+      if(editing) o.axisLabelColor = c.tpHot;
       if(r.tp) r.tp.applyOptions(o); else r.tp = lwSeries.createPriceLine(o);
     } else {
       if(r.tp){ try{ lwSeries.removePriceLine(r.tp); }catch(e){} r.tp = null; }
+      syncGlow("tpGlow", 0, c.tpHot);
       const px = (editing && lwEdit.tp != null)? lwEdit.tp : lwGhostPrice(pos, "tp");
-      const o = { price: px, color: editing? c.tp : c.ghostTp, lineWidth: editing? 2 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set TP — drag me" : "＋ Set TP" };
+      syncGlow("ghostTpGlow", px, c.tpHot);
+      const o = { price: px, color: editing? c.tpHot : (dimmed? lwWithAlpha(c.ghostTp, .16) : c.ghostTp), lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set TP — drag me" : "＋ Set TP" };
+      if(editing) o.axisLabelColor = c.tpHot;
       if(r.ghostTp) r.ghostTp.applyOptions(o); else r.ghostTp = lwSeries.createPriceLine(o);
     }
   });
@@ -3422,6 +3504,14 @@ function lwDragTo(e){
     : (key === "sl" ? "SL " + fmtPx(pos.market, price) + " · " + fmt$(-Math.abs(pos.entry - price) * pos.size)
                     : "TP " + fmtPx(pos.market, price) + " · +" + fmt$(Math.abs(price - pos.entry) * pos.size));
   try{ lwDrag.line.applyOptions({ price: price, title: title }); }catch(err){}
+  /* Keep the edit-mode glow halo glued to the dragged line. */
+  if(pos){
+    const rec = lwPosLines[pos.id];
+    if(rec){
+      const gk = lwDrag.ghost? (key === "sl"? "ghostSlGlow" : "ghostTpGlow") : (key === "sl"? "slGlow" : "tpGlow");
+      if(rec[gk]){ try{ rec[gk].applyOptions({ price: price }); }catch(err){} }
+    }
+  }
 }
 function lwDragEnd(){
   const d = lwDrag; lwDrag = null;
@@ -4638,7 +4728,7 @@ function closePosition(id, exitPrice, why, reflection){
   const noteBits = ["Paper trade"+(why? " — "+why:"")];
   if(pos.openNote) noteBits.push("At entry: "+pos.openNote);
   if(reflection && reflection.note) noteBits.push("At close: "+reflection.note);
-  const rec = { id:uid(), date:todayStr(), market:pos.market, dir:pos.dir, entry:pos.entry,
+  const rec = { id:uid(), date:todayStr(), closedAt:Date.now(), market:pos.market, dir:pos.dir, entry:pos.entry,
     sl: pos.sl || (pos.dir==="Long"? pos.entry*0.995 : pos.entry*1.005), exit:+exit.toFixed(4), size:pos.size,
     session:"New York", planId:pos.planId||"", emotion:(reflection && reflection.emotion) || pos.emotion || "",
     exitEmotion:(reflection && reflection.exitEmotion) || "",
