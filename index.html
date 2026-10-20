@@ -894,6 +894,23 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .date-pair input{flex:1;min-width:0;padding:8px 9px;font-size:13px}
 .date-pair .dp-arrow{color:var(--faint);font-weight:800;flex:0 0 auto}
 .date-pair .dp-cal{color:var(--faint);display:inline-flex;flex:0 0 auto}
+.dp-cal-btn{border:0;background:transparent;color:var(--faint);display:inline-flex;flex:0 0 auto;padding:2px;cursor:pointer}
+.dp-cal-btn:hover,.dp-cal-btn.on{color:var(--pine)}
+.dp-pop{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;background:var(--card2)}
+.dp-fields{display:flex;gap:6px;margin-bottom:9px}
+.dp-fields button{flex:1;border:1px solid var(--line2);background:var(--card);color:var(--muted);border-radius:8px;padding:6px 4px;font-size:12px;font-weight:700;cursor:pointer}
+.dp-fields button.on{border-color:var(--pine);color:var(--pine)}
+.dp-pop-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.dp-pop-head strong{font-size:13px}
+.dp-nav{width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);background:var(--card);color:var(--muted);font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.dp-nav:hover{color:var(--pine);border-color:var(--pine)}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dp-dow{font-size:10.5px;font-weight:800;color:var(--faint);text-align:center;padding:2px 0}
+.dp-day{border:0;background:transparent;color:var(--ink);font-size:12.5px;font-weight:600;border-radius:7px;padding:5px 0;cursor:pointer;text-align:center}
+.dp-day:hover{background:var(--pine-soft)}
+.dp-day.dim{color:var(--faint);opacity:.55}
+.dp-day.today{box-shadow:inset 0 0 0 1.5px var(--line2)}
+.dp-day.sel{background:var(--pine);color:#fff}
 .flt-check{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:13.5px;font-weight:600;cursor:pointer}
 .flt-check input{width:16px;height:16px;accent-color:var(--pine);flex:0 0 16px;margin:0}
 .imp-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px;display:inline-block}
@@ -901,7 +918,8 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .cur-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--card2);border-radius:9px;padding:5px 6px 5px 9px;font-size:13px;font-weight:700;margin-bottom:8px}
 .cur-chip button{border:0;background:transparent;color:var(--muted);font-size:15px;line-height:1;padding:0 2px;cursor:pointer}
 .cur-chip button:hover{color:var(--red)}
-.ev-head,.ev-row{display:grid;grid-template-columns:28px 52px 100px 46px minmax(0,1fr) 74px 74px 74px 26px;gap:8px;align-items:center}
+.ev-head,.ev-row{display:grid;grid-template-columns:28px 52px 100px 84px minmax(0,1fr) 74px 74px 74px 26px;gap:8px;align-items:center}
+.imp-cell{display:inline-flex;align-items:center;gap:6px;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
 .ev-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:10px 6px 8px;border-bottom:1px solid var(--line)}
 .ev-day{font-size:12.5px;font-weight:800;color:var(--muted);padding:15px 6px 3px}
 .ev-item{border-bottom:1px solid var(--line)}
@@ -1051,6 +1069,8 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 @media (max-width:640px){
   .ev-head,.ev-row{grid-template-columns:24px 42px 76px 20px minmax(0,1fr) 52px 26px;gap:6px;font-size:12.5px}
   .ev-fc,.ev-pv{display:none}
+  .imp-cell{justify-content:center}
+  .imp-cell .imp-txt{display:none}
   .ev-detail{margin-left:6px}
 }
 
@@ -6197,7 +6217,7 @@ function weekEvents(){
    schedule for every major currency, generated across a rolling window
    (five weeks back, three months ahead) so Today / week / month views,
    Next month, custom ranges and the calendar are always fully populated
-   across all 9 categories. The live Forex Factory feed covers the current
+   across all 8 categories. The live Forex Factory feed covers the current
    week only; dates outside its coverage are filled from this database.
    dow: 1=Mon … 7=Sun. Times are local display times. */
 const NEWS_DB_TEMPLATES = [
@@ -6214,16 +6234,16 @@ const NEWS_DB_TEMPLATES = [
   { dow:2, time:"04:30", cur:"AUD", cc:"AU", impact:"High",   cat:"Central Banks & Interest Rates", event:"RBA Interest Rate Decision", fc:"4.10%", prev:"4.10%" },
   { dow:2, time:"07:00", cur:"GBP", cc:"GB", impact:"Low",    cat:"Consumer & Housing", event:"UK Halifax House Price Index (MoM)", fc:"0.2%", prev:"0.1%" },
   { dow:2, time:"09:30", cur:"GBP", cc:"GB", impact:"Medium", cat:"Economic Growth", event:"UK Services PMI", fc:"51.8", prev:"51.2" },
-  { dow:2, time:"10:00", cur:"EUR", cc:"EU", impact:"Low",    cat:"Inflation", event:"Eurozone PPI (MoM)", fc:"0.1%", prev:"0.0%" },
+  { dow:2, time:"10:00", cur:"EUR", cc:"EU", impact:"Low",    cat:"Economic Growth", event:"Eurozone PPI (MoM)", fc:"0.1%", prev:"0.0%" },
   { dow:2, time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Trade", event:"US Trade Balance", fc:"-$62.0B", prev:"-$61.5B" },
   { dow:2, time:"15:00", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"JOLTS Job Openings", fc:"7.45M", prev:"7.39M" },
   { dow:2, time:"16:30", cur:"USD", cc:"US", impact:"Medium", cat:"Government & Bonds", event:"US 10-Year Note Auction", fc:"", prev:"4.21%" },
   { dow:2, time:"21:45", cur:"NZD", cc:"NZ", impact:"Medium", cat:"Employment", event:"NZ Employment Change (QoQ)", fc:"0.2%", prev:"0.1%" },
   /* Wednesday */
   { dow:3, time:"02:00", cur:"CNY", cc:"CN", impact:"Medium", cat:"Trade", event:"China Trade Balance", fc:"$82.5B", prev:"$79.8B" },
-  { dow:3, time:"02:30", cur:"CNY", cc:"CN", impact:"High",   cat:"Inflation", event:"China CPI (YoY)", fc:"0.4%", prev:"0.3%" },
-  { dow:3, time:"07:00", cur:"EUR", cc:"EU", impact:"High",   cat:"Inflation", event:"Eurozone CPI (YoY)", fc:"2.1%", prev:"2.2%" },
-  { dow:3, time:"08:00", cur:"CHF", cc:"CH", impact:"Medium", cat:"Inflation", event:"Swiss CPI (MoM)", fc:"0.0%", prev:"-0.1%" },
+  { dow:3, time:"02:30", cur:"CNY", cc:"CN", impact:"High",   cat:"Economic Growth", event:"China CPI (YoY)", fc:"0.4%", prev:"0.3%" },
+  { dow:3, time:"07:00", cur:"EUR", cc:"EU", impact:"High",   cat:"Economic Growth", event:"Eurozone CPI (YoY)", fc:"2.1%", prev:"2.2%" },
+  { dow:3, time:"08:00", cur:"CHF", cc:"CH", impact:"Medium", cat:"Economic Growth", event:"Swiss CPI (MoM)", fc:"0.0%", prev:"-0.1%" },
   { dow:3, time:"09:00", cur:"EUR", cc:"EU", impact:"Medium", cat:"Central Banks & Interest Rates", event:"ECB President Lagarde Speech", fc:"", prev:"" },
   { dow:3, time:"13:15", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"ADP Non-Farm Employment Change", fc:"124K", prev:"118K" },
   { dow:3, time:"15:00", cur:"USD", cc:"US", impact:"High",   cat:"Economic Growth", event:"ISM Services PMI", fc:"52.4", prev:"52.0" },
@@ -6238,15 +6258,15 @@ const NEWS_DB_TEMPLATES = [
   { dow:4, time:"12:00", cur:"GBP", cc:"GB", impact:"High",   cat:"Central Banks & Interest Rates", event:"BoE Interest Rate Decision", fc:"3.75%", prev:"3.75%" },
   { dow:4, time:"12:45", cur:"EUR", cc:"EU", impact:"High",   cat:"Central Banks & Interest Rates", event:"ECB Interest Rate Decision", fc:"2.15%", prev:"2.15%" },
   { dow:4, time:"13:30", cur:"EUR", cc:"EU", impact:"High",   cat:"Central Banks & Interest Rates", event:"ECB Press Conference", fc:"", prev:"" },
-  { dow:4, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Inflation", event:"US CPI (YoY)", fc:"3.0%", prev:"2.9%", act:"3.1%" },
-  { dow:4, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Inflation", event:"US Core CPI (MoM)", fc:"0.3%", prev:"0.2%", act:"0.3%" },
+  { dow:4, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Economic Growth", event:"US CPI (YoY)", fc:"3.0%", prev:"2.9%", act:"3.1%" },
+  { dow:4, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Economic Growth", event:"US Core CPI (MoM)", fc:"0.3%", prev:"0.2%", act:"0.3%" },
   { dow:4, time:"13:30", cur:"USD", cc:"US", impact:"Medium", cat:"Employment", event:"US Initial Jobless Claims", fc:"230K", prev:"228K" },
   { dow:4, time:"15:30", cur:"USD", cc:"US", impact:"Low",    cat:"Energy & Commodities", event:"EIA Natural Gas Storage", fc:"48B", prev:"52B" },
   { dow:4, time:"23:50", cur:"JPY", cc:"JP", impact:"Low",    cat:"Economic Growth", event:"Japan Current Account", fc:"¥2.9T", prev:"¥2.7T" },
   /* Friday */
   { dow:5, time:"04:00", cur:"JPY", cc:"JP", impact:"High",   cat:"Central Banks & Interest Rates", event:"BoJ Interest Rate Decision", fc:"0.75%", prev:"0.75%" },
   { dow:5, time:"06:30", cur:"JPY", cc:"JP", impact:"Medium", cat:"Central Banks & Interest Rates", event:"BoJ Press Conference", fc:"", prev:"" },
-  { dow:5, time:"08:30", cur:"GBP", cc:"GB", impact:"High",   cat:"Inflation", event:"UK CPI (YoY)", fc:"3.4%", prev:"3.6%" },
+  { dow:5, time:"08:30", cur:"GBP", cc:"GB", impact:"High",   cat:"Economic Growth", event:"UK CPI (YoY)", fc:"3.4%", prev:"3.6%" },
   { dow:5, time:"09:30", cur:"EUR", cc:"EU", impact:"Low",    cat:"Economic Growth", event:"Eurozone Industrial Production (MoM)", fc:"0.2%", prev:"-0.1%" },
   { dow:5, time:"13:30", cur:"CAD", cc:"CA", impact:"High",   cat:"Employment", event:"Canada Employment Change", fc:"18.5K", prev:"15.2K" },
   { dow:5, time:"13:30", cur:"USD", cc:"US", impact:"High",   cat:"Employment", event:"Non-Farm Payrolls", fc:"118K", prev:"102K", act:"121K" },
@@ -6272,11 +6292,11 @@ const NEWS_REAL_DAYS = {
     { time:"03:30", cur:"NZD", cc:"NZ", impact:"Medium", cat:"Economic Growth", event:"Composite NZ PCI", actual:"53.4", fc:"", prev:"" },
     { time:"03:45", cur:"NZD", cc:"NZ", impact:"Medium", cat:"Trade", event:"Balance of Trade", actual:"", fc:"", prev:"" },
     { time:"10:30", cur:"JPY", cc:"JP", impact:"Low",    cat:"Economic Growth", event:"Tertiary Industry Index MoM", actual:"", fc:"", prev:"" },
-    { time:"18:30", cur:"CAD", cc:"CA", impact:"High",   cat:"Inflation", event:"Inflation Rate MoM", actual:"", fc:"0.2%", prev:"-0.1%" },
-    { time:"18:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Inflation", event:"CPI Median YoY", actual:"", fc:"2.0%", prev:"2.0%" },
-    { time:"18:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Inflation", event:"CPI Trimmed-Mean YoY", actual:"", fc:"1.9%", prev:"1.9%" },
-    { time:"18:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Inflation", event:"CPI Common YoY", actual:"", fc:"2.6%", prev:"2.6%" },
-    { time:"18:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Inflation", event:"Core Inflation Rate MoM", actual:"", fc:"", prev:"0.1%" },
+    { time:"18:30", cur:"CAD", cc:"CA", impact:"High",   cat:"Economic Growth", event:"Inflation Rate MoM", actual:"", fc:"0.2%", prev:"-0.1%" },
+    { time:"18:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Economic Growth", event:"CPI Median YoY", actual:"", fc:"2.0%", prev:"2.0%" },
+    { time:"18:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Economic Growth", event:"CPI Trimmed-Mean YoY", actual:"", fc:"1.9%", prev:"1.9%" },
+    { time:"18:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Economic Growth", event:"CPI Common YoY", actual:"", fc:"2.6%", prev:"2.6%" },
+    { time:"18:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Economic Growth", event:"Core Inflation Rate MoM", actual:"", fc:"", prev:"0.1%" },
     { time:"20:00", cur:"USD", cc:"US", impact:"Medium", cat:"Consumer & Housing", event:"NAHB Housing Market Index", actual:"", fc:"31", prev:"32" },
     { time:"20:30", cur:"CAD", cc:"CA", impact:"Medium", cat:"Central Banks & Interest Rates", event:"BoC Business Outlook Survey", actual:"", fc:"", prev:"" },
     { time:"21:30", cur:"USD", cc:"US", impact:"Low",    cat:"Government & Bonds", event:"3-Month Bill Auction", actual:"", fc:"", prev:"" },
@@ -6308,7 +6328,6 @@ const NEWS_CATS = [
   ["Energy & Commodities", svgIco('<path d="M12 3c3.2 4.1 6 7.6 6 11a6 6 0 1 1-12 0c0-3.4 2.8-6.9 6-11z"/>')],
   ["Government & Bonds", svgIco('<path d="M3 9.5L12 4l9 5.5"/><path d="M5 10v7M9.7 10v7M14.3 10v7M19 10v7"/><path d="M3 20h18M3 17h18"/>')],
   ["Consumer & Housing", svgIco('<path d="M3 11l9-8 9 8"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/>')],
-  ["Inflation", svgIco('<path d="M4 20V11M10 20V5M16 20v-7"/><path d="M2.5 20h19"/>')],
   ["Employment", svgIco('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c.8-3.8 3.8-5.7 7.5-5.7s6.7 1.9 7.5 5.7"/>')],
   ["Central Banks & Interest Rates", svgIco('<path d="M18.5 5.5L5.5 18.5"/><circle cx="7" cy="7" r="2.6"/><circle cx="17" cy="17" r="2.6"/>')],
   ["Economic Growth", svgIco('<path d="M3 17.5l5.5-5.5 3.8 3.8L20.5 7.5"/><path d="M14.8 7.5h5.7v5.7"/>')],
@@ -6357,6 +6376,7 @@ function newsSavePrefs(){
   newsRangeKey = p.rangeKey || "";
   if(p.imp) newsImp = Object.assign(newsImp, p.imp);
   if(p.cats) newsCats = Object.assign(newsCats, p.cats);
+  delete newsCats["Inflation"]; // folded into Economic Growth (EdgeFlo's 8 categories)
   if(p.cur) newsCur = p.cur;
   newsWlOnly = !!p.wlOnly; newsBookOnly = !!p.bookOnly;
 })();
@@ -6396,7 +6416,7 @@ function newsCategoryFor(title){
   if(/crude|oil inventories|natural gas|gasoline|petroleum/.test(t)) return "Energy & Commodities";
   if(/bond|treasury|auction|gilts|bund|note auction/.test(t)) return "Government & Bonds";
   if(/housing|home sales|home prices|mortgage|building permits|construction spending|hpi|real estate/.test(t)) return "Consumer & Housing";
-  if(/\bcpi\b|\bppi\b|inflation|\bpce\b|price index|import prices|export prices/.test(t)) return "Inflation";
+  if(/\bcpi\b|\bppi\b|inflation|\bpce\b|price index|import prices|export prices/.test(t)) return "Economic Growth"; /* inflation prints fold into Economic Growth — EdgeFlo has no standalone Inflation category */
   if(/employ|unemploy|nonfarm|payroll|jobless|jolts|job openings|claimant|average hourly earnings|\badp\b/.test(t)) return "Employment";
   if(/interest rate|rate decision|monetary policy|\bfomc\b|central bank|press conference|meeting minutes|speaks|speech|\bfed\b|\becb\b|\bboj\b|\brba\b|\bboe\b|\bboc\b|\bsnb\b|\brbnz\b/.test(t)) return "Central Banks & Interest Rates";
   if(/trade balance|current account|\bexports\b|\bimports\b/.test(t)) return "Trade";
@@ -6459,7 +6479,8 @@ function newsMapLive(x, i){
     cur: cur, cc: cur==="ALL"? "ALL" : (NEWS_CC[cur] || cur.slice(0,2)),
     impact: /high/i.test(x.impact)? "High" : /medium/i.test(x.impact)? "Medium" : "Low",
     cat: newsCategoryFor(x.event), event: x.event || "—",
-    actual: x.actual || "", fc: x.forecast || "", prev: x.previous || "" };
+    actual: x.actual || "", fc: x.forecast || "", prev: x.previous || "",
+    source: x.source || "", desc: x.description || x.detail || "" };
 }
 function newsFetchLive(){
   if(newsLiveLoading) return;
@@ -6531,12 +6552,12 @@ function newsRange(key){
   else if(key==="nextweek"){ newsFrom = todayStr(add(7-dow)); newsTo = todayStr(add(13-dow)); }
   else if(key==="month"){ newsFrom = todayStr(new Date(t.getFullYear(), t.getMonth(), 1)); newsTo = todayStr(new Date(t.getFullYear(), t.getMonth()+1, 0)); }
   else if(key==="nextmonth"){ newsFrom = todayStr(new Date(t.getFullYear(), t.getMonth()+1, 1)); newsTo = todayStr(new Date(t.getFullYear(), t.getMonth()+2, 0)); }
-  newsRangeKey = key; RENDER.news();
+  newsRangeKey = key; newsPicker = null; RENDER.news();
 }
 function newsShift(days){
   const f = new Date(newsFrom+"T12:00:00"); f.setDate(f.getDate()+days);
   const t = new Date(newsTo+"T12:00:00"); t.setDate(t.getDate()+days);
-  newsFrom = todayStr(f); newsTo = todayStr(t); newsRangeKey = ""; RENDER.news();
+  newsFrom = todayStr(f); newsTo = todayStr(t); newsRangeKey = ""; newsPicker = null; RENDER.news();
 }
 function newsNavLabel(){
   const f = new Date(newsFrom+"T12:00:00"), t = new Date(newsTo+"T12:00:00");
@@ -6564,7 +6585,57 @@ function newsBlockGate(){
   if(DB.sub.plan==="plus") toast("News Block is active on your Plus plan — entries pause 30 min around high-impact releases.");
   else startCheckout("plus");
 }
-function newsCalPick(ds){ newsFrom = newsTo = ds; newsRangeKey = ""; newsViewMode = "list"; RENDER.news(); }
+function newsCalPick(ds){ newsFrom = newsTo = ds; newsRangeKey = ""; newsViewMode = "list"; newsPicker = null; RENDER.news(); }
+
+/* ---- Date range picker (EdgeFlo-style): text inputs + a calendar popover.
+   The two range fields are plain text inputs (typed dates are parsed on
+   change); the calendar button opens a month popover under the pair —
+   pick a From day and the popover advances to To, pick a To day and it
+   closes with the list already filtered to the chosen range. ---- */
+let newsPicker = null;              // null | "from" | "to" — field the open calendar edits
+let newsPickY = 0, newsPickM = 0;   // month the open calendar is showing
+function newsFmtDate(ds){ const d = new Date(ds+"T12:00:00"); return isNaN(d)? ds : d.toLocaleDateString("en-US",{month:"short", day:"numeric", year:"numeric"}); }
+function newsTogglePicker(){
+  if(newsPicker){ newsPicker = null; }
+  else { newsPicker = "from"; const b = new Date(newsFrom+"T12:00:00"); newsPickY = b.getFullYear(); newsPickM = b.getMonth(); }
+  RENDER.news();
+}
+function newsPickField(f){ newsPicker = f; const b = new Date((f==="from"? newsFrom : newsTo)+"T12:00:00"); newsPickY = b.getFullYear(); newsPickM = b.getMonth(); RENDER.news(); }
+function newsPickNav(delta){ newsPickM += delta; if(newsPickM<0){ newsPickM = 11; newsPickY--; } else if(newsPickM>11){ newsPickM = 0; newsPickY++; } RENDER.news(); }
+function newsPickDay(ds){
+  if(newsPicker==="from"){ newsFrom = ds; if(newsTo<ds) newsTo = ds; newsRangeKey = ""; newsPicker = "to"; const b = new Date(newsTo+"T12:00:00"); newsPickY = b.getFullYear(); newsPickM = b.getMonth(); }
+  else { newsTo = ds; if(newsFrom>ds) newsFrom = ds; newsRangeKey = ""; newsPicker = null; }
+  RENDER.news();
+}
+function newsTypedDate(which, val){
+  val = String(val||"").trim();
+  let ds = null;
+  const m = val.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m) ds = m[1]+"-"+String(+m[2]).padStart(2,"0")+"-"+String(+m[3]).padStart(2,"0");
+  else { const d = new Date(val); if(!isNaN(d)) ds = todayStr(d); }
+  if(!ds || isNaN(new Date(ds+"T12:00:00"))){ RENDER.news(); return; }
+  if(which==="from"){ newsFrom = ds; if(newsTo<ds) newsTo = ds; } else { newsTo = ds; if(newsFrom>ds) newsFrom = ds; }
+  newsRangeKey = ""; newsPicker = null; RENDER.news();
+}
+function newsPickerHTML(){
+  if(!newsPicker) return "";
+  const sel = newsPicker==="from"? newsFrom : newsTo;
+  const first = new Date(newsPickY, newsPickM, 1);
+  const startDow = (first.getDay()+6)%7;
+  const daysInMonth = new Date(newsPickY, newsPickM+1, 0).getDate();
+  const total = Math.ceil((startDow+daysInMonth)/7)*7;
+  let cells = "";
+  for(let i=0;i<total;i++){
+    const d = new Date(newsPickY, newsPickM, 1-startDow+i); const ds = todayStr(d);
+    cells += '<button type="button" class="dp-day'+(d.getMonth()!==newsPickM?" dim":"")+(ds===sel?" sel":"")+(ds===todayStr()?" today":"")+'" onclick="newsPickDay(\''+ds+'\')">'+d.getDate()+'</button>';
+  }
+  return '<div class="dp-pop">'
+    + '<div class="dp-fields"><button type="button" class="'+(newsPicker==="from"?"on":"")+'" onclick="newsPickField(\'from\')">From · '+newsFmtDate(newsFrom)+'</button><button type="button" class="'+(newsPicker==="to"?"on":"")+'" onclick="newsPickField(\'to\')">To · '+newsFmtDate(newsTo)+'</button></div>'
+    + '<div class="dp-pop-head"><button type="button" class="dp-nav" title="Previous month" onclick="newsPickNav(-1)">&lsaquo;</button><strong>'+first.toLocaleDateString("en-US",{month:"long", year:"numeric"})+'</strong><button type="button" class="dp-nav" title="Next month" onclick="newsPickNav(1)">&rsaquo;</button></div>'
+    + '<div class="dp-grid">'+["Mo","Tu","We","Th","Fr","Sa","Su"].map(d=>'<span class="dp-dow">'+d+'</span>').join("")+cells+'</div>'
+    + '<div class="small" style="margin-top:8px">Pick a '+(newsPicker==="from"? "start" : "end")+' date — the list filters as soon as both dates are set.</div>'
+    + '</div>';
+}
 
 function newsFiltersHTML(){
   const impSel = ["High","Medium","Low"].filter(i=>newsImp[i]).length;
@@ -6573,7 +6644,8 @@ function newsFiltersHTML(){
   const calIco = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
   return '<div class="card" style="padding:16px">'
     + '<div class="flt-title">Filters</div>'
-    + '<div class="date-pair"><input type="date" class="input" value="'+newsFrom+'" max="'+newsTo+'" onchange="newsFrom=this.value;newsRangeKey=\'\';RENDER.news()"><span class="dp-arrow">&rarr;</span><input type="date" class="input" value="'+newsTo+'" min="'+newsFrom+'" onchange="newsTo=this.value;newsRangeKey=\'\';RENDER.news()"><span class="dp-cal">'+calIco+'</span></div>'
+    + '<div class="date-pair"><input type="text" class="input" value="'+newsFmtDate(newsFrom)+'" placeholder="Start date" onchange="newsTypedDate(\'from\',this.value)"><span class="dp-arrow">&rarr;</span><input type="text" class="input" value="'+newsFmtDate(newsTo)+'" placeholder="End date" onchange="newsTypedDate(\'to\',this.value)"><button type="button" class="dp-cal-btn'+(newsPicker?" on":"")+'" title="Pick dates from a calendar" onclick="newsTogglePicker()">'+calIco+'</button></div>'
+    + newsPickerHTML()
     + '<div class="range-links">'+[["today","Today"],["tomorrow","Tomorrow"],["week","This week"],["nextweek","Next week"],["month","This month"],["nextmonth","Next month"]].map(r=>'<button class="'+(newsRangeKey===r[0]?"on":"")+'" onclick="newsRange(\''+r[0]+'\')">'+r[1]+'</button>').join("")+'</div>'
     + '<div class="flt-sec"><div class="flt-head"><span class="flt-name">Currencies</span><span class="flt-status">'+(newsCur==="All"? "All selected" : "1 selected")+'</span><button class="flt-link" onclick="newsCur=\'All\';RENDER.news()">Select all</button><button class="flt-link" style="margin-left:8px" onclick="newsCur=\'All\';RENDER.news()">Clear</button></div>'
     + (newsCur!=="All"? '<div><span class="cur-chip"><span class="flag-badge">'+(NEWS_CC[newsCur]||newsCur.slice(0,2))+'</span>'+newsCur+'<button title="Remove '+newsCur+' filter" onclick="newsCur=\'All\';RENDER.news()">&times;</button></span></div>' : "")
@@ -6610,7 +6682,7 @@ function newsListHTML(){
         + '<button class="ev-expand" title="Event details" onclick="newsToggleRow(\''+e.id+'\')">'+(open?"&minus;":"+")+'</button>'
         + '<span class="mono">'+(e.time? esc(e.time) : "&mdash;")+'</span>'
         + '<span style="display:flex;align-items:center;gap:7px"><span class="flag-badge">'+e.cc+'</span><strong>'+e.cur+'</strong></span>'
-        + '<span style="text-align:center"><span class="imp-dot" style="background:'+NEWS_IMP_COLORS[e.impact]+'"></span></span>'
+        + '<span class="imp-cell"><span class="imp-dot" style="background:'+NEWS_IMP_COLORS[e.impact]+'"></span><span class="imp-txt">'+e.impact+'</span></span>'
         + '<span style="font-weight:600">'+esc(e.event)+'</span>'
         + '<span class="mono" style="text-align:right;font-weight:700;color:'+newsActualColor(e)+'">'+(e.actual? esc(e.actual) : "&mdash;")+'</span>'
         + '<span class="mono ev-fc" style="text-align:right">'+(e.fc? esc(e.fc) : "&mdash;")+'</span>'
@@ -6618,11 +6690,14 @@ function newsListHTML(){
         + '<button class="bm-btn'+(newsIsBookmarked(e)? " on":"")+'" title="'+(newsIsBookmarked(e)? "Remove bookmark":"Bookmark this event")+'" onclick="toggleNewsBookmarkById(\''+e.id+'\')">'+(newsIsBookmarked(e)? "★":"☆")+'</button>'
         + '</div>'
         + (open? '<div class="ev-detail">'
+          + '<span><span class="dm-label">CURRENCY</span><br><strong>'+e.cur+'</strong></span>'
+          + '<span><span class="dm-label">IMPACT</span><br><strong>'+e.impact+'</strong></span>'
           + '<span><span class="dm-label">ACTUAL</span><br><strong>'+(e.actual? esc(e.actual):"—")+'</strong></span>'
           + '<span><span class="dm-label">FORECAST</span><br><strong>'+(e.fc? esc(e.fc):"—")+'</strong></span>'
           + '<span><span class="dm-label">PREVIOUS</span><br><strong>'+(e.prev? esc(e.prev):"—")+'</strong></span>'
-          + '<span><span class="dm-label">IMPACT</span><br><strong>'+e.impact+'</strong></span>'
           + '<span><span class="dm-label">CATEGORY</span><br><strong>'+esc(e.cat)+'</strong></span>'
+          + (e.source? '<span><span class="dm-label">SOURCE</span><br><strong>'+esc(e.source)+'</strong></span>' : "")
+          + (e.desc? '<span style="flex:1 1 100%"><span class="dm-label">DESCRIPTION</span><br>'+esc(e.desc)+'</span>' : "")
           + '</div>' : "")
         + '</div>';
     });
