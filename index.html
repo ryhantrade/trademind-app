@@ -161,6 +161,14 @@ table.tbl tr:last-child td{border-bottom:0}
 .empty{padding:34px 20px;text-align:center;color:var(--muted)}
 .empty .e-title{font-weight:800;color:var(--ink);font-size:15px;margin-bottom:4px}
 .seg{display:inline-flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+/* Login gate: full-screen sign-in wall shown when there is no session */
+#auth-gate{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;justify-content:center;overflow-y:auto;padding:30px 14px}
+#auth-gate[hidden]{display:none}
+.auth-card{width:100%;max-width:430px;margin:auto}
+.auth-tabs{display:flex;gap:2px;margin:16px 0 18px}
+.auth-tabs button{flex:1}
+.auth-err{display:none;margin:0 0 12px}
+.alert.red.auth-err{display:none}
 .seg button{border:0;background:transparent;padding:6px 13px;border-radius:8px;font-weight:700;font-size:12.5px;color:var(--muted)}
 .seg button.on{background:var(--card);color:var(--pine);box-shadow:var(--shadow-sm)}
 .progress{height:8px;border-radius:99px;background:var(--bg2);overflow:hidden}
@@ -232,6 +240,21 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 .tv-wrap>.lw-editbar{height:auto}
 .lw-editbar .eb-sub{color:var(--muted);font-weight:600}
 .lw-editbar .eb-vals{color:var(--muted);font-weight:700;font-size:12.5px}
+/* Bar-close countdown: a pill overlaid on the chart's top-left (clear of
+   the centered edit bar) plus a matching readout at the right of the
+   symbol bar. paintBarCountdown ticks both every 250ms off the loaded
+   bars' own grid; the pill turns amber in the final 10 seconds. */
+.lw-count{position:absolute;top:10px;left:10px;z-index:9;display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line2);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--ink);box-shadow:var(--shadow-sm);pointer-events:none;font-variant-numeric:tabular-nums}
+.tv-wrap>.lw-count{height:auto}
+.lw-count svg{color:var(--muted);flex:0 0 auto}
+.lw-count .bc-label{color:var(--muted);font-weight:600}
+.lw-count.hot{color:var(--amber);border-color:var(--amber)}
+.lw-count.hot svg{color:var(--amber)}
+.sym-bar .bar-count{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sym-bar .bar-count svg{flex:0 0 auto}
+.sym-bar .bar-count b{color:var(--ink);font-weight:800}
+.sym-bar .bar-count.hot{color:var(--amber)}
+.sym-bar .bar-count.hot b{color:var(--amber)}
 /* Open Positions table + row action buttons */
 table.pos-tbl td,table.pos-tbl th{white-space:nowrap}
 .pos-act{width:28px;height:28px;border-radius:8px;border:1px solid var(--line2);background:var(--card);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;vertical-align:middle;font-size:15px;font-weight:800;line-height:1}
@@ -1115,6 +1138,7 @@ input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px
 </style>
 </head>
 <body>
+<div id="auth-gate" hidden></div>
 <div id="app">
   <!-- ============ LEFT NAV RAIL ============ -->
   <nav id="rail" aria-label="Main">
@@ -1238,6 +1262,17 @@ const MODULE_PLAN = { coach:"plus", performance:"plus" }; // Guardrails configur
 
 /* ---------------- Store (localStorage) ---------------- */
 const DB_KEY = "edgepine_db_v1";
+/* Per-account data separation: a signed-in server account's store lives
+   under DB_KEY + ":" + email; guest/demo keeps the default key. The
+   active key is chosen at load from the stored auth session, so the
+   first loadDB() already reads the signed-in account's own data — a
+   brand-new account starts from the empty defaults, never from the
+   guest/demo store. */
+let ACTIVE_DB_KEY = DB_KEY;
+try{
+  const au0 = JSON.parse(localStorage.getItem("tmAuthUser") || "null");
+  if(au0 && au0.email && localStorage.getItem("tmAuthToken")) ACTIVE_DB_KEY = DB_KEY + ":" + String(au0.email).toLowerCase();
+}catch(e){}
 /* Pre-Market Routine: each step carries an action — the page its panel
    link opens. The old 3-step default list migrates to the EdgeFlo 4. */
 const ROUTINE_ACTIONS = [["news","Go to News"],["edge","Go to Edge"],["sanctuary","Go to Sanctuary"],["trading","Go to Trading Platform"],["journal","Go to Journal"],["dashboard","Go to Dashboard"],["notebook","Go to Notebook"],["guardrails","Go to Guardrails"],["none","No action"]];
@@ -1292,7 +1327,7 @@ const DEFAULTS = {
 };
 let DB;
 function loadDB(){
-  try{ const raw = localStorage.getItem(DB_KEY); DB = raw ? Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), JSON.parse(raw)) : JSON.parse(JSON.stringify(DEFAULTS)); }
+  try{ const raw = localStorage.getItem(ACTIVE_DB_KEY); DB = raw ? Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), JSON.parse(raw)) : JSON.parse(JSON.stringify(DEFAULTS)); }
   catch(e){ DB = JSON.parse(JSON.stringify(DEFAULTS)); }
   DB.guardrails = Object.assign({}, DEFAULTS.guardrails, DB.guardrails||{});
   /* One-time migration: the trading window default moved 07:00 → 08:00 to
@@ -1341,7 +1376,7 @@ function loadDB(){
   DB.routine.enabled = DB.settings.routinePrefs.banner !== false;
   if(!DB.integrations || typeof DB.integrations!=="object") DB.integrations = {};
 }
-function saveDB(){ try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){ toast("Storage full — screenshot images may be too large."); } }
+function saveDB(){ try{ localStorage.setItem(ACTIVE_DB_KEY, JSON.stringify(DB)); }catch(e){ toast("Storage full — screenshot images may be too large."); } }
 loadDB();
 
 /* ---------------- Utils ---------------- */
@@ -1822,7 +1857,7 @@ function openTutorial(){
     ["1. Set your guardrails","Account → Trading Preferences: max daily loss, max profit, trades per day and your trading window."],
     ["2. Do the pre-market routine","The floating panel walks your checklist — Meditate, Review Trade Plan, Mark Up Charts. Trading unlocks at 100%."],
     ["3. Build your Edge","Edge holds your playbooks: charting process, entry criteria and risk controls for every setup."],
-    ["4. Trade the plan on paper","Trading page: live chart, watchlist and a $100,000 paper account. Arm the Trading Plan checklist before you execute."],
+    ["4. Trade the plan on paper","Trading page: live chart, watchlist and a paper trading account. Arm the Trading Plan checklist before you execute."],
     ["5. Journal everything","Every paper trade lands in the Journal. Review it in the evening — that is where the edge compounds."]
   ];
   openModal('<h3>Getting started with TradeMind</h3><div class="small" style="margin:8px 0 4px">Five steps to your first disciplined session:</div>'
@@ -3177,10 +3212,12 @@ function initLwChart(){
   lwCreateMainSeries();
   Object.keys(tvStudies).forEach(n=> lwAddIndicator(n));
   mount.addEventListener("pointerdown", lwPointerDown, true);
+  mount.addEventListener("pointermove", lwHoverCursor);
   try{ lwChart.timeScale().subscribeVisibleLogicalRangeChange(()=> lwPaintChips()); }catch(e){}
   if(window.ResizeObserver){ lwRO = new ResizeObserver(()=> lwPaintChips()); lwRO.observe(mount); }
   lwFetchCandles(true);
   lwStartLiveLoop();
+  lwStartCountdown();
 }
 /* ---- Candle data: real bars from the backend, seeded fallback ---- */
 function lwSeedBars(){
@@ -3337,7 +3374,7 @@ function lwLiveTick(){
   try{ paintSymBar(false); }catch(e){}
   try{ lwPaintChips(); }catch(e){}
 }
-/* The chart's own live driver: a dedicated 1s timer owned by the chart
+/* The chart's own live driver: a dedicated 500ms timer owned by the chart
    (started in initLwChart, cleared in lwDestroyChart), independent of
    the legacy sim tick — so no other paint routine's error or re-render
    cadence can starve or stop it. While the Trading page is open the
@@ -3349,7 +3386,54 @@ function lwStartLiveLoop(){
   lwLiveTimer = setInterval(()=>{
     if(currentView !== "trading" || document.hidden) return;
     try{ lwLiveTick(); }catch(e){}
-  }, 1000);
+  }, 500);
+}
+/* ---- Countdown to bar close ----
+   Remaining time on the forming bar, shown as a pill overlaid on the
+   chart and as a readout in the symbol bar. Computed on the loaded bars'
+   own grid (last bar time + timeframe − now), falling back to the
+   wall-clock grid before bars load. A dedicated 250ms timer (started
+   with the chart, never cleared) repaints only when the displayed
+   second changes; under 10 seconds left both readouts turn amber. */
+let lwCountTimer = null, lwCountCache = "";
+function lwBarRemainSec(){
+  const tf = LW_TF_SEC[tvInterval] || 3600;
+  const nowSec = Math.floor(Date.now() / 1000);
+  let rem = tf - (nowSec % tf);
+  if(lwBarsKey === simMarket + "|" + tvInterval && lwBars.length){
+    const r2 = lwBars[lwBars.length - 1].time + tf - nowSec;
+    if(r2 > 0 && r2 <= tf) rem = r2;
+  }
+  return rem;
+}
+function lwFmtCountdown(sec){
+  sec = Math.max(0, Math.floor(sec));
+  const p2 = n=> String(n).padStart(2, "0");
+  const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  if(d > 0) return d + "d " + p2(h) + ":" + p2(m) + ":" + p2(s);
+  if(h > 0) return h + ":" + p2(m) + ":" + p2(s);
+  return p2(m) + ":" + p2(s);
+}
+function paintBarCountdown(){
+  const els = document.querySelectorAll("[data-bar-count]");
+  if(!els.length) return;
+  const rem = lwBarRemainSec();
+  const txt = lwFmtCountdown(rem);
+  const hot = rem <= 10;
+  const sig = txt + "|" + (hot? "1" : "0");
+  if(sig === lwCountCache) return;
+  lwCountCache = sig;
+  const clock = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  els.forEach(el=>{
+    el.classList.toggle("hot", hot);
+    el.innerHTML = el.classList.contains("lw-count")
+      ? clock + '<span class="bc-label">Bar close</span><span>' + txt + '</span>'
+      : clock + '<span>Bar close <b>' + txt + '</b></span>';
+  });
+}
+function lwStartCountdown(){
+  if(lwCountTimer) return;
+  lwCountTimer = setInterval(()=>{ try{ paintBarCountdown(); }catch(e){} }, 250);
 }
 /* ---- Native position price lines (TradingView long/short style) ---- */
 function lwRTag(pos, tpPrice){
@@ -3437,7 +3521,7 @@ function paintPosLines(){
       syncGlow("slGlow", 0, c.slHot);
       const px = (editing && lwEdit.sl != null)? lwEdit.sl : lwGhostPrice(pos, "sl");
       syncGlow("ghostSlGlow", px, c.slHot);
-      const o = { price: px, color: editing? c.slHot : (dimmed? lwWithAlpha(c.ghostSl, .16) : c.ghostSl), lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set SL — drag me" : "＋ Set SL" };
+      const o = { price: px, color: editing? c.slHot : (dimmed? lwWithAlpha(c.ghostSl, .16) : c.ghostSl), lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set SL — drag to set" : "＋ Set SL" };
       if(editing) o.axisLabelColor = c.slHot;
       if(r.ghostSl) r.ghostSl.applyOptions(o); else r.ghostSl = lwSeries.createPriceLine(o);
     }
@@ -3455,7 +3539,7 @@ function paintPosLines(){
       syncGlow("tpGlow", 0, c.tpHot);
       const px = (editing && lwEdit.tp != null)? lwEdit.tp : lwGhostPrice(pos, "tp");
       syncGlow("ghostTpGlow", px, c.tpHot);
-      const o = { price: px, color: editing? c.tpHot : (dimmed? lwWithAlpha(c.ghostTp, .16) : c.ghostTp), lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set TP — drag me" : "＋ Set TP" };
+      const o = { price: px, color: editing? c.tpHot : (dimmed? lwWithAlpha(c.ghostTp, .16) : c.ghostTp), lineWidth: editing? 3 : 1, lineStyle: LS.Dashed, axisLabelVisible: true, title: editing? "＋ Set TP — drag to set" : "＋ Set TP" };
       if(editing) o.axisLabelColor = c.tpHot;
       if(r.ghostTp) r.ghostTp.applyOptions(o); else r.ghostTp = lwSeries.createPriceLine(o);
     }
@@ -3490,13 +3574,37 @@ function lwPaintChips(){
   if(wrap._h !== h){ wrap.innerHTML = h; wrap._h = h; }
 }
 /* ---- Drag SL / TP on the chart's own scale ----
-   A press within ~16px of an SL / TP / ghost line starts a drag for that
-   line; the chart's own scrolling/scaling is suspended while dragging.
-   Moves convert through series.coordinateToPrice and update the price
-   line live (price + $ in the title); release rounds to the symbol's
-   decimals and persists through the position save path. While the
-   in-chart edit mode is active for a position, a drag instead updates
-   only that position's draft (lwEdit) and commits on Save. */
+   Edit-only drag lock: SL / TP / ghost lines are draggable ONLY while
+   the in-chart edit mode is active for that exact position. Outside
+   Edit mode a press on any SL / TP / ghost line does nothing — no drag
+   starts, nothing moves, nothing commits and no toast fires — and while
+   editing, every other position's lines stay locked and dimmed. Inside
+   Edit mode, moves convert through series.coordinateToPrice and update
+   the price line live (price + $ in the title) as an uncommitted draft
+   (lwEdit); Save on the edit bar commits through the position save
+   path, Cancel restores the original values. The chart's own
+   scrolling/scaling is suspended while dragging. */
+/* Hover affordance: within the same ~22px grab zone the cursor becomes
+   a vertical resize arrow ONLY for the edited position's lines while
+   Edit mode is active; outside Edit mode the lines never advertise
+   themselves as draggable. */
+function lwHoverCursor(e){
+  if(lwDrag || !lwSeries || !lwMountEl) return;
+  const rect = lwMountEl.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  let near = false;
+  Object.keys(lwPosLines).forEach(id=>{
+    if(near) return;
+    if(!lwEdit || id !== lwEdit.id) return;
+    const r = lwPosLines[id];
+    [r.sl, r.ghostSl, r.tp, r.ghostTp].forEach(line=>{
+      if(near || !line) return;
+      const cy = lwSeries.priceToCoordinate(line.options().price);
+      if(cy != null && Math.abs(cy - y) <= 22) near = true;
+    });
+  });
+  lwMountEl.style.cursor = near? "ns-resize" : "";
+}
 function lwPointerDown(e){
   if(!lwSeries || !lwChart || !lwMountEl) return;
   if(e.pointerType === "mouse" && e.button != null && e.button !== 0) return;
@@ -3509,12 +3617,14 @@ function lwPointerDown(e){
     const cy = lwSeries.priceToCoordinate(price);
     if(cy == null) return;
     const d = Math.abs(cy - y);
-    if(d <= 16 && (!best || d < best.d)) best = { d: d, line: line, pos: pos, key: key, ghost: ghost, cur: price };
+    if(d <= 22 && (!best || d < best.d)) best = { d: d, line: line, pos: pos, key: key, ghost: ghost, cur: price };
   };
   Object.keys(lwPosLines).forEach(id=>{
-    /* In edit mode only the edited position's lines are draggable —
-       every other position's lines stay non-editable. */
-    if(lwEdit && id !== lwEdit.id) return;
+    /* Edit-only drag lock: with no active edit session, or for any
+       position other than the one being edited, refuse to even
+       consider a drag — the press falls through to the chart as
+       normal pan/zoom and no line ever moves. */
+    if(!lwEdit || id !== lwEdit.id) return;
     const pos = DB.paper.positions.find(p=> p.id === id); if(!pos) return;
     const r = lwPosLines[id];
     consider(r.sl, pos, "sl", false); consider(r.ghostSl, pos, "sl", true);
@@ -3545,6 +3655,9 @@ function lwPointerDown(e){
 }
 function lwDragTo(e){
   if(!lwDrag || !lwSeries || !lwMountEl) return;
+  /* Edit-only lock, enforced again mid-drag: a drag may only ever move
+     the edited position's lines inside its edit session. */
+  if(!lwEdit || !lwDrag.pos || lwDrag.pos.id !== lwEdit.id) return;
   const rect = lwMountEl.getBoundingClientRect();
   const price = lwSeries.coordinateToPrice(e.clientY - rect.top);
   if(price == null || !(price > 0)) return;
@@ -3572,19 +3685,17 @@ function lwDragEnd(){
   if(lwMountEl) lwMountEl.style.touchAction = "";
   if(lwChart){ try{ lwChart.applyOptions({ handleScroll: true, handleScale: true }); }catch(err){} }
   if(!d || d.cur == null){ paintPosLines(); return; }
-  /* Edit mode: releasing a drag does NOT commit — the draft stays on
-     the lines (via lwEdit) until Save or Cancel on the edit bar. */
+  /* Edit-only lock, enforced at release: a drag-end NEVER commits a
+     value to the position record outside an edit session. Inside the
+     session, releasing a drag does NOT commit either — the draft stays
+     on the lines (via lwEdit) until Save or Cancel on the edit bar;
+     Save (savePosEdit) is the only path that writes dragged values. */
   if(lwEdit && d.pos && d.pos.id === lwEdit.id){
     lwEdit[d.key] = d.cur;
     paintPosLines(); paintEditBar();
     return;
   }
-  const pos = d.pos, key = d.key;
-  const s = (typeof wlState !== "undefined")? wlState[pos.market] : null;
-  const r = Math.pow(10, (s && s.dec != null)? s.dec + 1 : 3);
-  pos[key] = Math.round(d.cur * r) / r;
-  saveDB(); repaintPositionsPanel(); paintPosLines();
-  toast(pos.market + " updated — SL " + (pos.sl == null? "none" : fmtPx(pos.market, pos.sl)) + " · TP " + (pos.tp == null? "none" : fmtPx(pos.market, pos.tp)) + ".");
+  paintPosLines();
 }
 document.addEventListener("pointermove", e=>{ if(lwDrag) lwDragTo(e); });
 document.addEventListener("pointerup", e=>{
@@ -4432,7 +4543,7 @@ RENDER.trading = function(opts){
       + '<div class="card mb chart-card chart-card-flush">'
       + chartToolbarHTML()
       + symBarHTML()
-      + '<div class="tv-wrap"'+(chartH? ' style="height:'+chartH+'px"':'')+'><div id="lw-chart-mount"></div><div class="lw-chips" id="lw-chips"></div><div class="lw-editbar" id="lw-editbar" style="display:none"></div>'+octFloatHTML()+'</div></div>'
+      + '<div class="tv-wrap"'+(chartH? ' style="height:'+chartH+'px"':'')+'><div id="lw-chart-mount"></div><div class="lw-chips" id="lw-chips"></div><div class="lw-editbar" id="lw-editbar" style="display:none"></div><div class="lw-count" data-bar-count></div>'+octFloatHTML()+'</div></div>'
       + positionsPanelHTML()
       + '</div>'
       + '<div class="side-col">'+tradingSidebarHTML(st, tradeLocked)+'</div>'
@@ -4456,7 +4567,7 @@ RENDER.trading = function(opts){
   paintSymBar(needFull);
   paintPosLines();
   paintOrdLines();
-  clearInterval(simTimer); simTimer = setInterval(()=>{ if(currentView==="trading") tickSim(); }, 1600);
+  clearInterval(simTimer); simTimer = setInterval(()=>{ if(currentView==="trading") tickSim(); }, 800);
 };
 /* ---- Chart toolbar state (Lightweight Charts engine) ---- */
 let tvInterval = "240", tvChartType = "1", tvThemeOverride = null;
@@ -4723,7 +4834,7 @@ function chartScreenshot(){
 let symBarTrack = { sym:"", o:0, h:0, l:0 };
 function symBarHTML(){
   return '<div class="sym-bar"><span class="sym-name" data-sym-name>'+esc(simMarket)+' &middot; '+tvTfPillLabel(tvInterval)+' &middot; '+esc(symClassOf(simMarket))+'</span>'
-    + '<span class="sym-dot" data-sym-dot></span><span class="ohlc up" data-ohlc></span></div>';
+    + '<span class="sym-dot" data-sym-dot></span><span class="ohlc up" data-ohlc></span><span class="bar-count" data-bar-count></span></div>';
 }
 function symClassOf(sym){ const row = WL_INSTRUMENTS.find(r=>r[0]===sym); return row? row[1] : ""; }
 function symDispDec(s){ return s.cls==="Forex"? s.dec+1 : Math.max(s.dec, 2); }
@@ -4878,7 +4989,7 @@ function calcSize(){
   $("#calc-out").innerHTML = '<div class="alert pine"><div>Risk amount: <strong class="mono">'+fmt$(riskAmt)+'</strong><br>Position size: <strong class="mono">'+units.toLocaleString("en-US",{maximumFractionDigits:4})+' units</strong><br><span class="small">If the stop is hit you lose exactly '+risk+'% — no debate at the chart.</span></div></div>';
   const sz = $("#pt-size"); if(sz) sz.value = +units.toFixed(4);
 }
-function resetPaper(){ const start = (DB.demoStart && DB.demoStart.paper) || 100000; DB.paper = { balance:start, positions:[] }; saveDB(); renderAll(); toast("Paper account reset to " + fmt$(start) + "."); }
+function resetPaper(){ const start = (DB.demoStart && DB.demoStart.paper) || 10000; DB.paper = { balance:start, positions:[] }; saveDB(); renderAll(); toast("Paper account reset to " + fmt$(start) + "."); }
 </script>
 
 <script>
@@ -4908,13 +5019,13 @@ function wlTick(){
   paintTradingWlPrices();
   checkPriceAlerts();
 }
-setInterval(wlTick, 2200);
+setInterval(wlTick, 900);
 /* ================= LIVE WATCHLIST PRICES =================
    Forex from open.er-api.com (USD-base rates, no key), crypto + gold
    (PAX Gold tracks spot gold) from CoinGecko (no key). A symbol a feed
    covers stops random-walking and shows the live price so the watchlist
    matches the chart; if a fetch fails, that feed's symbols fall back to
-   the simulated tick above so the watchlist never breaks. Polls 60s. */
+   the simulated tick above so the watchlist never breaks. Polls 30s. */
 const wlPrevFx = {};   // previous poll's forex price per symbol — er-api's free tier has no intraday change, so % change is measured poll to poll
 let wlAnyLive = false; // true while at least one live feed is feeding prices
 const WL_CG_IDS = { BTCUSD:"bitcoin", ETHUSD:"ethereum", SOLUSD:"solana", XRPUSD:"ripple", XAUUSD:"pax-gold" };
@@ -4964,7 +5075,7 @@ async function wlLivePoll(){
   wlLivePaint();
 }
 wlLivePoll();
-setInterval(wlLivePoll, 60000);
+setInterval(wlLivePoll, 30000);
 function toggleWlPin(sym){
   const i = DB.wlPins.indexOf(sym);
   if(i>=0) DB.wlPins.splice(i,1); else DB.wlPins.push(sym);
@@ -5353,7 +5464,7 @@ function storeModelImage(planId, slot, dataUrl){
   p[key] = dataUrl; saveDB();
   let persisted = false;
   try{
-    const raw = localStorage.getItem(DB_KEY);
+    const raw = localStorage.getItem(ACTIVE_DB_KEY);
     const chk = raw? JSON.parse(raw) : null;
     const cp = chk && chk.plans? chk.plans.find(x=>x.id===planId) : null;
     persisted = !!(cp && cp[key]===dataUrl);
@@ -5974,6 +6085,20 @@ function newsSavePrefs(){
    (matching the server-side cache) while the app is open. */
 const NEWS_FEED_URL = "https://playbook-signal-dashboard.onrender.com/api/forex-calendar";
 const BROKER_API = "https://playbook-signal-dashboard.onrender.com";
+/* ================= SUPABASE CONFIG =================
+   Auth runs on Supabase Auth, called directly from the browser.
+   Paste the project's values here — this is the ONLY place they live:
+     url:     the Supabase Project URL (https://<project-ref>.supabase.co)
+     anonKey: the Supabase anon public key
+   Until both are set, the login/signup forms report that the server
+   cannot be reached and demo mode remains available. */
+const SUPABASE_CONFIG = {
+  url: "https://lxxgrlesnzqzosubamri.supabase.co",
+  anonKey: "sb_publishable_VmHNsbPMs3Yz3hpJFqIwZQ_WeazFNVA",
+  /* Legacy anon key — used only as a one-time fallback if an endpoint
+     rejects the publishable key above. */
+  anonKeyFallback: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4eGdybGVzbnpxem9zdWJhbXJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1MTE1MTksImV4cCI6MjEwODA4NzUxOX0.YLDPByOBd3C57lrnhOqoM1qzaEcvhzVlfacuiKxXhN4"
+};
 let newsLiveEvents = null, newsLiveUpdated = null, newsLiveLoading = false, newsFetchStarted = false;
 let newsRefreshTimer = null;
 function newsCategoryFor(title){
@@ -7339,14 +7464,23 @@ function activeBrokerAccount(){
   return { id: id, acct: acct, name: id === "paper"? "TradeMind Demo" : (b? b[0] : id), demo: acctIsDemo(id, acct), platformLabel: plat, balanceUSD: brokerBalanceUSD(acct) };
 }
 /* One-click demo reset: the balance goes back to the starting amount
-   picked at connect and open positions are cleared, wiping every
-   trade/PnL effect since — the same fresh start Reset paper gives the
-   built-in account. Journal history is kept, like resetPaper. */
+   picked at connect and open positions (and pending orders) are
+   cleared, wiping every trade/PnL effect since — the same fresh start
+   Reset paper gives the built-in account. Journal history is kept,
+   like resetPaper. The built-in TradeMind Demo card (id "paper") gets
+   the same button: its starting amount is the one picked in the demo
+   connect flow, defaulting to $10,000 when none was picked. */
 function resetDemoBalance(id){
-  const start = DB.demoStart && DB.demoStart[id];
+  let start = DB.demoStart && DB.demoStart[id];
+  if(!start && id === "paper"){
+    start = 10000;
+    if(!DB.demoStart) DB.demoStart = {};
+    DB.demoStart[id] = start;   // the built-in demo's starting amount from now on — the card and Reset paper agree on it
+  }
   if(!start) return;
   DB.paper.balance = start;
   DB.paper.positions = [];
+  if(DB.paper.orders) DB.paper.orders = [];
   DB.demoSeedFor = id;
   saveDB(); renderAll();
   toast("Demo balance reset to " + fmt$(start) + " — open positions cleared, fresh start.");
@@ -7407,7 +7541,7 @@ function brokerConnectedHTML(){
       + '<div style="margin-top:8px"><span style="font-weight:800;font-size:18px">'+esc(bal || "—")+'</span> <span style="font-size:13px;color:var(--muted)">'+(id === "paper"? "virtual trading balance" : "account balance")+'</span></div>'
       + (det.length && id !== "paper"? '<div class="small" style="margin-top:4px">'+esc(det.join(" · "))+'</div>' : "")
       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--faint)">'+esc(brokerLastSyncText())+'</span><span style="display:inline-flex;gap:8px;flex-wrap:wrap">'
-      + ((id !== "paper" && acctIsDemo(id, acct) && DB.demoStart && DB.demoStart[id])? '<button class="btn sm" title="Back to the starting balance picked at connect — clears open positions" onclick="resetDemoBalance(\''+id+'\')">Reset balance</button>' : "")
+      + ((acctIsDemo(id, acct) && (id === "paper" || (DB.demoStart && DB.demoStart[id])))? '<button class="btn sm" title="Back to the starting balance picked at connect — clears open positions" onclick="resetDemoBalance(\''+id+'\')">Reset balance</button>' : "")
       + '<button class="btn sm" '+(busy? "disabled" : "")+' onclick="disconnectBroker(\''+id+'\')">'+(busy? "Working…" : "Disconnect")+'</button></span></div>'
       + '</div>';
   }).join("");
@@ -7857,6 +7991,205 @@ function acctTabAbout(){
     + '</div>';
 }
 
+/* ================= SUPABASE AUTH =================
+   Real accounts live in Supabase Auth, called directly from the
+   browser with plain fetch against the Auth REST endpoints
+   (<SUPABASE_CONFIG.url>/auth/v1/...), the anon key sent as the
+   apikey header. Flows mirror supabase-js: signUp, signInWithPassword,
+   session restore on load (getSession equivalent: the stored session
+   is revalidated against /auth/v1/user, with one refresh-token grant
+   on a 401), and signOut. The access token is kept in localStorage
+   ("tmAuthToken") with the refresh token ("tmAuthRefresh") and the
+   user profile ("tmAuthUser"); the app data store is keyed per
+   account (see ACTIVE_DB_KEY). Nothing here ever fakes a login
+   locally — a failed or unreachable auth server shows an inline error
+   and the user stays signed out. Guest/demo mode (signUpDemo) is
+   separate and stays local-only. */
+function tmToken(){ try{ return localStorage.getItem("tmAuthToken"); }catch(e){ return null; } }
+function tmUser(){ try{ return JSON.parse(localStorage.getItem("tmAuthUser") || "null"); }catch(e){ return null; } }
+function tmClearSession(){ try{ localStorage.removeItem("tmAuthToken"); localStorage.removeItem("tmAuthRefresh"); localStorage.removeItem("tmAuthUser"); }catch(e){} }
+function tmStoreSession(token, refresh, user){
+  try{
+    localStorage.setItem("tmAuthToken", token);
+    if(refresh) localStorage.setItem("tmAuthRefresh", refresh);
+    if(user) localStorage.setItem("tmAuthUser", JSON.stringify({ name: user.name || "", email: user.email || "" }));
+  }catch(e){}
+}
+function sbConfigured(){ return !!(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey); }
+function sbFetch(path, opts){
+  if(!sbConfigured()) return Promise.resolve(null);
+  const attempt = (key)=>{
+    const o = Object.assign({}, opts || {});
+    o.headers = Object.assign({ apikey: key, "Content-Type": "application/json" }, (opts && opts.headers) || {});
+    return fetch(SUPABASE_CONFIG.url.replace(/\/+$/, "") + "/auth/v1" + path, o)
+      .then(r=> r.json().catch(()=> null).then(d=> ({ status: r.status, d: d })))
+      .catch(()=> null); /* null = network failure / unreachable */
+  };
+  return attempt(SUPABASE_CONFIG.anonKey).then(res=>{
+    /* If an endpoint rejects the publishable key (401/403), retry once
+       with the legacy anon key before giving the caller the failure. */
+    if(res && (res.status === 401 || res.status === 403) && SUPABASE_CONFIG.anonKeyFallback){
+      return attempt(SUPABASE_CONFIG.anonKeyFallback).then(r2=> r2 && r2.status !== 401 && r2.status !== 403? r2 : res);
+    }
+    return res;
+  });
+}
+function sbUserProfile(u){
+  if(!u) return { name: "", email: "" };
+  const md = u.user_metadata || {};
+  return { name: md.name || md.full_name || "", email: u.email || "" };
+}
+function sbErrText(res, fallback){
+  const d = res && res.d;
+  if(!d) return fallback;
+  return d.error_description || d.msg || d.message || (typeof d.error === "string"? d.error : "") || fallback;
+}
+function switchAccountStore(email){
+  ACTIVE_DB_KEY = email? DB_KEY + ":" + String(email).toLowerCase() : DB_KEY;
+  loadDB();
+}
+function authErr(p, msg){
+  const e = document.getElementById(p + "-err");
+  if(e){ e.textContent = msg || ""; e.style.display = msg? "block" : "none"; }
+}
+function authBusy(p, on){
+  const b = document.getElementById(p + "-btn");
+  if(b){ if(on){ b.setAttribute("data-label", b.textContent); b.disabled = true; b.textContent = "Please wait…"; } else { b.disabled = false; b.textContent = b.getAttribute("data-label") || b.textContent; } }
+}
+const AUTH_UNREACHABLE = "Cannot reach the server — check your connection and try again.";
+function authEnterSession(token, user, isNew, refresh){
+  tmStoreSession(token, refresh, user);
+  switchAccountStore(user.email);
+  const fresh = !DB.user; /* this account's own store has no user yet */
+  DB.user = { name: user.name || "", email: user.email || "", since: (DB.user && DB.user.since) || todayStr() };
+  if(isNew || fresh){ DB.settings.profile.name = user.name || ""; DB.settings.profile.email = user.email || ""; }
+  saveDB(); buildNav(); renderAll(); hideAuthGate();
+  toast(isNew? "Account created — welcome, " + (user.name || "").split(" ")[0] + "." : "Welcome back, " + (user.name || "").split(" ")[0] + ".");
+  if(pendingAfterSignup){ const f = pendingAfterSignup; pendingAfterSignup = null; f(); }
+}
+function authRegister(p){
+  const name = (document.getElementById(p + "-name") || {}).value || "", email = ((document.getElementById(p + "-email") || {}).value || "").trim(), pass = (document.getElementById(p + "-pass") || {}).value || "";
+  if(name.trim().length < 2){ authErr(p, "Enter your name."); return; }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ authErr(p, "Enter a valid email address."); return; }
+  if(pass.length < 8){ authErr(p, "Password needs at least 8 characters."); return; }
+  authErr(p, ""); authBusy(p, true);
+  /* supabase.auth.signUp equivalent */
+  sbFetch("/signup", { method: "POST", body: JSON.stringify({ email: email, password: pass, data: { name: name.trim() } }) })
+    .then(res=>{
+      authBusy(p, false);
+      if(!res || !res.d){ authErr(p, AUTH_UNREACHABLE); return; }
+      const d = res.d;
+      if(d.access_token && d.user){ authEnterSession(d.access_token, sbUserProfile(d.user), true, d.refresh_token); return; }
+      if(d.id || d.user){ /* account created; email confirmation pending */
+        toast("Account created — check your email to confirm, then log in.");
+        if(document.getElementById("auth-form-login")){ authTab("login"); const le = document.getElementById("li-email"); if(le) le.value = email; }
+        return;
+      }
+      authErr(p, sbErrText(res, "Registration failed — please try again."));
+    });
+}
+function authLogin(p){
+  const email = ((document.getElementById(p + "-email") || {}).value || "").trim(), pass = (document.getElementById(p + "-pass") || {}).value || "";
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ authErr(p, "Enter a valid email address."); return; }
+  if(!pass){ authErr(p, "Enter your password."); return; }
+  authErr(p, ""); authBusy(p, true);
+  /* supabase.auth.signInWithPassword equivalent */
+  sbFetch("/token?grant_type=password", { method: "POST", body: JSON.stringify({ email: email, password: pass }) })
+    .then(res=>{
+      authBusy(p, false);
+      if(!res || !res.d){ authErr(p, AUTH_UNREACHABLE); return; }
+      const d = res.d;
+      if(d.access_token && d.user){ authEnterSession(d.access_token, sbUserProfile(d.user), false, d.refresh_token); return; }
+      authErr(p, res.status === 400 || res.status === 401? (sbErrText(res, "") || "Wrong email or password.") : sbErrText(res, "Login failed — please try again."));
+    });
+}
+function authExpire(){
+  tmClearSession();
+  switchAccountStore(null);
+  DB.user = null; saveDB(); buildNav(); renderAll();
+  showAuthGate("Your session has expired — please log in again.");
+}
+function authValidate(){
+  /* getSession equivalent: revalidate the stored session against
+     /auth/v1/user; on a 401 try one refresh-token grant before
+     declaring the session expired. Network failure keeps the session —
+     only the server can end it. */
+  const tok = tmToken(); if(!tok) return;
+  sbFetch("/user", { headers: { Authorization: "Bearer " + tok } })
+    .then(res=>{
+      if(!res) return; /* unreachable: keep the session */
+      if(res.status === 401){
+        let refresh = null;
+        try{ refresh = localStorage.getItem("tmAuthRefresh"); }catch(e){}
+        if(!refresh){ authExpire(); return; }
+        sbFetch("/token?grant_type=refresh_token", { method: "POST", body: JSON.stringify({ refresh_token: refresh }) })
+          .then(r2=>{
+            if(r2 && r2.d && r2.d.access_token && r2.d.user){ tmStoreSession(r2.d.access_token, r2.d.refresh_token, sbUserProfile(r2.d.user)); }
+            else if(r2){ authExpire(); }
+          });
+        return;
+      }
+      if(res.d && res.d.id){ tmStoreSession(tok, null, sbUserProfile(res.d)); }
+      else if(res.d && res.d.code){ authExpire(); }
+    });
+}
+/* ---- Login gate (full-screen wall over the app when signed out) ---- */
+function authGateHTML(msg){
+  return '<div class="card auth-card">'
+    + '<h3 style="font-size:19px">Welcome to TradeMind</h3><div class="card-sub">Log in to your account, or create one — your journal, plans and paper trading are saved per account.</div>'
+    + (msg? '<div class="alert red" style="margin-top:12px">' + esc(msg) + '</div>' : "")
+    + '<div class="seg auth-tabs" role="tablist"><button type="button" id="auth-tab-login" class="on" onclick="authTab(\'login\')">Log in</button><button type="button" id="auth-tab-signup" onclick="authTab(\'signup\')">Create account</button></div>'
+    + '<div id="auth-form-login">'
+    + '<div class="field"><label class="f">Email</label><input class="input" id="li-email" type="email" autocomplete="email" placeholder="you@example.com"></div>'
+    + '<div class="field"><label class="f">Password</label><input class="input" id="li-pass" type="password" autocomplete="current-password" placeholder="Your password" onkeydown="if(event.key===\'Enter\')authLogin(\'li\')"></div>'
+    + '<div class="alert red auth-err" id="li-err"></div>'
+    + '<button class="btn primary block" id="li-btn" onclick="authLogin(\'li\')">Log in</button>'
+    + '</div>'
+    + '<div id="auth-form-signup" style="display:none">'
+    + '<div class="field"><label class="f">Full name</label><input class="input" id="au-name" autocomplete="name" placeholder="Your name"></div>'
+    + '<div class="field"><label class="f">Email</label><input class="input" id="au-email" type="email" autocomplete="email" placeholder="you@example.com"></div>'
+    + '<div class="field"><label class="f">Password</label><input class="input" id="au-pass" type="password" autocomplete="new-password" placeholder="8+ characters" onkeydown="if(event.key===\'Enter\')authRegister(\'au\')"></div>'
+    + '<div class="alert red auth-err" id="au-err"></div>'
+    + '<button class="btn primary block" id="au-btn" onclick="authRegister(\'au\')">Create free account</button>'
+    + '</div>'
+    + '<div class="divider"></div><div style="text-align:center"><span class="small">Just exploring?</span> <button class="btn ghost sm" onclick="signUpDemo()">Continue with a demo name</button></div>'
+    + '<div class="small" style="margin-top:8px;text-align:center">Demo mode is local-only and separate from real accounts.</div>'
+    + '</div>';
+}
+function authTab(which){
+  const login = which === "login";
+  const fl = document.getElementById("auth-form-login"), fs = document.getElementById("auth-form-signup");
+  if(fl) fl.style.display = login? "" : "none";
+  if(fs) fs.style.display = login? "none" : "";
+  const tl = document.getElementById("auth-tab-login"), ts = document.getElementById("auth-tab-signup");
+  if(tl) tl.classList.toggle("on", login);
+  if(ts) ts.classList.toggle("on", !login);
+}
+function showAuthGate(msg){
+  const g = document.getElementById("auth-gate"); if(!g) return;
+  g.innerHTML = authGateHTML(msg || "");
+  g.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+function hideAuthGate(){
+  const g = document.getElementById("auth-gate"); if(!g) return;
+  g.hidden = true; g.innerHTML = "";
+  document.body.style.overflow = "";
+}
+function initAuth(){
+  const tok = tmToken(), au = tmUser();
+  if(tok && au && au.email){
+    if(!DB.user || String(DB.user.email || "").toLowerCase() !== String(au.email).toLowerCase()){
+      DB.user = { name: au.name || "", email: au.email, since: todayStr() };
+      saveDB(); buildNav();
+    }
+    authValidate();
+    return;
+  }
+  if(tok) tmClearSession(); /* token without a profile is unusable */
+  if(!DB.user) showAuthGate();
+}
+
 RENDER.account = function(){
   const el = document.querySelector('[data-view="account"]');
   const u = DB.user; const p = PLANS[DB.sub.plan];
@@ -7864,34 +8197,42 @@ RENDER.account = function(){
     el.innerHTML = '<div style="max-width:460px;margin:14px auto"><div class="card"><h3 style="font-size:18px">Create your account</h3><div class="card-sub">Free forever for the core journal. Upgrade only if you want the discipline tools.</div>'
       + '<div class="field" style="margin-top:16px"><label class="f">Full name</label><input class="input" id="su-name" placeholder="Your name"></div>'
       + '<div class="field"><label class="f">Email</label><input class="input" id="su-email" type="email" placeholder="you@example.com"></div>'
-      + '<div class="field"><label class="f">Password</label><input class="input" id="su-pass" type="password" placeholder="8+ characters"></div>'
-      + '<button class="btn primary block" onclick="signUp()">Create free account</button>'
-      + '<div class="small" style="margin-top:10px;text-align:center">Demo sign-up: your account is stored only in this browser on this device — there is no server account yet.</div>'
+      + '<div class="field"><label class="f">Password</label><input class="input" id="su-pass" type="password" placeholder="8+ characters" onkeydown="if(event.key===\'Enter\')authRegister(\'su\')"></div>'
+      + '<div class="alert red auth-err" id="su-err"></div>'
+      + '<button class="btn primary block" id="su-btn" onclick="authRegister(\'su\')">Create free account</button>'
+      + '<div class="divider"></div><h3 style="font-size:16px">Already have an account?</h3>'
+      + '<div class="field" style="margin-top:12px"><label class="f">Email</label><input class="input" id="al-email" type="email" placeholder="you@example.com"></div>'
+      + '<div class="field"><label class="f">Password</label><input class="input" id="al-pass" type="password" placeholder="Your password" onkeydown="if(event.key===\'Enter\')authLogin(\'al\')"></div>'
+      + '<div class="alert red auth-err" id="al-err"></div>'
+      + '<button class="btn block" id="al-btn" onclick="authLogin(\'al\')">Log in</button>'
       + '<div class="divider"></div><div style="text-align:center"><span class="small">Already exploring?</span> <button class="btn ghost sm" onclick="signUpDemo()">Continue with a demo name</button></div>'
       + '</div></div>' + acctTabsHTML();
     return;
   }
   el.innerHTML = acctTabsHTML();
 };
-function signUp(){
-  const name = $("#su-name").value.trim(), email = $("#su-email").value.trim(), pass = $("#su-pass").value;
-  if(name.length<2){ toast("Enter your name."); return; }
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast("Enter a valid email address."); return; }
-  if(pass.length<8){ toast("Password needs at least 8 characters."); return; }
-  DB.user = { name, email, since: todayStr() };
-  DB.settings.profile.name = name; DB.settings.profile.email = email;
-  saveDB(); buildNav();
-  toast("Account created — welcome, "+name.split(" ")[0]+".");
-  if(pendingAfterSignup){ const f = pendingAfterSignup; pendingAfterSignup=null; f(); } else RENDER.account();
-}
 function signUpDemo(){
   DB.user = { name:"Demo Trader", email:"demo@edgepine.app", since: todayStr() };
   if(!DB.settings.profile.name){ DB.settings.profile.name = "Demo Trader"; DB.settings.profile.email = "demo@edgepine.app"; }
-  saveDB(); buildNav();
+  saveDB(); buildNav(); hideAuthGate();
   if(pendingAfterSignup){ const f = pendingAfterSignup; pendingAfterSignup=null; f(); } else RENDER.account();
   toast("Demo account ready.");
 }
-function signOut(){ DB.user = null; saveDB(); buildNav(); RENDER.account(); toast("Signed out. Your data stays on this device."); }
+function signOut(){
+  const tok = tmToken();
+  if(tok){
+    /* Server account: supabase.auth.signOut equivalent, drop the local
+       session, switch back to the guest store and return to the gate. */
+    sbFetch("/logout", { method: "POST", headers: { Authorization: "Bearer " + tok } });
+    tmClearSession();
+    switchAccountStore(null);
+    DB.user = null; saveDB(); buildNav(); renderAll();
+    showAuthGate();
+    toast("Signed out.");
+    return;
+  }
+  DB.user = null; saveDB(); buildNav(); RENDER.account(); toast("Signed out. Your data stays on this device.");
+}
 function cancelSub(){
   DB.sub = { plan:"free", billing:"monthly", since:null, status:"cancelled" };
   saveDB(); renderAll(); toast("Subscription cancelled — you are back on Free. Your data is untouched.");
@@ -7899,7 +8240,7 @@ function cancelSub(){
 function wipeAll(){
   openModal('<h3>Erase everything?</h3><div class="small" style="margin:8px 0 16px">All trades, notes, plans, guardrails, streaks and your subscription on this device will be permanently deleted.</div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Keep my data</button><button class="btn danger" onclick="doWipe()">Erase it all</button></div>');
 }
-function doWipe(){ localStorage.removeItem(DB_KEY); loadDB(); closeModal(); renderAll(); go("dashboard"); toast("Everything erased. Fresh start."); }
+function doWipe(){ localStorage.removeItem(ACTIVE_DB_KEY); loadDB(); closeModal(); renderAll(); go("dashboard"); toast("Everything erased. Fresh start."); }
 function exportCSV(){
   if(!DB.trades.length){ toast("No trades to export yet."); return; }
   const rows = [["date","market","direction","entry","stop","exit","size","session","emotion","pnl","r","notes"]];
@@ -7916,6 +8257,7 @@ $("#tb-avatar").addEventListener("click", ()=> go("account"));
 applyTheme();
 seedEdgePlans();
 buildNav(); renderSessionBar(); renderRoutinePanel(); renderLockout(); go("dashboard");
+initAuth();
 </script>
 </body>
 </html>
