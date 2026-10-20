@@ -1376,6 +1376,7 @@ const DEFAULTS = {
   paper: { balance:100000, positions: [], orders: [] },
   demoStart: {},                                // broker id -> demo starting balance the user picked at connect (10000/50000/100000)
   demoSeedFor: null,                            // broker id whose picked demo balance currently backs the local trading ledger
+  demoAcct: null,                               // {id, platform} of that demo connection, recorded locally so Dashboard/Trading keep showing the account even if the broker server forgets the connection
   checkins: [],                                 // sanctuary streak dates (yyyy-mm-dd)
   intentions: {},                               // date -> text
   coach: [],                                    // chat history {who, text}
@@ -1417,6 +1418,7 @@ function loadDB(){
   DB.paper = Object.assign({}, DEFAULTS.paper, DB.paper||{});
   if(!DB.demoStart || typeof DB.demoStart!=="object") DB.demoStart = {};
   if(DB.demoSeedFor===undefined) DB.demoSeedFor = null;
+  if(DB.demoAcct===undefined) DB.demoAcct = null;
   DB.sub = Object.assign({}, DEFAULTS.sub, DB.sub||{});
   DB.routine = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS.routine)), DB.routine||{});
   /* The checklist is edited in Settings → Pre-Market Routine. A list that
@@ -2069,6 +2071,10 @@ function dashChrome(view){
      real subtitle, never a date or plan badges. */
   const BARE_VIEWS = ["journal","addtrade","guardrails","news","notebook","coach","performance","pricing","checkout"];
   if(topbar) topbar.style.display = BARE_VIEWS.indexOf(view)>=0? "none":"";
+  /* "+ New Plan" belongs to the Edge page only (EdgeFlo parity): the slot
+     lives in the shared top bar, so every other view must hide it —
+     otherwise it leaks onto the Dashboard after visiting Edge. */
+  const enp = document.getElementById("tb-edge-new"); if(enp && view!=="edge") enp.style.display = "none";
   document.body.classList.toggle("on-trading", view==="trading");
   if(view==="dashboard"){
     if(sub) sub.textContent = "Your trading performance at a glance — track your progress, discipline, and daily flow.";
@@ -8204,6 +8210,20 @@ function acctIsDemo(id, acct){
   return !!(DB.demoStart && DB.demoStart[id]); // a picked starting balance at connect means demo
 }
 function activeBrokerAccount(){
+  /* Local demo fallback: a demo connect records the account (id +
+     platform) and its picked starting balance in the local DB, and
+     that record backs the trading ledger. If the broker server no
+     longer returns the connection (its stored credentials live in a
+     file that a restart/redeploy wipes), the demo account must still
+     be the active account on Dashboard and Trading — its name, Demo
+     type and the ledger balance the user picked — not silently
+     vanish back to the anonymous local account. */
+  const seedId = DB.demoSeedFor;
+  if(seedId && DB.demoAcct && DB.demoAcct.id === seedId && !BROKER_ACCOUNTS[seedId]){
+    const sb = brokerById(seedId);
+    const splat = DB.demoAcct.platform === "mt5"? "MT5" : DB.demoAcct.platform === "ctrader"? "cTrader" : "";
+    return { id: seedId, acct: { broker: seedId, demo: true, platform: DB.demoAcct.platform || null, local: true }, name: seedId === "paper"? "TradeMind Demo" : (sb? sb[0] : seedId), demo: true, platformLabel: splat, balanceUSD: (DB.demoStart && DB.demoStart[seedId]) || null };
+  }
   const ids = Object.keys(BROKER_ACCOUNTS);
   if(!ids.length) return null;
   const ext = ids.filter(i=> i !== "paper").sort();
@@ -8333,6 +8353,21 @@ async function loadBrokerStatus(){
     if(d && d.ok && Array.isArray(d.accounts)){
       const next = {};
       d.accounts.forEach(a=>{ if(a && a.broker) next[a.broker] = a; });
+      /* Backfill for demo connections made before the local record
+         existed: while the server still returns the account backing
+         the ledger, adopt its identity into DB.demoAcct. */
+      if(!DB.demoAcct && DB.demoSeedFor && DB.demoStart && DB.demoStart[DB.demoSeedFor] && next[DB.demoSeedFor]){
+        DB.demoAcct = { id: DB.demoSeedFor, platform: next[DB.demoSeedFor].platform || null };
+        saveDB();
+      }
+      /* Keep a locally recorded demo connection visible (Connected
+         list, broker cards) even when the server no longer returns
+         it — the demo balance lives in the local ledger anyway, so
+         the account must not disappear from the app. */
+      if(DB.demoAcct && DB.demoSeedFor === DB.demoAcct.id && !next[DB.demoAcct.id]){
+        next[DB.demoAcct.id] = { broker: DB.demoAcct.id, demo: true, platform: DB.demoAcct.platform || null, local: true,
+          balance: { total_usd: (DB.demoStart && DB.demoStart[DB.demoAcct.id]) || null } };
+      }
       BROKER_ACCOUNTS = next;
       if(next.paper) seedPaperFromBroker(next.paper);
     }
@@ -8463,6 +8498,7 @@ async function submitBrokerConnect(id){
       if(!DB.demoStart) DB.demoStart = {};
       DB.demoStart[id] = bkDemoBal;
       DB.demoSeedFor = id;
+      DB.demoAcct = { id:id, platform:platform };
       DB.paper.balance = bkDemoBal;
       saveDB();
       if(currentView === "dashboard"){ try{ RENDER.dashboard(); }catch(e){} }
@@ -8483,11 +8519,25 @@ async function disconnectBroker(id){
   brokerBusy[id] = true; refreshBrokerList();
   try{
     const acct = BROKER_ACCOUNTS[id];
+    if(acct && acct.local){
+      /* The server already forgot this demo connection — dropping
+         the local record is the whole disconnect. */
+      delete BROKER_ACCOUNTS[id];
+      if(DB.demoSeedFor === id) DB.demoSeedFor = null;
+      if(DB.demoAcct && DB.demoAcct.id === id) DB.demoAcct = null;
+      saveDB();
+      if(currentView === "dashboard"){ try{ RENDER.dashboard(); }catch(e){} }
+      if(currentView === "trading"){ try{ paintTradingHeader(tradeLockedNow); }catch(e){} }
+      toast(b[0] + " disconnected.");
+      notifyEvent("acctDisconnected", "Trading account disconnected", b[0] + " was unlinked from this workspace.");
+      brokerBusy[id] = false; refreshBrokerList();
+      return;
+    }
     const r = await fetch(BROKER_API + "/api/broker/disconnect", { method:"DELETE", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ broker: (acct && acct.key) || id }) });
     let d = null; try{ d = await r.json(); }catch(e){}
     if(!d || !d.ok) throw new Error((d && d.error) || ("Request failed (HTTP " + r.status + ")."));
     delete BROKER_ACCOUNTS[id];
-    if(DB.demoSeedFor === id){ DB.demoSeedFor = null; saveDB(); }
+    if(DB.demoSeedFor === id){ DB.demoSeedFor = null; if(DB.demoAcct && DB.demoAcct.id === id) DB.demoAcct = null; saveDB(); }
     if(currentView === "dashboard"){ try{ RENDER.dashboard(); }catch(e){} }
     if(currentView === "trading"){ try{ paintTradingHeader(tradeLockedNow); }catch(e){} }
     toast(b[0] + " disconnected.");
