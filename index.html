@@ -1303,10 +1303,12 @@ try{
   if(au0 && au0.email && localStorage.getItem("tmAuthToken")) ACTIVE_DB_KEY = DB_KEY + ":" + String(au0.email).toLowerCase();
 }catch(e){}
 /* Pre-Market Routine: each step carries an action — the page its panel
-   link opens. The old 3-step default list migrates to the EdgeFlo 4. */
+   link opens. Earlier default lists (the 4-step list, and the pre-rename
+   3-step list) migrate to the current EdgeFlo 3-step default. */
 const ROUTINE_ACTIONS = [["news","Go to News"],["edge","Go to Edge"],["sanctuary","Go to Sanctuary"],["trading","Go to Trading Platform"],["journal","Go to Journal"],["dashboard","Go to Dashboard"],["notebook","Go to Notebook"],["guardrails","Go to Guardrails"],["none","No action"]];
 const ROUTINE_ACTION_KEYS = ROUTINE_ACTIONS.map(a=>a[0]);
-const ROUTINE_OLD_DEFAULT_STEPS = ["Meditate (5 mins)","Review Trade Plan","Mark Up Charts"];
+const ROUTINE_OLD_DEFAULT_STEPS = ["Review Economic Calendar","Review Trade Plan","10 Min Meditation","Analyze Charts"];
+const ROUTINE_PRIOR_DEFAULT_STEPS = ["Meditate (5 mins)","Review Trade Plan","Mark Up Charts"];
 const DEFAULTS = {
   user: null,                                   // {name, email}
   sub:  { plan:"free", billing:"monthly", since:null, status:"none" },
@@ -1330,8 +1332,8 @@ const DEFAULTS = {
   intentions: {},                               // date -> text
   coach: [],                                    // chat history {who, text}
   routine: { enabled:true, pinned:true,
-             steps:["Review Economic Calendar","Review Trade Plan","10 Min Meditation","Analyze Charts"],
-             actions:["news","edge","sanctuary","trading"], // per-step panel destination, aligned with steps
+             steps:["Meditate 5 mins","Review Trade Plan","Mark Up Charts"],
+             actions:["sanctuary","edge","trading"], // per-step panel destination, aligned with steps
              done:{},                           // date -> [step indexes ticked]
              reviewed:{} },                     // date -> "HH:MM" the trade plan was marked reviewed
   dailyNotes: {},                               // date -> { text, voices:[{id, at, dur, src}] }
@@ -1370,10 +1372,15 @@ function loadDB(){
   DB.sub = Object.assign({}, DEFAULTS.sub, DB.sub||{});
   DB.routine = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS.routine)), DB.routine||{});
   /* The checklist is edited in Settings → Pre-Market Routine. A list that
-     still matches the old 3-step default follows the new EdgeFlo default;
-     a saved custom list is kept as-is. */
+     still matches an earlier default follows the current EdgeFlo 3-step
+     default; a saved custom list is kept as-is. Today's ticks live in
+     DB.routine.done (keyed by date) and are never touched here, so an
+     in-progress routine for the current day is preserved. */
   if(!Array.isArray(DB.routine.steps) || !DB.routine.steps.length) DB.routine.steps = DEFAULTS.routine.steps.slice();
-  if(JSON.stringify(DB.routine.steps) === JSON.stringify(ROUTINE_OLD_DEFAULT_STEPS)) DB.routine.steps = DEFAULTS.routine.steps.slice();
+  if(JSON.stringify(DB.routine.steps) === JSON.stringify(ROUTINE_OLD_DEFAULT_STEPS) || JSON.stringify(DB.routine.steps) === JSON.stringify(ROUTINE_PRIOR_DEFAULT_STEPS)){
+    DB.routine.steps = DEFAULTS.routine.steps.slice();
+    DB.routine.actions = DEFAULTS.routine.actions.slice(); // keep per-step destinations aligned with the new list
+  }
   if(!Array.isArray(DB.routine.actions)) DB.routine.actions = [];
   DB.routine.steps.forEach((s,i)=>{ if(!ROUTINE_ACTION_KEYS.includes(DB.routine.actions[i])){
     const t = String(s||"").toLowerCase();
@@ -1841,6 +1848,7 @@ function edgeMarkReviewed(){
 }
 function refreshRoutineUI(){
   renderRoutinePanel();
+  paintRoutinePill(); // keep the Dashboard pill's N/total count live as steps are ticked
   if(currentView==="dashboard") RENDER.dashboard();
   if(currentView==="trading") RENDER.trading(); // keep the routine lock / unlock state live
 }
@@ -1985,6 +1993,21 @@ function rangeTabsEl(){
   t.innerHTML = rangeTabsHTML();
   return t;
 }
+/* The Dashboard's routine entry point: a pill in the header row beside
+   the range tabs, labelled with today's live completion count. Clicking
+   it opens the floating routine panel. */
+function routinePillEl(){
+  let p = document.getElementById("tb-routine-pill");
+  if(!p){ p = document.createElement("button"); p.id = "tb-routine-pill"; p.type = "button"; p.className = "routine-pill"; p.title = "Open today's pre-market routine"; p.setAttribute("onclick","openRoutinePanel()"); }
+  paintRoutinePill(p);
+  return p;
+}
+function paintRoutinePill(p){
+  p = p || document.getElementById("tb-routine-pill"); if(!p) return;
+  const total = DB.routine.steps.length;
+  p.textContent = "Pre-Market Routine " + routineDoneCount() + "/" + total;
+  if(currentView==="dashboard") p.style.display = (DB.routine.enabled && total>0)? "" : "none";
+}
 function dashChrome(view){
   const sub = $("#tb-date"), right = document.querySelector(".tb-right");
   const tt = $("#tb-trading"); if(tt) tt.style.display = view==="trading"? "flex":"none";
@@ -2001,7 +2024,7 @@ function dashChrome(view){
   document.body.classList.toggle("on-trading", view==="trading");
   if(view==="dashboard"){
     if(sub) sub.textContent = "Your trading performance at a glance — track your progress, discipline, and daily flow.";
-    if(right){ right.style.display = ""; const t = rangeTabsEl(); t.style.display = ""; right.appendChild(t); }
+    if(right){ right.style.display = ""; const rp2 = routinePillEl(); right.insertBefore(rp2, right.firstChild); const t = rangeTabsEl(); t.style.display = ""; right.appendChild(t); }
     if(badge) badge.style.display = "none";
     if(upg) upg.style.display = "none";
     if(av) av.style.display = "none";
@@ -2009,6 +2032,7 @@ function dashChrome(view){
     return;
   }
   if(tabs) tabs.style.display = "none";
+  const rpill = document.getElementById("tb-routine-pill"); if(rpill) rpill.style.display = "none";
   if(topbar) topbar.style.borderBottom = "";
   if(badge) badge.style.display = "";
   if(upg) upg.style.display = DB.sub.plan==="plus" ? "none" : "";
@@ -2203,6 +2227,7 @@ function disciplineCardHTML(st){
     + '<div class="pnl-scale"><span><strong class="mono" style="color:var(--ink)">'+fmt$(lo)+'</strong><br>Max Loss</span><span style="text-align:right"><strong class="mono" style="color:var(--ink)">'+(hi>=1000? "$"+(hi/1000)+"K" : fmt$(hi))+'</strong><br>Max Profit</span></div></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
     + disciplineOpensBanner()
+    + '<div style="margin-top:12px"><button class="btn sm" onclick="acctTab=\'trading\';go(\'account\')">Modify guardrails</button></div>'
     + '</div>';
 }
 function disciplineOpensBanner(){
