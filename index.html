@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:," />
 <title>TradeMind — Trading Super App</title>
@@ -496,6 +499,7 @@ table.pos-tbl td,table.pos-tbl th{white-space:nowrap}
 .tb-trading .acct-val{font-size:15px;white-space:nowrap}
 @media (max-width:1080px){ .tb-trading{gap:12px} .tb-trading .acct-val{font-size:13px} .tb-trading .acct-label{font-size:10px} .tb-trading .acct-cell.hide-m{display:none} }
 @media (max-width:860px){ .tb-trading{gap:10px} }
+@media (max-width:560px){ #tb-trading{flex-basis:100%;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-left:0} #tb-trading .acct-cell{flex-shrink:0} }
 /* Chart card: EdgeFlo-style chart toolbar + symbol info bar above the chart.
    Left: timeframe pills (active = solid violet), a "more timeframes"
    dropdown, chart-type icons, the ƒx Indicators menu and undo/redo.
@@ -2658,7 +2662,9 @@ function tickSim(){
   else { const drift=(Math.random()-0.49)*p*0.0011; c = p+drift; }
   simCandles.push({o:p, h:Math.max(p,c)+Math.random()*p*0.0004, l:Math.min(p,c)-Math.random()*p*0.0004, c});
   if(simCandles.length>60) simCandles.shift();
-  drawChart(); updateTicker(); paintTradingLive();
+  try{ drawChart(); }catch(e){}
+  try{ updateTicker(); }catch(e){}
+  paintTradingLive();
   // auto SL/TP checks — marked against the LIVE price for every position;
   // the sim candle close is only a fallback when no live price exists.
   DB.paper.positions.slice().forEach(pos=>{
@@ -2758,7 +2764,7 @@ function tvSymbolFor(sym){
   if(cls==="Metals") return "OANDA:"+sym;
   return { US30:"TVC:DJI", NAS100:"NASDAQ:NDX", SPX500:"SP:SPX" }[sym] || "FX:"+sym;
 }
-function setChartSymbol(sym){ simMarket = sym; seedCandles(simMarket); if(!routineLocked()) orderOpen = true; RENDER.trading({chart:"reload"}); }
+function setChartSymbol(sym){ simMarket = sym; seedCandles(simMarket); fetchRealCandles(); if(!routineLocked()) orderOpen = true; RENDER.trading({chart:"reload"}); }
 function openPnlNow(){ return DB.paper.positions.reduce((a,p)=> a + posPnl(p), 0); }
 function paintTradingLive(){
   if(currentView!=="trading") return;
@@ -2774,12 +2780,33 @@ function paintTradingLive(){
 }
 let marginPopOpen = false;
 function toggleMarginPop(){ marginPopOpen = !marginPopOpen; RENDER.trading(); }
-/* Balance shown in the Trading header: the linked Paper Trading broker
-   account's balance when connected, else the local simulator balance. */
+/* Balance shown in the Trading header (and the Dashboard card): ALWAYS
+   the local trading account (DB.paper.balance) — in-app trades execute
+   against that ledger, so the header must read it too, or Balance/Equity
+   never move on in-app opens/closes. `connected` only reports whether a
+   Paper Trading broker connection exists; on connect the local account is
+   seeded from the connected balance once (seedPaperFromBroker), which is
+   what keeps the two in sync without a frozen server snapshot. */
 function activePaperBalance(){
   const acct = BROKER_ACCOUNTS.paper;
-  if(acct && acct.balance && typeof acct.balance.total_usd === "number") return { amount: acct.balance.total_usd, connected: true };
-  return { amount: DB.paper.balance, connected: false };
+  const connected = !!(acct && acct.balance && typeof acct.balance.total_usd === "number");
+  return { amount: DB.paper.balance, connected: connected };
+}
+/* Seed the local paper account from a connected Paper Trading balance,
+   ONCE per connection: only while the local account has no trade history
+   (no journal trades and no open positions), and only when the stored
+   seed marker differs from this connection's key (broker id + balance).
+   A traded account is never re-seeded — it keeps its live balance across
+   reloads and reconnects. */
+function seedPaperFromBroker(acct){
+  if(!acct || !acct.balance || typeof acct.balance.total_usd !== "number") return;
+  const hasHistory = (DB.trades && DB.trades.length > 0) || (DB.paper.positions && DB.paper.positions.length > 0);
+  if(hasHistory) return;
+  const key = (acct.broker || "paper") + "|" + acct.balance.total_usd;
+  if(DB.paper.brokerSeedKey === key) return;
+  DB.paper.balance = acct.balance.total_usd;
+  DB.paper.brokerSeedKey = key;
+  saveDB();
 }
 function tradingHeaderHTML(lockedOut){
   const pb = activePaperBalance();
@@ -2962,30 +2989,121 @@ function posOpenedLabel(pos){
   const time = d.toLocaleTimeString("en-GB",{hour:"2-digit", minute:"2-digit", hour12:false});
   return date+", "+time+' <span class="small" data-posdur="'+pos.id+'">'+posDurText(pos)+'</span>';
 }
+/* ---- Real-candle range calibration (Coinbase Exchange public API) ----
+   The TradingView widget auto-scales around REAL market candles, so the
+   overlay's price window must be calibrated from real candles too — the
+   simulated practice feed's random-walk range has almost nothing to do
+   with the axis the widget displays, which is why the SL/TP/entry lines
+   used to land at wrong heights. Fetched OHLC is cached per
+   symbol+granularity with a fetched-at stamp; fetches are async and fail
+   silently, leaving the live-anchored fallback in posLineScale() in
+   charge (FX pairs have no Coinbase product and always use it). */
+const CB_PRODUCTS = { BTCUSD:"BTC-USD", ETHUSD:"ETH-USD", SOLUSD:"SOL-USD", XRPUSD:"XRP-USD", XAUUSD:"PAXG-USD" };
+const CB_GRAN = { "1":60, "5":300, "15":900, "30":900, "60":3600, "240":3600, "D":86400, "W":86400 };
+const RC_STALE_MS = 5*60*1000;
+const rcCache = {};    /* "SYM|gran" → { bars:[{t,l,h,o,c}] oldest-first, at:ms } */
+const rcInflight = {}; /* "SYM|gran" → true while a fetch is outstanding */
+function rcGranularity(){ return CB_GRAN[tvInterval] || 3600; }
+function fetchRealCandles(){
+  const prod = CB_PRODUCTS[simMarket]; if(!prod) return;
+  const g = rcGranularity(), key = simMarket + "|" + g;
+  const hit = rcCache[key];
+  if(hit && Date.now() - hit.at < RC_STALE_MS) return;
+  if(rcInflight[key]) return;
+  rcInflight[key] = true;
+  fetch("https://api.exchange.coinbase.com/products/" + prod + "/candles?granularity=" + g)
+    .then(r=>{ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+    .then(rows=>{
+      delete rcInflight[key];
+      if(!Array.isArray(rows) || !rows.length) return;
+      /* Rows are [time, low, high, open, close, volume], newest first. */
+      const bars = rows.map(r=>({ t:+r[0], l:+r[1], h:+r[2], o:+r[3], c:+r[4] }))
+        .filter(b=> isFinite(b.t) && b.h > 0 && b.l > 0)
+        .sort((a,b)=> a.t - b.t);
+      if(!bars.length) return;
+      rcCache[key] = { bars: bars, at: Date.now() };
+      paintPosLines(); paintOrdLines();
+    })
+    .catch(()=>{ delete rcInflight[key]; });
+}
+/* The 4h timeframe is fetched as 1h bars and aggregated in groups of 4. */
+function rcBarsFor(key){
+  const hit = rcCache[key]; if(!hit || !hit.bars.length) return null;
+  if(tvInterval !== "240" || rcGranularity() !== 3600) return hit.bars;
+  const raw = hit.bars, agg = [];
+  for(let i = 0; i < raw.length; i += 4){
+    const grp = raw.slice(i, i + 4); if(!grp.length) continue;
+    agg.push({ t: grp[0].t, o: grp[0].o, c: grp[grp.length-1].c,
+      h: Math.max.apply(null, grp.map(b=> b.h)), l: Math.min.apply(null, grp.map(b=> b.l)) });
+  }
+  return agg.length? agg : null;
+}
 /* SL / TP / entry lines for the chart symbol's open positions, drawn on the
    .pos-lines overlay inside .tv-wrap (the #tv-chart-mount subtree is never
-   rebuilt or touched). Price → Y uses a LIVE-ANCHORED window centred on the
-   current price: the TradingView chart auto-scales around live price, so
-   anchoring the overlay window on the live price (with the practice feed's
-   recent range as the volatility proxy, widened so every position level
-   renders inside with headroom) keeps the lines glued to the chart's price
-   action — repainted on every tick via paintTradingLive(). Dollar risk /
-   reward use the app's position math: |entry − level| × size (size is
-   units). */
+   rebuilt or touched). Price → Y is calibrated from the REAL candles the
+   TradingView widget is displaying (see the module above): the visible
+   window is the widget's own visible time range when its API offers one,
+   else the most recent N bars; the window is widened to include the live
+   price and every position level, then padded TradingView-style. Without
+   real candles (FX pairs / fetch failure) a live-price-anchored window
+   with a per-timeframe minimum span is used instead. Repainted on every
+   tick via paintTradingLive(). Dollar risk / reward use the app's
+   position math: |entry − level| × size (size is units). */
 function posLineScale(ovEl){
   const ov = ovEl || document.getElementById("pos-lines"); if(!ov) return null;
   const H = ov.clientHeight || 400;
+  const W = ov.clientWidth || 800;
   const anchor = (typeof wlState!=="undefined" && wlState[simMarket] && wlState[simMarket].last>0)? wlState[simMarket].last : curPrice();
-  let fmin=Infinity, fmax=-Infinity; simCandles.forEach(c=>{ fmin=Math.min(fmin,c.l); fmax=Math.max(fmax,c.h); });
-  const feedRange = (fmax>fmin)? fmax-fmin : 0;
-  let span = Math.max(feedRange, anchor*0.0025);
+  fetchRealCandles();
+  const levels = [];
   DB.paper.positions.filter(p=>p.market===simMarket).forEach(p=>{
-    [p.entry, p.sl, p.tp].forEach(v=>{ if(v!=null && !isNaN(v)) span = Math.max(span, 2.6*Math.abs(v-anchor)); });
+    [p.entry, p.sl, p.tp].forEach(v=>{ if(v!=null && !isNaN(v) && +v > 0) levels.push(+v); });
   });
-  if(!(span>0)) span = anchor*0.0025 || 1;
-  const min = anchor - span/2, max = anchor + span/2;
-  const Y = v=> H-18 - ((v-min)/(max-min))*(H-36);
-  const P = y=> min + ((H-18-y)/(H-36))*(max-min);
+  let min = Infinity, max = -Infinity;
+  const bars = CB_PRODUCTS[simMarket]? rcBarsFor(simMarket + "|" + rcGranularity()) : null;
+  if(bars && bars.length){
+    let sel = null;
+    try{
+      const ch = tvChartApi();
+      if(ch && ch.getVisibleRange){
+        const vr = ch.getVisibleRange();
+        if(vr && isFinite(vr.from) && isFinite(vr.to) && vr.to > vr.from){
+          const barSec = tvInterval === "240"? 14400 : rcGranularity();
+          sel = bars.filter(b=> b.t + barSec >= vr.from && b.t <= vr.to);
+          if(sel.length < 2) sel = null;
+        }
+      }
+    }catch(e){ sel = null; }
+    if(!sel){
+      const n = Math.max(60, Math.min(220, Math.round(W / 6)));
+      sel = bars.slice(-n);
+    }
+    sel.forEach(b=>{ min = Math.min(min, b.l); max = Math.max(max, b.h); });
+    if(max > min){
+      /* Widen to include the live price and every position level, each
+         with a 2%-of-range margin, then TradingView-style padding. */
+      let lo = min, hi = max;
+      [anchor].concat(levels).forEach(v=>{ lo = Math.min(lo, v); hi = Math.max(hi, v); });
+      const m = (hi - lo) * 0.02; lo -= m; hi += m;
+      const rng = hi - lo;
+      max = hi + rng * 0.12; min = lo - rng * 0.08;
+    } else { min = Infinity; max = -Infinity; }
+  }
+  if(!(max > min)){
+    /* Fallback: live-price-anchored window, span at least the
+       per-timeframe fraction of the anchor, widened to include levels. */
+    const FRAC = { "1":0.001, "5":0.002, "15":0.004, "30":0.008, "60":0.012, "240":0.03, "D":0.06, "W":0.12 };
+    let span = anchor * (FRAC[tvInterval] || 0.012);
+    [anchor].concat(levels).forEach(v=>{ span = Math.max(span, 2.6 * Math.abs(v - anchor)); });
+    if(!(span > 0)) span = anchor * 0.012 || 1;
+    min = anchor - span / 2; max = anchor + span / 2;
+  }
+  /* Map onto the widget's plot geometry: the plot runs from the top of
+     the overlay down to the time axis (~28px at the bottom). Y and P are
+     exact inverses on this mapping; lines clamp inside the plot. */
+  const plotBottom = Math.max(50, H - 28);
+  const Y = v=> Math.max(0, Math.min(plotBottom, plotBottom - ((v - min) / (max - min)) * plotBottom));
+  const P = y=> min + ((plotBottom - y) / plotBottom) * (max - min);
   return { ov, H, min, max, Y, P };
 }
 let plDrag = null;
@@ -3986,6 +4104,7 @@ function paintTfPills(){
 }
 function setTvInterval(iv){
   tvInterval = iv;
+  fetchRealCandles();
   paintTfPills(); closeCtbMenus(); paintSymBar(true);
   const ch = tvChartApi();
   if(ch && ch.setResolution){ try{ ch.setResolution(iv); paintPosLines(); return; }catch(e){} }
@@ -6831,6 +6950,7 @@ async function loadBrokerStatus(){
       const next = {};
       d.accounts.forEach(a=>{ if(a && a.broker) next[a.broker] = a; });
       BROKER_ACCOUNTS = next;
+      if(next.paper) seedPaperFromBroker(next.paper);
     }
   }catch(e){ /* server unreachable — fall back to showing every broker as disconnected */ }
   brokerStatusLoading = false; brokerStatusLoaded = true;
@@ -6856,6 +6976,7 @@ async function connectPaper(){
   try{
     const d = await brokerPost("/api/broker/connect", { broker:"paper" });
     BROKER_ACCOUNTS.paper = Object.assign({ broker:"paper" }, d.account || {});
+    seedPaperFromBroker(BROKER_ACCOUNTS.paper);
     if(currentView === "trading"){ try{ paintTradingHeader(tradeLockedNow); }catch(e){} }
     toast("Paper Trading connected.");
     notifyEvent("acctConnected", "Trading account connected", "Paper Trading linked to this workspace.");
