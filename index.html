@@ -582,6 +582,22 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
    rebuilt) but drops out of the grid, giving the chart the full row. */
 .trade-grid.wide{grid-template-columns:1fr}
 .trade-grid.wide>.side-col{display:none}
+/* Panel-wide mode (EdgeFlo expand-panel button): the right sidebar widens
+   and the chart column keeps the remaining space — the chart widget is
+   autoSize, so it follows the narrower column and its price lines keep
+   tracking. Desktop only: below 1081px the grid stacks full-width, so
+   there is nothing to expand into. Chart-wide still wins when both are
+   set (the sidebar is hidden then anyway). */
+@media (min-width:1081px){
+  .trade-grid.panel-wide{grid-template-columns:minmax(0,1fr) 560px}
+  .trade-grid.panel-wide.wide{grid-template-columns:1fr}
+}
+/* Expand-panel button in the sidebar tabs header (Watchlist / Alerts /
+   Trading Plan panel) */
+.side-expand-btn{width:26px;height:26px;flex:0 0 26px;margin-left:auto;align-self:center;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.side-expand-btn:hover{color:var(--pine);background:var(--card2)}
+.side-expand-btn.on{color:var(--violet);background:var(--violet-soft)}
+@media (max-width:1080px){ .side-expand-btn{display:none} }
 /* Trading page (desktop): the whole view fits the viewport like the
    Dashboard — no page scroll; only the positions body, the watchlist rows
    and the Trading Plan content scroll internally. */
@@ -3030,7 +3046,7 @@ function updateTicker(){
   t.innerHTML = '<span class="t-price mono">'+p.toFixed(simCandles.dec)+'</span><span class="chip '+(chg>=0?"green":"red")+'">'+fmtPct(chg)+' today (simulated feed)</span>';
 }
 /* ---- Trading page state (EdgeFlo layout) ---- */
-let posTab = "open", posPanelHidden = true, tradeWide = false, sideTab = "watchlist", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
+let posTab = "open", posPanelHidden = true, tradeWide = false, sideWide = false, sideTab = "watchlist", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
 let tradeLockedNow = false; /* header Trade-button lock state (guardrails lockout only — routine/window locks open their Override modals instead), kept for header repaints */
 /* Bottom positions panel height (px) — user-resizable via the grabber on
    the panel's top edge; 0 = natural height. Persisted across reloads. */
@@ -3199,6 +3215,29 @@ function toggleTradeWide(){
   const grid = document.querySelector('[data-view="trading"] .trade-grid');
   if(grid) grid.classList.toggle("wide", tradeWide);
   paintTradingHeader(tradeLockedNow);
+}
+/* Expand-panel toggle (EdgeFlo): widens the right sidebar in place — the
+   grid class flips, the chart column shrinks, and the chart (autoSize)
+   resizes with it; entry/SL/TP lines are native chart price lines, so
+   they stay pinned to their prices. No re-render: the sidebar DOM, its
+   scroll position and the live chart all survive the toggle. */
+const SIDE_PANEL_SVG_MAX = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
+const SIDE_PANEL_SVG_MIN = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M10 14l-7 7"/></svg>';
+function toggleSideWide(){
+  sideWide = !sideWide;
+  const grid = document.querySelector('[data-view="trading"] .trade-grid');
+  if(grid) grid.classList.toggle("panel-wide", sideWide);
+  const btn = document.getElementById("side-expand-btn");
+  if(btn){
+    btn.title = sideWide? "Collapse panel" : "Expand panel";
+    btn.setAttribute("aria-label", btn.title);
+    btn.classList.toggle("on", sideWide);
+    btn.innerHTML = sideWide? SIDE_PANEL_SVG_MIN : SIDE_PANEL_SVG_MAX;
+  }
+  /* The mount's ResizeObserver repaints the position chips as the chart
+     resizes; one extra repaint after the new layout settles keeps the
+     chips glued to their lines. */
+  requestAnimationFrame(()=>{ try{ lwPaintChips(); }catch(e){} });
 }
 function repaintTradingSidebar(){
   const el = document.querySelector('[data-view="trading"]');
@@ -4529,6 +4568,7 @@ function tradingSidebarHTML(st, lockedOut){
     + tabBtn("watchlist","Watchlist", icoTab('<path d="M12 17v5M9 3h6l-1 7 3 3H7l3-7z"/>'))
     + tabBtn("alerts","Alerts", icoTab('<path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7-2.5 7h17S18 15 18 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/>'))
     + tabBtn("plan","Trading Plan", icoTab('<path d="M6 2h9l4 4v16H6z"/><path d="M9 12h6M9 16h6"/>'))
+    + '<button type="button" class="side-expand-btn'+(sideWide?" on":"")+'" id="side-expand-btn" title="'+(sideWide?"Collapse panel":"Expand panel")+'" aria-label="'+(sideWide?"Collapse panel":"Expand panel")+'" onclick="toggleSideWide()">'+(sideWide? SIDE_PANEL_SVG_MIN : SIDE_PANEL_SVG_MAX)+'</button>'
     + '</div>'
     + '<div class="side-tabbody" id="trading-tabs-body">'
     + (sideTab==="watchlist"? sideWatchlistHTML() : sideTab==="alerts"? sideAlertsHTML() : '<div class="plan-scroll">'+sidePlanHTML()+'</div>')
@@ -4861,7 +4901,7 @@ RENDER.trading = function(opts){
   if(needFull){
     el.innerHTML =
       (lockedOut? tradingLockoutAlertHTML() : "")
-      + '<div class="trade-grid'+(tradeWide? " wide":"")+'"><div class="trade-leftcol" style="min-width:0">'
+      + '<div class="trade-grid'+(tradeWide? " wide":"")+(sideWide? " panel-wide":"")+'"><div class="trade-leftcol" style="min-width:0">'
       + '<div class="card mb chart-card chart-card-flush">'
       + chartToolbarHTML()
       + symBarHTML()
@@ -4880,6 +4920,7 @@ RENDER.trading = function(opts){
     if(lockedOut && !alert) grid.insertAdjacentHTML("beforebegin", tradingLockoutAlertHTML());
     else if(!lockedOut && alert) alert.remove();
     grid.classList.toggle("wide", tradeWide);
+    grid.classList.toggle("panel-wide", sideWide);
     const sc = el.querySelector(".side-col");
     if(sc){ const fresh = document.createElement("div"); fresh.className = "side-col"; fresh.innerHTML = tradingSidebarHTML(st, tradeLocked); sc.replaceWith(fresh); }
     const pp = document.getElementById("trading-pos-panel");
