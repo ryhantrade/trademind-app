@@ -8170,7 +8170,7 @@ function acctTabNotifications(){
 }
 
 /* ---- Tab: Integrations (brokers — real connections via BROKER_API) ---- */
-const BROKERS = [["Paper Trading","Built-in simulated account — $10,000, one-click connect","paper"],
+const BROKERS = [["Paper Trading","Built-in simulated account — pick your starting balance","paper"],
 ["HeroFX","via TradeLocker","herofx"],
 ["Eightcap Challenges","via TradeLocker","eightcap-challenges"],
 ["Black Bull","via cTrader","blackbull"],
@@ -8389,17 +8389,55 @@ function connectBroker(id){
   if(id === "paper"){ connectPaper(); return; }
   openBrokerModal(id);
 }
-async function connectPaper(){
+/* Paper Trading connect: Paper Trading is a demo account, so — like
+   the cTrader/MT5 connect dialogs — it first asks for the demo
+   starting balance ($10K / $50K / $100K) instead of connecting
+   instantly at a fixed $10,000. The picked amount becomes the
+   account's starting balance (see submitPaperConnect). */
+function connectPaper(){
   if(brokerBusy.paper) return;
+  bkDemoBal = (DB.demoStart && DB.demoStart.paper) || 10000;
+  const balWrap = '<div class="field" id="bk-bal-wrap"><label class="f">Demo starting balance</label>'
+    + '<div class="seg" id="bk-bal-seg">' + [10000, 50000, 100000].map(v=> '<button type="button" data-bal="' + v + '" onclick="bkSetDemoBal(' + v + ')">$' + (v/1000) + 'K</button>').join("") + '</div></div>';
+  openModal('<h3>Connect Paper Trading</h3><div class="small" style="margin-bottom:12px">Built-in simulated account — no credentials needed. Pick the balance your demo account starts with.</div>'
+    + balWrap
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="bk-connect" onclick="submitPaperConnect()">Connect</button></div>');
+  bkDemoUiSync();
+}
+async function submitPaperConnect(){
+  if(brokerBusy.paper) return;
+  const btn = $("#bk-connect");
   brokerBusy.paper = true; refreshBrokerList();
+  if(btn){ btn.disabled = true; btn.textContent = "Connecting…"; }
+  /* The picked starting balance becomes this demo account's balance,
+     recorded exactly like a broker demo connect: it backs the local
+     trading ledger, so the Integrations card, the Dashboard
+     caption/balance and the Trading page strip all show it, and Reset
+     balance can return to it later. Paper Trading is a built-in
+     simulated account, so the connection is recorded locally first —
+     the local record (DB.demoAcct) is what keeps it visible on
+     Dashboard and Trading even if the broker server forgets it — and
+     the server is then told about the connection best-effort: when it
+     answers, its account record is used; when it cannot be reached,
+     the local record stands on its own instead of failing the
+     connect. demoSeedFor is set before any seeding runs, so the
+     server's fixed paper balance can never stomp the picked amount. */
+  if(!DB.demoStart) DB.demoStart = {};
+  DB.demoStart.paper = bkDemoBal;
+  DB.demoSeedFor = "paper";
+  DB.demoAcct = { id:"paper", platform:null };
+  DB.paper.balance = bkDemoBal;
+  saveDB();
+  BROKER_ACCOUNTS.paper = { broker:"paper", demo:true, local:true };
   try{
     const d = await brokerPost("/api/broker/connect", { broker:"paper" });
     BROKER_ACCOUNTS.paper = Object.assign({ broker:"paper" }, d.account || {});
-    seedPaperFromBroker(BROKER_ACCOUNTS.paper);
-    if(currentView === "trading"){ try{ paintTradingHeader(tradeLockedNow); }catch(e){} }
-    toast("Paper Trading connected.");
-    notifyEvent("acctConnected", "Trading account connected", "Paper Trading linked to this workspace.");
-  }catch(e){ toast("Paper Trading connection failed: " + e.message); }
+  }catch(e){ /* broker server unreachable — the local record above is the connection */ }
+  closeModal();
+  if(currentView === "dashboard"){ try{ RENDER.dashboard(); }catch(e){} }
+  if(currentView === "trading"){ try{ paintTradingHeader(tradeLockedNow); }catch(e){} }
+  toast("Paper Trading connected.");
+  notifyEvent("acctConnected", "Trading account connected", "Paper Trading linked to this workspace.");
   brokerBusy.paper = false; refreshBrokerList();
 }
 function brokerCredFieldsHTML(kind){
@@ -8415,7 +8453,9 @@ let bkDemoBal = 10000; // starting balance picked in the connect modal (demo acc
 function bkSetDemoBal(v){ bkDemoBal = v; bkDemoUiSync(); }
 /* The starting-balance picker only applies to demo accounts: it shows
    while the visible credential set's Demo toggle is on (the platform
-   select decides which set is visible in platform-choice modals). */
+   select decides which set is visible in platform-choice modals). A
+   modal with no Demo toggle at all (the Paper Trading connect modal —
+   Paper Trading is always a demo account) always shows it. */
 function bkDemoUiSync(){
   const wrap = document.getElementById("bk-bal-wrap"); if(!wrap) return;
   const platSel = document.getElementById("bk-platform");
@@ -8427,6 +8467,7 @@ function bkDemoUiSync(){
   else if(ct && mt) on = false;
   else if(mt) on = !!mt.checked;
   else if(ct) on = !!ct.checked;
+  else on = true;
   wrap.style.display = on? "block" : "none";
   wrap.querySelectorAll("button[data-bal]").forEach(b=> b.classList.toggle("on", +b.getAttribute("data-bal") === bkDemoBal));
 }
