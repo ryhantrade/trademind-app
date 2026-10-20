@@ -444,6 +444,7 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .margin-pop .mp-row strong{font-variant-numeric:tabular-nums}
 .acct-label{font-size:11.5px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px}
 .acct-val{font-size:16px;font-weight:800;margin-top:1px}
+.acct-cap{font-size:10.5px;font-weight:700;color:var(--faint);margin-top:2px}
 .info-i{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--faint);color:var(--faint);font-size:9px;font-weight:800;font-style:normal;cursor:help;flex:0 0 14px}
 .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line2);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;padding:0}
 .icon-btn:hover{color:var(--pine);border-color:var(--pine)}
@@ -466,7 +467,10 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .pos-tab.on{color:var(--pine);border-bottom-color:var(--pine)}
 .pnl-slider{margin-top:10px}
 .pnl-track{height:8px;border-radius:99px;background:var(--bg2);position:relative}
-.pnl-track>i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--pine);border:2.5px solid var(--card);box-shadow:var(--shadow-sm);transform:translate(-50%,-50%)}
+.pnl-track .pnl-fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--green);transition:width .5s ease}
+.pnl-track .pnl-fill.neg{background:var(--red)}
+.pnl-track>i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--pine);border:2.5px solid var(--card);box-shadow:var(--shadow-sm);transform:translate(-50%,-50%);z-index:1}
+@media (prefers-reduced-motion: reduce){ .pnl-track .pnl-fill{transition:none} }
 .pnl-scale{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:7px}
 .dot-track{display:inline-flex;gap:6px}
 .tdot{width:13px;height:13px;border-radius:50%;background:var(--bg2);border:1px solid var(--line2);display:inline-block}
@@ -1254,6 +1258,8 @@ const DEFAULTS = {
                 riskOn:true, lossOn:true, lossMode:"usd", profitOn:true, profitMode:"usd", tradesOn:true, windowOn:true },
   overrides: [],                                // guardrail rule-break log
   paper: { balance:100000, positions: [], orders: [] },
+  demoStart: {},                                // broker id -> demo starting balance the user picked at connect (10000/50000/100000)
+  demoSeedFor: null,                            // broker id whose picked demo balance currently backs the local trading ledger
   checkins: [],                                 // sanctuary streak dates (yyyy-mm-dd)
   intentions: {},                               // date -> text
   coach: [],                                    // chat history {who, text}
@@ -1293,6 +1299,8 @@ function loadDB(){
      match EdgeFlo; a stored value of exactly the old default follows it. */
   if(DB.guardrails.winStart === "07:00") DB.guardrails.winStart = "08:00";
   DB.paper = Object.assign({}, DEFAULTS.paper, DB.paper||{});
+  if(!DB.demoStart || typeof DB.demoStart!=="object") DB.demoStart = {};
+  if(DB.demoSeedFor===undefined) DB.demoSeedFor = null;
   DB.sub = Object.assign({}, DEFAULTS.sub, DB.sub||{});
   DB.routine = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS.routine)), DB.routine||{});
   /* The checklist is edited in Settings → Pre-Market Routine. A list that
@@ -1936,16 +1944,22 @@ function renderAll(){ buildNav(); renderSessionBar(); renderRoutinePanel(); rend
 "use strict";
 /* ================= DASHBOARD ================= */
 let dashRange = "30d";
-function rangeTrades(){
-  if(dashRange==="all") return DB.trades;
+function rangeTrades(list){
+  const src = list || DB.trades;
+  /* Ranges key on the CLOSE date (exitDate for journal trades, the
+     record date for paper closes — the same day Recent Trades and the
+     Closed Positions tab present), so a trade lands in the period it
+     closed, not the day it was entered. */
+  const cd = t=> t.exitDate || t.date || "";
+  if(dashRange==="all") return src;
   const now = new Date();
-  if(dashRange==="today") return DB.trades.filter(t=>t.date===todayStr());
-  if(dashRange==="ytd") return DB.trades.filter(t=>t.date >= now.getFullYear()+"-01-01");
+  if(dashRange==="today") return src.filter(t=>cd(t)===todayStr());
+  if(dashRange==="ytd") return src.filter(t=>cd(t) >= now.getFullYear()+"-01-01");
   const cut = new Date(now);
   if(dashRange==="7d") cut.setDate(now.getDate()-7);
   else if(dashRange==="90d") cut.setDate(now.getDate()-90);
   else cut.setDate(now.getDate()-30);
-  const cs = todayStr(cut); return DB.trades.filter(t=>t.date>=cs);
+  const cs = todayStr(cut); return src.filter(t=>cd(t)>=cs);
 }
 function fmtK(v){
   const k = v/1000; let s = k.toFixed(2);
@@ -2007,13 +2021,18 @@ function balanceChartSVG(){
 RENDER.dashboard = function(){
   if(Date.now() - brokerStatusAt > 15000){ try{ loadBrokerStatus(); }catch(e){} }
   const el = document.querySelector('[data-view="dashboard"]');
-  const tr = rangeTrades(); const s = computeStats(tr);
-  /* Recent Trades reads the SAME real trade records as the Journal and
-     the Closed Positions tab (DB.trades), newest close at the top.
-     Sample trades are labelled demo data: once any real trade exists
-     they never appear here. */
+  /* Every number on this page is computed live at render time from the
+     SAME real closed-trade records Recent Trades and the Closed
+     Positions tab read (DB.trades): sample/demo records are excluded
+     once any real trade exists, so the KPI cards can never sit on the
+     sample dataset's old totals while real closes land beside them.
+     Renders are triggered by every mutation (closePosition, trade
+     save/delete and broker seeding all re-render), so the cards always
+     show the current records. */
   const realTrades = DB.trades.filter(t=> t.source !== "sample");
-  const recent = tradesNewestFirst(realTrades.length? realTrades : DB.trades).slice(0,6);
+  const statBase = realTrades.length? realTrades : DB.trades;
+  const tr = rangeTrades(statBase); const s = computeStats(tr);
+  const recent = tradesNewestFirst(statBase).slice(0,6);
   const st = guardrailStatus();
   const wins = tr.filter(t=>tradePnl(t)>0), losses = tr.filter(t=>tradePnl(t)<0);
   const avgWinR = wins.length? wins.reduce((a,t)=>a+tradeR(t),0)/wins.length : 0;
@@ -2021,13 +2040,13 @@ RENDER.dashboard = function(){
   /* Profit Factor gauge (EdgeFlo): an SVG ring split red-left / green-right
      with a small gap at the top (and bottom); the split follows the gross
      win/loss share, defaulting to an even half when there are no trades. */
-  const pfShare = (s.grossWin+s.grossLoss)>0? (s.grossLoss>0? s.grossWin/(s.grossWin+s.grossLoss) : 0.5) : 0.5;
+  const pfShare = (s.grossWin+s.grossLoss)>0? (s.grossLoss>0? s.grossWin/(s.grossWin+s.grossLoss) : 1) : 0.5;
   const PF_GAP = 14, pfUsable = 360 - 4*PF_GAP;
   const pfGSpan = pfUsable*pfShare, pfRSpan = pfUsable - pfGSpan;
   const pfArc = (a0,a1)=>{ const pt = a=> [32+29*Math.cos(a*Math.PI/180), 32+29*Math.sin(a*Math.PI/180)]; const p0 = pt(a0), p1 = pt(a1);
     return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A29 29 0 "+((a1-a0)>180?1:0)+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); };
   const pfGA0 = -90 + PF_GAP, pfGA1 = pfGA0 + pfGSpan, pfRA0 = 90 + PF_GAP, pfRA1 = pfRA0 + pfRSpan;
-  const pfFace = (!s.n || s.pf===Infinity)? "😐" : (s.pf>=1? "🙂" : "🙁");
+  const pfFace = !s.n? "😐" : (s.pf===Infinity || s.pf>=1? "🙂" : "🙁");
   const rMax = Math.max(Math.abs(avgWinR), Math.abs(avgLossR));
   const winBar = wins.length && rMax? Math.round(Math.abs(avgWinR)/rMax*100) : 0;
   const lossBar = losses.length && rMax? Math.round(Math.abs(avgLossR)/rMax*100) : 0;
@@ -2042,16 +2061,16 @@ RENDER.dashboard = function(){
   const infoI = t=> ' <span class="info-i" title="'+t+'">i</span>';
   el.innerHTML =
     '<div class="grid g5">'
-    + kpi("Account Balance"+infoI(apb.connected? "Connected Paper Trading account balance" : "Paper account cash balance (local simulator)"), '<div class="k-value mono">'+bal$(acctBal)+'</div>')
+    + kpi("Account Balance"+infoI(apb.connected? "Balance of the active connected account" : "Paper account cash balance (local simulator)"), '<div class="k-value mono">'+bal$(acctBal)+'</div>' + (apb.cap? '<div class="acct-cap">'+esc(apb.cap)+'</div>' : ""))
     + kpi("Total Closed Net PnL"+infoI("Net realised P&L from closed trades in the selected range"), '<div class="k-value mono '+(s.pnl>=0?"pos":"neg")+'">'+fmt$(s.pnl)+'</div>')
     + kpi("Win Rate", '<div class="k-value mono">'+(s.n? s.winRate.toFixed(2):"0.00")+'%'+wrArrow+'</div>')
     + kpi("Avg R Per Trade", '<div style="display:flex;align-items:center;gap:12px">'
-      + '<div class="k-value mono" style="margin-top:0">'+(s.n? String(Math.round(s.avgR)):"0")+avgRArrow+'</div>'
+      + '<div class="k-value mono" style="margin-top:0">'+(s.n? s.avgR.toFixed(2):"0.00")+avgRArrow+'</div>'
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:row;gap:12px">'
       + '<div style="flex:1;min-width:0"><div class="mono pos" style="font-size:12px;font-weight:700">+'+Math.abs(avgWinR).toFixed(2)+'R</div><div class="progress green" style="height:4px;margin-top:3px"><i style="width:'+winBar+'%"></i></div></div>'
       + '<div style="flex:1;min-width:0"><div class="mono neg" style="font-size:12px;font-weight:700">-'+Math.abs(avgLossR).toFixed(2)+'R</div><div class="progress red" style="height:4px;margin-top:3px"><i style="width:'+lossBar+'%"></i></div></div>'
       + '</div></div>')
-    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0">'+(s.n && s.pf!==Infinity? s.pf.toFixed(2):"0.00")+' <span style="font-size:20px">'+pfFace+'</span></div>'
+    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0">'+(s.n? (s.pf===Infinity? "&infin;" : s.pf.toFixed(2)) : "0.00")+' <span style="font-size:20px">'+pfFace+'</span></div>'
       + '<svg width="64" height="64" viewBox="0 0 64 64" style="margin-left:auto;flex:0 0 64px" role="img" aria-label="Profit factor gauge">'
       + (pfGSpan>0.5? '<path d="'+pfArc(pfGA0,pfGA1)+'" fill="none" stroke="'+pfGreen+'" stroke-width="5.5" stroke-linecap="round"/>':"")
       + (pfRSpan>0.5? '<path d="'+pfArc(pfRA0,pfRA1)+'" fill="none" stroke="'+pfRed+'" stroke-width="5.5" stroke-linecap="round"/>':"")
@@ -2072,7 +2091,7 @@ function disciplineCardHTML(st){
   const dots = Array.from({length: Math.max(1, g.maxTrades)}, (_,i)=> '<i class="tdot '+(i<used?"on":"")+'"></i>').join("");
   return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Today&rsquo;s Discipline Summary</h3></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><strong class="mono" style="font-size:19px">'+fmt$(st.pnl)+'</strong><span class="small">Today&rsquo;s Closed PnL <span class="info-i" title="Net closed P&amp;L in your journal for today, against your guardrail limits">i</span></span></div>'
-    + '<div class="pnl-slider"><div class="pnl-track"><i style="left:'+pctPos+'%"></i></div>'
+    + '<div class="pnl-slider"><div class="pnl-track"><b class="pnl-fill'+(st.pnl<0?" neg":"")+'" style="width:'+pctPos+'%"></b><i style="left:'+pctPos+'%"></i></div>'
     + '<div class="pnl-scale"><span><strong class="mono" style="color:var(--ink)">'+fmt$(lo)+'</strong><br>Max Loss</span><span style="text-align:right"><strong class="mono" style="color:var(--ink)">'+(hi>=1000? "$"+(hi/1000)+"K" : fmt$(hi))+'</strong><br>Max Profit</span></div></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
     + disciplineOpensBanner()
@@ -2694,7 +2713,7 @@ function tickSim(){
   if(simCandles.length>60) simCandles.shift();
   try{ drawChart(); }catch(e){}
   try{ updateTicker(); }catch(e){}
-  paintTradingLive();
+  try{ paintTradingLive(); }catch(e){} /* guarded: a paint error must never abort the tick before the chart update + SL/TP checks below */
   try{ lwLiveTick(); }catch(e){}
   // auto SL/TP checks — marked against the LIVE price for every position;
   // the sim candle close is only a fallback when no live price exists.
@@ -2806,6 +2825,7 @@ function paintTradingLive(){
   const op = $("#th-openpnl"); if(op){ op.textContent = (openPnl>=0?"+":"")+fmt$(openPnl); op.className = openPnl>=0? "pos":"neg"; }
   const eq = $("#th-equity"); if(eq) eq.textContent = bal$(activePaperBalance().amount + openPnl);
   const bc = $("#th-balance"); if(bc) bc.textContent = bal$(activePaperBalance().amount);
+  const acp = $("#th-acct"); if(acp) acp.textContent = activePaperBalance().cap || "";
   if(Date.now() - brokerStatusAt > 60000){ try{ loadBrokerStatus(); }catch(e){} }
   DB.paper.positions.forEach(p=>{ const s = document.querySelector('[data-pospnl="'+p.id+'"]'); if(s){ const v = posPnl(p); s.textContent = fmt$(v); s.className = "mono "+(v>=0?"pos":"neg"); s.style.fontWeight = "800"; } });
   DB.paper.positions.forEach(p=>{ const c = document.querySelector('[data-poscur="'+p.id+'"]'); if(c) c.textContent = fmtPx(p.market, posCurPrice(p)); });
@@ -2822,10 +2842,23 @@ function toggleMarginPop(){ marginPopOpen = !marginPopOpen; RENDER.trading(); }
    seeded from the connected balance once (seedPaperFromBroker), which is
    what keeps the two in sync without a frozen server snapshot. */
 function activePaperBalance(){
-  const acct = BROKER_ACCOUNTS.paper;
-  const connected = !!(acct && acct.balance && typeof acct.balance.total_usd === "number");
-  return { amount: DB.paper.balance, connected: connected };
+  const act = activeBrokerAccount();
+  if(act){
+    return { amount: DB.paper.balance, connected: true, acctId: act.id, name: act.name, demo: act.demo, external: act.id !== "paper",
+      cap: act.name + (act.platformLabel? " · " + act.platformLabel : "") + (act.demo? " · Demo account" : " · Live account") };
+  }
+  return { amount: DB.paper.balance, connected: false, acctId: "paper", name: "TradeMind Demo", demo: true, external: false, cap: "" };
 }
+/* The connected account to surface on the Dashboard and Trading page:
+   a connected broker account wins over the built-in Paper Trading one,
+   so connecting a demo (or live) account is always visible as the
+   active account — name, platform and Demo/Live type — instead of the
+   pages silently going on showing only the local account. The amount
+   itself stays the local trading ledger (DB.paper.balance): a demo
+   connect SETS that ledger to the user's picked starting balance
+   (submitBrokerConnect), so the shown balance IS the demo balance and
+   in-app trades move it. Defined in the broker section below;
+   activeBrokerAccount() resolves the identity from BROKER_ACCOUNTS. */
 /* Seed the local paper account from a connected Paper Trading balance,
    ONCE per connection: only while the local account has no trade history
    (no journal trades and no open positions), and only when the stored
@@ -2834,6 +2867,7 @@ function activePaperBalance(){
    reloads and reconnects. */
 function seedPaperFromBroker(acct){
   if(!acct || !acct.balance || typeof acct.balance.total_usd !== "number") return;
+  if(DB.demoSeedFor) return; // a picked demo balance backs the ledger — never stomp it with the paper seed
   const hasHistory = (DB.trades && DB.trades.length > 0) || (DB.paper.positions && DB.paper.positions.length > 0);
   if(hasHistory) return;
   const key = (acct.broker || "paper") + "|" + acct.balance.total_usd;
@@ -2856,7 +2890,7 @@ function tradingHeaderHTML(lockedOut){
   /* EdgeFlo header: the page title + subtitle sit on the left of the top
      bar; these account stats + Trade controls fill its right side — no
      separate account card inside the page. */
-  return '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="'+(pb.connected? "Connected Paper Trading account balance" : "Paper account cash balance (local simulator)")+'">i</span></div><div class="acct-val mono" id="th-balance">'+bal$(pb.amount)+'</div></div>'
+  return '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="'+(pb.connected? "Balance of the active connected account" : "Paper account cash balance (local simulator)")+'">i</span></div><div class="acct-val mono" id="th-balance">'+bal$(pb.amount)+'</div><div class="acct-cap" id="th-acct">'+esc(pb.cap || "")+'</div></div>'
     + '<div class="acct-cell"><div class="acct-label">Open PnL <span class="info-i" title="Unrealised P&amp;L across open paper positions">i</span></div><div class="acct-val mono"><span id="th-openpnl" class="'+(openPnl>=0?"pos":"neg")+'">'+(openPnl>=0?"+":"")+fmt$(openPnl)+'</span></div></div>'
     + '<div class="acct-cell"><div class="acct-label">Equity <span class="info-i" title="Balance plus open P&amp;L">i</span></div><div class="acct-val mono" id="th-equity">'+bal$(equity)+'</div></div>'
     + '<div class="acct-cell margin-cell"><div class="acct-label">Margin Health <span class="info-i" title="'+(DB.guardrails.marginInvert? "Margin level inverted in Guardrails: showing margin USED as a share of equity (1% margin per position)." : "Free margin as a share of equity (1% margin per position). N/A with no open positions.")+'">i</span></div><div class="acct-val mono" title="Margin breakdown" onclick="toggleMarginPop()">'+mh+chevD+'</div>'
@@ -3057,6 +3091,7 @@ let lwOrdLineSet = {}; /* draft lines: { entry, sl, tp } */
 let lwIndSeries = {};  /* indicator name -> [series, ...] */
 let lwIndPane = -1;    /* pane index hosting RSI / MACD (-1 = none) */
 let lwDrag = null, lwEntryPress = null;
+let lwLiveTimer = null; /* the chart's own live-update driver (see lwStartLiveLoop) */
 function lwThemeColors(){
   const dark = tvThemeOverride? tvThemeOverride==="dark" : isDark();
   return dark
@@ -3115,6 +3150,7 @@ function lwCreateMainSeries(){
   paintPosLines(); paintOrdLines();
 }
 function lwDestroyChart(){
+  if(lwLiveTimer){ clearInterval(lwLiveTimer); lwLiveTimer = null; }
   if(lwRO){ try{ lwRO.disconnect(); }catch(e){} lwRO = null; }
   if(lwChart){ try{ lwChart.remove(); }catch(e){} }
   lwChart = null; lwSeries = null; lwMountEl = null;
@@ -3144,6 +3180,7 @@ function initLwChart(){
   try{ lwChart.timeScale().subscribeVisibleLogicalRangeChange(()=> lwPaintChips()); }catch(e){}
   if(window.ResizeObserver){ lwRO = new ResizeObserver(()=> lwPaintChips()); lwRO.observe(mount); }
   lwFetchCandles(true);
+  lwStartLiveLoop();
 }
 /* ---- Candle data: real bars from the backend, seeded fallback ---- */
 function lwSeedBars(){
@@ -3294,8 +3331,25 @@ function lwLiveTick(){
     if(live < last.low) last.low = live;
   }
   try{ lwSeries.update(lwBarDatum(last)); }catch(e){}
-  lwRefreshLineTitles();
-  lwPaintChips();
+  /* The readouts ride along with the forming candle; each is guarded so a
+     paint error can never kill the live update itself. */
+  try{ lwRefreshLineTitles(); }catch(e){}
+  try{ paintSymBar(false); }catch(e){}
+  try{ lwPaintChips(); }catch(e){}
+}
+/* The chart's own live driver: a dedicated 1s timer owned by the chart
+   (started in initLwChart, cleared in lwDestroyChart), independent of
+   the legacy sim tick — so no other paint routine's error or re-render
+   cadence can starve or stop it. While the Trading page is open the
+   forming candle tracks wlState's last price continuously, with no
+   reload: every tick rewrites the forming bar via series.update, and
+   crossing a period boundary appends the new bar (lwLiveTick). */
+function lwStartLiveLoop(){
+  if(lwLiveTimer) return;
+  lwLiveTimer = setInterval(()=>{
+    if(currentView !== "trading" || document.hidden) return;
+    try{ lwLiveTick(); }catch(e){}
+  }, 1000);
 }
 /* ---- Native position price lines (TradingView long/short style) ---- */
 function lwRTag(pos, tpPrice){
@@ -4095,7 +4149,7 @@ function tradingSidebarHTML(st, lockedOut){
   const chevS = open=> '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="'+(open? "M5 15l7-7 7 7":"M5 9l7 7 7-7")+'"/></svg>';
   const sessionBody = sideSessionOpen?
       '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px"><strong class="mono" style="font-size:19px">'+fmt$(dayPnl)+'</strong><span class="small">Today&rsquo;s Closed PnL <span class="info-i" title="Net closed P&amp;L in your journal for today, against your guardrail limits">i</span></span></div>'
-    + '<div class="pnl-slider"><div class="pnl-track"><i style="left:'+pctPos+'%"></i></div>'
+    + '<div class="pnl-slider"><div class="pnl-track"><b class="pnl-fill'+(dayPnl<0?" neg":"")+'" style="width:'+pctPos+'%"></b><i style="left:'+pctPos+'%"></i></div>'
     + '<div class="pnl-scale"><span><strong class="mono" style="color:var(--ink)">'+fmt$(lo)+'</strong><br>Max Loss</span><span style="text-align:right"><strong class="mono" style="color:var(--ink)">'+(hi>=1000? "$"+(hi/1000)+"K" : fmt$(hi))+'</strong><br>Max Profit</span></div></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
     + '<div class="side-count"><span style="flex:1">&#9719; '+opensTxt+'</span><span class="mono tw-count" style="white-space:nowrap">'+fmtCountdownHM(info.target - new Date())+'</span></div>'
@@ -4824,7 +4878,7 @@ function calcSize(){
   $("#calc-out").innerHTML = '<div class="alert pine"><div>Risk amount: <strong class="mono">'+fmt$(riskAmt)+'</strong><br>Position size: <strong class="mono">'+units.toLocaleString("en-US",{maximumFractionDigits:4})+' units</strong><br><span class="small">If the stop is hit you lose exactly '+risk+'% — no debate at the chart.</span></div></div>';
   const sz = $("#pt-size"); if(sz) sz.value = +units.toFixed(4);
 }
-function resetPaper(){ DB.paper = { balance:100000, positions:[] }; saveDB(); renderAll(); toast("Paper account reset to $100,000."); }
+function resetPaper(){ const start = (DB.demoStart && DB.demoStart.paper) || 100000; DB.paper = { balance:start, positions:[] }; saveDB(); renderAll(); toast("Paper account reset to " + fmt$(start) + "."); }
 </script>
 
 <script>
@@ -7263,6 +7317,40 @@ let brokerStatusLoaded = false; // true once a status fetch has finished (succes
 let brokerStatusLoading = false;// true while a status fetch is in flight
 const brokerBusy = {};          // broker id -> true while a connect/disconnect request is in flight
 function brokerById(id){ return BROKERS.find(b=> b[2]===id); }
+function brokerBalanceUSD(acct){
+  const b = acct && acct.balance;
+  if(typeof b === "number") return b;
+  if(b && typeof b.total_usd === "number") return b.total_usd;
+  return null;
+}
+function acctIsDemo(id, acct){
+  if(id === "paper") return true;
+  if(acct && acct.demo === true) return true;
+  return !!(DB.demoStart && DB.demoStart[id]); // a picked starting balance at connect means demo
+}
+function activeBrokerAccount(){
+  const ids = Object.keys(BROKER_ACCOUNTS);
+  if(!ids.length) return null;
+  const ext = ids.filter(i=> i !== "paper").sort();
+  const id = ext.length? ext[0] : "paper";
+  const acct = BROKER_ACCOUNTS[id]; if(!acct) return null;
+  const b = brokerById(id);
+  const plat = acct.platform === "mt5"? "MT5" : acct.platform === "ctrader"? "cTrader" : "";
+  return { id: id, acct: acct, name: id === "paper"? "TradeMind Demo" : (b? b[0] : id), demo: acctIsDemo(id, acct), platformLabel: plat, balanceUSD: brokerBalanceUSD(acct) };
+}
+/* One-click demo reset: the balance goes back to the starting amount
+   picked at connect and open positions are cleared, wiping every
+   trade/PnL effect since — the same fresh start Reset paper gives the
+   built-in account. Journal history is kept, like resetPaper. */
+function resetDemoBalance(id){
+  const start = DB.demoStart && DB.demoStart[id];
+  if(!start) return;
+  DB.paper.balance = start;
+  DB.paper.positions = [];
+  DB.demoSeedFor = id;
+  saveDB(); renderAll();
+  toast("Demo balance reset to " + fmt$(start) + " — open positions cleared, fresh start.");
+}
 function brokerBalanceText(acct){
   const b = acct && acct.balance;
   if(b == null) return "";
@@ -7307,17 +7395,20 @@ function brokerConnectedHTML(){
   h += ids.map(id=>{
     const acct = BROKER_ACCOUNTS[id], b = brokerById(id), busy = !!brokerBusy[id];
     const name = id === "paper"? "TradeMind Demo" : (b? b[0] : id);
-    const bal = brokerBalanceText(acct);
+    const bal = (DB.demoSeedFor === id && DB.demoStart && DB.demoStart[id])? fmt$(DB.paper.balance) : brokerBalanceText(acct);
     const det = [];
     if(acct.platform) det.push(acct.platform === "mt5"? "MT5" : acct.platform === "ctrader"? "cTrader" : String(acct.platform));
     if(acct.key_masked) det.push("Key " + acct.key_masked);
     if(acct.login_masked) det.push("Login " + acct.login_masked);
     if(acct.server) det.push(String(acct.server));
+    if(id !== "paper" && DB.demoStart && DB.demoStart[id]) det.push("Demo start " + fmt$(DB.demoStart[id]));
     return '<div style="margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div style="font-weight:800;font-size:15px">'+esc(name)+'</div><span style="display:inline-flex;gap:6px;flex-wrap:wrap"><span class="chip violet">Selected</span><span class="chip green">Verified</span></span></div>'
       + '<div style="margin-top:8px"><span style="font-weight:800;font-size:18px">'+esc(bal || "—")+'</span> <span style="font-size:13px;color:var(--muted)">'+(id === "paper"? "virtual trading balance" : "account balance")+'</span></div>'
       + (det.length && id !== "paper"? '<div class="small" style="margin-top:4px">'+esc(det.join(" · "))+'</div>' : "")
-      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--faint)">'+esc(brokerLastSyncText())+'</span><button class="btn sm" '+(busy? "disabled" : "")+' onclick="disconnectBroker(\''+id+'\')">'+(busy? "Working…" : "Disconnect")+'</button></div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap"><span style="font-size:12px;color:var(--faint)">'+esc(brokerLastSyncText())+'</span><span style="display:inline-flex;gap:8px;flex-wrap:wrap">'
+      + ((id !== "paper" && acctIsDemo(id, acct) && DB.demoStart && DB.demoStart[id])? '<button class="btn sm" title="Back to the starting balance picked at connect — clears open positions" onclick="resetDemoBalance(\''+id+'\')">Reset balance</button>' : "")
+      + '<button class="btn sm" '+(busy? "disabled" : "")+' onclick="disconnectBroker(\''+id+'\')">'+(busy? "Working…" : "Disconnect")+'</button></span></div>'
       + '</div>';
   }).join("");
   return h;
@@ -7395,10 +7486,30 @@ async function connectPaper(){
 function brokerCredFieldsHTML(kind){
   if(kind === "mt5") return '<div class="field"><label class="f">Login</label><input class="input" id="bk-login" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="MT5 account login"></div>'
     + '<div class="field"><label class="f">Password</label><input class="input" id="bk-pass" type="password" autocomplete="off" spellcheck="false" placeholder="MT5 account password"></div>'
-    + '<div class="field"><label class="f">Server</label><input class="input" id="bk-server" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. FTMO-Server"></div>';
+    + '<div class="field"><label class="f">Server</label><input class="input" id="bk-server" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. FTMO-Server"></div>'
+    + '<label class="tgl" style="display:flex;margin:2px 0 12px"><input type="checkbox" id="bk-demo-mt5" onchange="bkDemoUiSync()"> Demo account</label>';
   return '<div class="field"><label class="f">Access Token</label><input class="input" id="bk-token" type="password" autocomplete="off" spellcheck="false" placeholder="cTrader Open API access token"></div>'
     + '<div class="field"><label class="f">Account ID <span style="font-weight:600;color:var(--faint)">(optional)</span></label><input class="input" id="bk-acctid" type="text" autocomplete="off" spellcheck="false" placeholder="cTrader account ID"></div>'
-    + '<label class="tgl" style="display:flex;margin:2px 0 12px"><input type="checkbox" id="bk-demo" checked> Demo account</label>';
+    + '<label class="tgl" style="display:flex;margin:2px 0 12px"><input type="checkbox" id="bk-demo" checked onchange="bkDemoUiSync()"> Demo account</label>';
+}
+let bkDemoBal = 10000; // starting balance picked in the connect modal (demo accounts only)
+function bkSetDemoBal(v){ bkDemoBal = v; bkDemoUiSync(); }
+/* The starting-balance picker only applies to demo accounts: it shows
+   while the visible credential set's Demo toggle is on (the platform
+   select decides which set is visible in platform-choice modals). */
+function bkDemoUiSync(){
+  const wrap = document.getElementById("bk-bal-wrap"); if(!wrap) return;
+  const platSel = document.getElementById("bk-platform");
+  const plat = platSel? platSel.value : null;
+  const ct = document.getElementById("bk-demo"), mt = document.getElementById("bk-demo-mt5");
+  let on = false;
+  if(plat === "mt5") on = !!(mt && mt.checked);
+  else if(plat === "ctrader") on = !!(ct && ct.checked);
+  else if(ct && mt) on = false;
+  else if(mt) on = !!mt.checked;
+  else if(ct) on = !!ct.checked;
+  wrap.style.display = on? "block" : "none";
+  wrap.querySelectorAll("button[data-bal]").forEach(b=> b.classList.toggle("on", +b.getAttribute("data-bal") === bkDemoBal));
 }
 function openBrokerModal(id){
   const b = brokerById(id); if(!b) return;
@@ -7412,10 +7523,15 @@ function openBrokerModal(id){
   } else if(id === "mt5" || via === "mt5") fields = brokerCredFieldsHTML("mt5");
   else fields = brokerCredFieldsHTML("ctrader");
   const sub = b[1].indexOf("via ") === 0? "Connect your " + b[0] + " account (" + b[1] + ")" : b[1];
+  bkDemoBal = (DB.demoStart && DB.demoStart[id]) || 10000;
+  const balWrap = '<div class="field" id="bk-bal-wrap" style="display:none"><label class="f">Demo starting balance</label>'
+    + '<div class="seg" id="bk-bal-seg">' + [10000, 50000, 100000].map(v=> '<button type="button" data-bal="' + v + '" onclick="bkSetDemoBal(' + v + ')">$' + (v/1000) + 'K</button>').join("") + '</div></div>';
   openModal('<h3>Connect ' + esc(b[0]) + '</h3><div class="small" style="margin-bottom:12px">' + esc(sub) + '. Credentials are sent to our server over HTTPS and stored securely there — never saved in this browser, and never shown again after connecting.</div>'
     + fields
+    + balWrap
     + '<div class="small" id="bk-error" style="display:none;color:var(--red);font-weight:700"></div>'
     + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="bk-connect" onclick="submitBrokerConnect(\'' + id + '\')">Connect</button></div>');
+  bkDemoUiSync();
   const f = $("#bk-login") || $("#bk-token"); if(f) f.focus();
 }
 function brokerPlatformChange(){
@@ -7423,6 +7539,7 @@ function brokerPlatformChange(){
   const m = $("#bk-mt5-fields"), c = $("#bk-ct-fields");
   if(m) m.style.display = sel.value === "mt5"? "block" : "none";
   if(c) c.style.display = sel.value === "ctrader"? "block" : "none";
+  bkDemoUiSync();
 }
 async function submitBrokerConnect(id){
   const b = brokerById(id); if(!b) return;
@@ -7433,22 +7550,40 @@ async function submitBrokerConnect(id){
   if(withPlatform){ const sel = $("#bk-platform"); platform = sel? sel.value : "mt5"; }
   const payload = { broker:id, label:b[0] };
   if(withPlatform) payload.platform = platform;
+  let demoOn = false;
   if(platform === "mt5"){
     const login = $("#bk-login")? $("#bk-login").value.trim() : "", password = $("#bk-pass")? $("#bk-pass").value : "", server = $("#bk-server")? $("#bk-server").value.trim() : "";
     if(!login || !password || !server){ showErr("Enter your login, password and server."); return; }
     payload.login = login; payload.password = password; payload.server = server;
+    const demoMt = $("#bk-demo-mt5"); demoOn = demoMt? !!demoMt.checked : false;
+    payload.demo = demoOn;
   } else {
     const token = $("#bk-token")? $("#bk-token").value.trim() : "", acctId = $("#bk-acctid")? $("#bk-acctid").value.trim() : "", demoEl = $("#bk-demo");
     if(!token){ showErr("Enter your cTrader access token."); return; }
     payload.access_token = token;
     if(acctId) payload.account_id = acctId;
     payload.demo = demoEl? !!demoEl.checked : true;
+    demoOn = payload.demo;
   }
+  if(demoOn) payload.demo_balance = bkDemoBal;
   showErr("");
   if(btn){ btn.disabled = true; btn.textContent = "Connecting…"; }
   try{
     const d = await brokerPost("/api/broker/connect", payload);
     BROKER_ACCOUNTS[id] = Object.assign({ broker:id }, d.account || {});
+    if(demoOn){
+      /* The picked starting balance becomes this demo account's
+         balance: it backs the local trading ledger, so the Dashboard
+         and Trading page show it as the Account Balance (and Reset
+         balance can return to it later). */
+      if(!DB.demoStart) DB.demoStart = {};
+      DB.demoStart[id] = bkDemoBal;
+      DB.demoSeedFor = id;
+      DB.paper.balance = bkDemoBal;
+      saveDB();
+      if(currentView === "dashboard"){ try{ RENDER.dashboard(); }catch(e){} }
+      if(currentView === "trading"){ try{ paintTradingHeader(tradeLockedNow); }catch(e){} }
+    }
     closeModal();
     refreshBrokerList();
     toast(b[0] + " connected.");
@@ -7468,6 +7603,9 @@ async function disconnectBroker(id){
     let d = null; try{ d = await r.json(); }catch(e){}
     if(!d || !d.ok) throw new Error((d && d.error) || ("Request failed (HTTP " + r.status + ")."));
     delete BROKER_ACCOUNTS[id];
+    if(DB.demoSeedFor === id){ DB.demoSeedFor = null; saveDB(); }
+    if(currentView === "dashboard"){ try{ RENDER.dashboard(); }catch(e){} }
+    if(currentView === "trading"){ try{ paintTradingHeader(tradeLockedNow); }catch(e){} }
     toast(b[0] + " disconnected.");
     notifyEvent("acctDisconnected", "Trading account disconnected", b[0] + " was unlinked from this workspace.");
   }catch(e){ toast("Could not disconnect " + b[0] + ": " + e.message); }
