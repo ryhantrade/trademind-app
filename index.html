@@ -1134,6 +1134,25 @@ input[type="range"].vol{-webkit-appearance:none;appearance:none;height:6px;borde
 input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--pine);cursor:pointer;border:2.5px solid var(--card);box-shadow:var(--shadow-sm)}
 .tpl-preview{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;white-space:pre-wrap;max-height:220px;overflow-y:auto;margin-top:10px}
 
+/* ---------- Notebook header + templates panel ---------- */
+.nb-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.nb-head h2{font-size:20px;font-weight:800}
+.nb-sub{font-size:13px;color:var(--muted);margin-top:1px}
+.nb-new-wrap{position:relative;flex:0 0 auto}
+.nb-new-wrap .pop-menu{left:0;right:auto;min-width:204px}
+@media (max-width:900px){ .nb-main-grid{grid-template-columns:1fr !important} }
+.nb-tpl-panel{margin-top:18px}
+.nb-tpl-sec{display:flex;align-items:center;gap:8px;margin:20px 0 10px}
+.nb-tpl-sec:first-child{margin-top:4px}
+.nb-tpl-sec .t{font-weight:800;font-size:14.5px}
+.nb-tpl-count{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--muted)}
+.nb-tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.tpl-card{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:11px 12px}
+.tpl-card:hover{border-color:var(--pine)}
+.tpl-main{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:2px 0;cursor:pointer;font-family:inherit;color:var(--ink)}
+.tpl-name{font-weight:700;font-size:13.5px;display:block;line-height:1.3}
+.tpl-sub{font-size:12px;color:var(--muted);display:block;margin-top:1px}
+
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
 </style>
 </head>
@@ -1288,6 +1307,8 @@ const DEFAULTS = {
   edgeSyncV3: false,                            // seeded Market Mechanics plan synced to the EdgeFlo wording/values once
   edgeSyncV4: false,                            // MM plan risk corrected 10% -> 1% to match EdgeFlo once
   notes: [], folders: ["General","Reviews","Ideas"],
+  pinnedTemplates: [],                        // notebook template names pinned by the user
+  myTemplates: [],                            // user-created notebook templates {name, body}
   guardrails: { enabled:true, maxLoss:100, maxProfit:1000, maxTrades:5, winStart:"08:00", winEnd:"17:00", newsBlock:false, hardLock:false,
                 marginInvert:false, prompts:true, promptsOpen:true, promptsClose:true, routineGate:true, riskMode:"usd", riskValue:1, tz:"UTC",
                 riskOn:true, lossOn:true, lossMode:"usd", profitOn:true, profitMode:"usd", tradesOn:true, windowOn:true },
@@ -6410,6 +6431,8 @@ RENDER.news = function(){
 
 /* ================= NOTEBOOK ================= */
 let nbFolder = "All", nbSearch = "", nbActive = null;
+let nbNewOpen = false;        // "New Note" dropdown open
+let nbTplMenu = null;         // template key whose "⋯" menu is open ("g<gi>i<ix>" / "m<ix>")
 const NOTE_COLORS = [ ["", "None", ""], ["pine","Pine","#01796F"], ["leaf","Leaf","#1E9E62"], ["amber","Amber","#C07F10"], ["rust","Rust","#D64545"], ["ocean","Ocean","#2F7FC1"], ["slate","Slate","#5D7167"] ];
 const NOTE_EMOJIS = ["", "📈", "🧠", "🎯", "🔥", "📊", "💡", "⚠️", "✅", "📝", "🏦", "🌊"];
 function noteColorHex(n){ const c = NOTE_COLORS.find(x=>x[0]===(n.color||"")); return c? c[2] : ""; }
@@ -6438,8 +6461,12 @@ RENDER.notebook = function(){
   if(nbFolder!=="All") list = list.filter(n=>n.folder===nbFolder);
   if(nbSearch) list = list.filter(n=> (n.title+n.body).toLowerCase().includes(nbSearch.toLowerCase()));
   const active = DB.notes.find(n=>n.id===nbActive) || list[0] || null;
-  el.innerHTML = '<div class="grid g2" style="grid-template-columns:380px 1fr;align-items:start">'
-    + '<div><div style="display:flex;gap:8px;margin-bottom:10px"><input class="input" placeholder="Search notes…" value="'+esc(nbSearch)+'" oninput="nbSearch=this.value;RENDER.notebook()"><button class="btn primary" onclick="newNote()">+ New</button><button class="btn" onclick="openTemplates()">Templates</button></div>'
+  el.innerHTML = '<div class="nb-head"><div><h2>Notebook</h2><div class="nb-sub">Think before you trade. Review before you repeat.</div></div></div>'
+    + '<div class="grid g2 nb-main-grid" style="grid-template-columns:380px 1fr;align-items:start">'
+    + '<div><div style="display:flex;gap:8px;margin-bottom:10px"><input class="input" placeholder="Search notes…" value="'+esc(nbSearch)+'" oninput="nbSearch=this.value;RENDER.notebook()">'
+    + '<span class="nb-new-wrap"><button class="btn primary" onclick="nbToggleNewMenu()">New Note &#9662;</button>'
+    + (nbNewOpen? '<span class="pop-menu" style="display:block"><button onclick="newNote()">Create Blank Note</button><button onclick="newFromTemplate()">Create From Template</button></span>' : "")
+    + '</span></div>'
     + '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">'
     + ["All"].concat(DB.folders).map(f=>'<button class="folder-chip '+(nbFolder===f?"on":"")+'" onclick="nbFolder=\''+esc(f)+'\';RENDER.notebook()">'+esc(f)+'</button>').join("")
     + '<button class="folder-chip" onclick="addFolder()">+ Folder</button></div>'
@@ -6465,11 +6492,19 @@ RENDER.notebook = function(){
         + '<div class="field"><label class="f">Note</label><textarea class="input" id="nb-body" rows="14" placeholder="Session review, lessons, setups to watch…">'+esc(active.body||"")+'</textarea></div>'
         + '<div style="display:flex;gap:8px"><button class="btn primary" onclick="saveNote(\''+active.id+'\')">Save note</button><button class="btn" onclick="deleteNote(\''+active.id+'\')">Delete</button></div>'
       : '<div class="empty"><div class="e-title">Nothing selected</div>Create a note to start your trading notebook.</div>')
-    + '</div></div>';
+    + '</div></div>'
+    + nbTemplatesPanelHTML();
   const inp = el.querySelector('input[placeholder="Search notes…"]');
   if(inp && nbSearch){ inp.focus(); inp.setSelectionRange(nbSearch.length, nbSearch.length); }
 };
+function nbToggleNewMenu(){ nbNewOpen = !nbNewOpen; nbTplMenu = null; RENDER.notebook(); }
+function newFromTemplate(){
+  nbNewOpen = false; RENDER.notebook();
+  const p = document.getElementById("nb-templates");
+  if(p) p.scrollIntoView({behavior:"smooth", block:"start"});
+}
 function newNote(){
+  nbNewOpen = false; nbTplMenu = null;
   const n = { id:uid(), title:"Untitled note", body:"", folder: DB.folders[0], pinned:false, color:"", emoji:"", updated: todayStr() };
   DB.notes.push(n); nbActive = n.id; nbFolder="All"; saveDB(); RENDER.notebook();
 }
@@ -6484,58 +6519,326 @@ function addFolder(){
 function saveFolder(){ const v=$("#fld-name").value.trim(); if(!v) return; if(!DB.folders.includes(v)) DB.folders.push(v); saveDB(); closeModal(); RENDER.notebook(); }
 
 /* ---- Notebook template library: 15 built-in templates in 4 groups ---- */
+function tplBody(lines){ return lines.join("\n"); }
+function periodReviewTpl(adj, firstLine, focusLabel){ return tplBody([
+  firstLine,
+  "",
+  "SUMMARY STATISTICS",
+  "Total trades:",
+  "Net P&L:",
+  "Net R:",
+  "Win rate:",
+  "Profit factor:",
+  "Best trade:",
+  "Worst trade:",
+  "Biggest drawdown:",
+  "",
+  "EXECUTION CHECK",
+  "[ ] Followed the trade plan",
+  "[ ] Entries only at planned POIs",
+  "[ ] No trades outside the window",
+  "[ ] Risk rules respected",
+  "Guardrail violations:",
+  "",
+  adj.toUpperCase() + " REFLECTION",
+  "Best setup:",
+  "Worst leak (session, emotion, market):",
+  "The lesson of this period:",
+  "",
+  focusLabel,
+  "One focus (ONE thing):",
+  "What I will stop doing:"
+]);}
+const HABIT_ROWS = ["Pre-market routine complete","Marked up HTF liquidity & POIs","Journaled every trade the same day","No trades outside the window","Sanctuary / breathing practice","Reviewed the day in the Notebook","Closed the platform on time"];
+function habitTrackerBody(){
+  const head = "Habit".padEnd(38, " ") + "Mon Tue Wed Thu Fri Sat Sun";
+  const rows = HABIT_ROWS.map(h=> h.padEnd(38, " ") + "[ ] [ ] [ ] [ ] [ ] [ ] [ ]");
+  return tplBody(["Week of:", "", head].concat(rows, ["", "Streak notes:"]));
+}
+function dailyPlannerBody(){
+  const lines = ["Date:", "", "TOP 3 OUTCOMES TODAY", "1.", "2.", "3.", "", "HOURLY PLAN (0700–2200)"];
+  for(let h=7; h<=22; h++) lines.push(("0"+h).slice(-2) + "00 —");
+  lines.push("", "Trading window:", "Sessions I will trade (and only these):", "Shutdown ritual time:");
+  return tplBody(lines);
+}
 const NOTE_TEMPLATES = [
-  { group:"Performance Review", items:[
-    ["Daily Review","Date:\nSession:\n\nTrades taken (plan / no-plan):\nNet P&L / R:\nBest decision today:\nWorst decision today:\nRule breaks:\nOne lesson to carry into tomorrow:"],
-    ["Weekly Review","Week of:\n\nTotal trades / Net R:\nWin rate / Profit factor:\nBest setup this week:\nWorst leak (session, emotion, market):\nGuardrail violations:\nFocus for next week (ONE thing):"],
-    ["Monthly Review","Month:\n\nNet P&L / R:\nExpectancy per trade:\nBest market & session:\nWorst market & session:\nBiggest drawdown & cause:\nProcess grade (A–F):\nOne structural change for next month:"],
-    ["Quarterly Review","Quarter:\n\nNet P&L / R vs plan:\nExpectancy trend vs last quarter:\nEdge Score movement:\nTop 3 strengths:\nTop 3 leaks:\nCapital & risk changes for next quarter:\nGoals for next quarter:"],
-    ["Annual Review","Year:\n\nNet P&L / R:\nBest month / worst month:\nThe trade that taught me the most:\nThe habit that made the money:\nThe habit that cost the money:\nWho I was as a trader in January vs December:\nNext year's single focus:"]
+  { group:"Performance Review", emoji:"📊", items:[
+    ["Daily Review", tplBody([
+      "Date:",
+      "Session:",
+      "",
+      "SUMMARY STATISTICS",
+      "Trades taken:",
+      "Net P&L:",
+      "Net R:",
+      "Win rate:",
+      "Best trade:",
+      "Worst trade:",
+      "",
+      "EXECUTION CHECK",
+      "[ ] Followed the trade plan",
+      "[ ] Entries only at planned POIs",
+      "[ ] Stop and target set before entry",
+      "[ ] Risk per trade within limit",
+      "Rule breaks:",
+      "",
+      "DAILY REFLECTION",
+      "Best decision today:",
+      "Worst decision today:",
+      "What the market taught me today:",
+      "",
+      "TOMORROW'S FOCUS",
+      "One thing to do better tomorrow:",
+      "Key levels / pools to watch:"
+    ])],
+    ["Annual Review", periodReviewTpl("Annual", "Year:", "NEXT YEAR'S FOCUS")],
+    ["Weekly Review", periodReviewTpl("Weekly", "Week of:", "NEXT WEEK'S FOCUS")],
+    ["Monthly Review", periodReviewTpl("Monthly", "Month:", "NEXT MONTH'S FOCUS")],
+    ["Quarterly Review", periodReviewTpl("Quarterly", "Quarter:", "NEXT QUARTER'S FOCUS")]
   ]},
-  { group:"Mindset", items:[
-    ["Macro Trade Journal","Date / market:\nHTF external liquidity (above / below):\nHTF draw — where is price magnetised?\nInternal liquidity on the path:\nLiquidity already taken:\nExpected path:\nBias + invalidation:\nOnly trade if:"],
-    ["Pre-Market Mental Prep","Sleep / energy (1–10):\nMind state right now:\nToday's intention (one sentence):\nWhat could tilt me today:\nMy counter-move when it happens:\nMax risk & max trades today:\nI will walk away if:"],
-    ["Post-Trade Reflection","Trade:\nDid I follow the plan? (yes / partly / no)\nEmotion at entry:\nEmotion at exit:\nWhat the market actually did:\nWhat I did well:\nWhat I would change:\nR result vs process grade:"],
-    ["Emotional Mapping","Trigger event:\nEmotion (name it precisely):\nBody signal I noticed:\nWhat I wanted to do:\nWhat I actually did:\nCost / benefit of that choice:\nPattern I am seeing across entries:"]
+  { group:"Mindset", emoji:"✍🏻", items:[
+    ["Macro Trade Journal Template", tplBody([
+      "Date:",
+      "Market:",
+      "",
+      "MARKET REGIME",
+      "Rate Cycle Phase:",
+      "[ ] Hiking cycle",
+      "[ ] Pause / plateau",
+      "[ ] Cutting cycle",
+      "",
+      "Risk Sentiment:",
+      "[ ] Risk-on",
+      "[ ] Risk-off",
+      "[ ] Mixed / unclear",
+      "",
+      "HTF CONTEXT",
+      "HTF external liquidity (above / below):",
+      "HTF draw — where is price magnetised?",
+      "Internal liquidity on the path:",
+      "Liquidity already taken:",
+      "Expected path:",
+      "Bias + invalidation:",
+      "",
+      "TRADE IDEA",
+      "Only trade if:"
+    ])],
+    ["Pre-Market Mental Prep", tplBody([
+      "Date:",
+      "",
+      "MENTAL STATE",
+      "Sleep Score (1–10):",
+      "Energy (1–10):",
+      "Emotional State:",
+      "Stress level (1–10):",
+      "",
+      "PREPARATION",
+      "Today's intention (one sentence):",
+      "What could tilt me today:",
+      "My counter-move when it happens:",
+      "Max risk & max trades today:",
+      "I will walk away if:"
+    ])],
+    ["Post-Trade Reflection", tplBody([
+      "Trade (pair / direction / date):",
+      "",
+      "THE TRADE",
+      "Entry:",
+      "Exit:",
+      "Result (R):",
+      "",
+      "MISTAKES — TICK ANY THAT APPLIED",
+      "[ ] Entered early / FOMO",
+      "[ ] No liquidity sweep before entry",
+      "[ ] Moved the stop loss",
+      "[ ] Oversized the position",
+      "[ ] Revenge traded after a loss",
+      "[ ] Traded outside the plan",
+      "[ ] Exited early out of fear",
+      "[ ] Held a loser hoping it would turn",
+      "[ ] Traded into high-impact news",
+      "",
+      "REFLECTION",
+      "Did I follow the plan? (yes / partly / no)",
+      "Emotion at entry:",
+      "Emotion at exit:",
+      "What I did well:",
+      "What I would change:",
+      "Process grade (A–F):"
+    ])],
+    ["Emotional Mapping Journal", tplBody([
+      "Date:",
+      "Trigger event:",
+      "",
+      "EMOTION MAP",
+      "Emotion (name it precisely):",
+      "Intensity (1–10):",
+      "Body signal I noticed:",
+      "What I wanted to do:",
+      "What I actually did:",
+      "Cost / benefit of that choice:",
+      "",
+      "PATTERN",
+      "Have I felt this before? When:",
+      "What usually triggers it:",
+      "My planned response next time:"
+    ])]
   ]},
-  { group:"Productivity", items:[
-    ["Habit Tracker","Week of:\n\n[ ] Pre-market routine — Mon Tue Wed Thu Fri\n[ ] Journal every trade same day\n[ ] No trades outside the window\n[ ] Sanctuary / breathing daily\n[ ] Weekly review done\nStreak notes:"],
-    ["Daily Planner","Top 3 outcomes today:\n1.\n2.\n3.\n\nTrading window:\nSessions I will trade (and only these):\nAdmin / study blocks:\nNon-trading priorities:\nShutdown ritual time:"],
-    ["Daily Routine Checklist","[ ] Wake + hydrate\n[ ] Review HTF charts & mark liquidity\n[ ] Write bias + invalidation\n[ ] Check news calendar\n[ ] Set intention in Sanctuary\n[ ] Complete pre-market routine\n[ ] Trade only the plan\n[ ] Journal + daily note\n[ ] Close platform on time"],
-    ["Goal Tracker","Goal:\nWhy it matters:\nDeadline:\nMilestones:\n- \n- \n- \nWeekly action this week:\nObstacle & counter-plan:\nProgress log:"]
+  { group:"Productivity", emoji:"🧠", items:[
+    ["Habit Tracker", habitTrackerBody()],
+    ["Daily Planner", dailyPlannerBody()],
+    ["Daily Routine Checklist", tplBody([
+      "[ ] Wake + hydrate",
+      "[ ] Review HTF charts & mark liquidity",
+      "[ ] Write bias + invalidation",
+      "[ ] Check news calendar",
+      "[ ] Set intention in Sanctuary",
+      "[ ] Complete pre-market routine",
+      "[ ] Trade only the plan",
+      "[ ] Journal + daily note",
+      "[ ] Close platform on time"
+    ])],
+    ["Goal Tracker", tplBody([
+      "Goal:",
+      "Why it matters:",
+      "Deadline:",
+      "",
+      "MILESTONES",
+      "- ",
+      "- ",
+      "- ",
+      "",
+      "Weekly action this week:",
+      "Obstacle & counter-plan:",
+      "Progress log:"
+    ])]
   ]},
-  { group:"Playbook", items:[
-    ["Entry Model","Model name:\nMarket / timeframe:\nHTF condition required:\nPOI type (OB / FVG / liquidity pool):\nTrigger (sweep → shift → ?):\nEntry:\nStop (beyond what?):\nTarget (which pool?):\nMin R:R:\nInvalidation:\nExample trade links:"],
-    ["Trade Plan","Plan name:\nMarket:\nBias rule:\nEntry criteria:\n1.\n2.\n3.\nRisk per trade:\nExit rules:\nWhen this plan is OFF (news, conditions):\nStats so far (link trades in Journal):"]
+  { group:"Playbook", emoji:"📘", items:[
+    ["Entry Model", tplBody([
+      "Model name:",
+      "Market / timeframe:",
+      "",
+      "ENTRY CRITERIA — ALL MUST BE TRUE",
+      "[ ] HTF bias is clear (BOS direction)",
+      "[ ] Price is at a valid POI (order block / FVG)",
+      "[ ] Liquidity has been swept into the POI",
+      "[ ] Displacement / market structure shift on the LTF",
+      "[ ] Entry trigger confirmed",
+      "[ ] Stop sits beyond invalidation",
+      "[ ] Target is the next opposing liquidity pool",
+      "[ ] Minimum R:R is met",
+      "",
+      "EXECUTION",
+      "Entry:",
+      "Stop (beyond what?):",
+      "Target (which pool?):",
+      "Invalidation:",
+      "Example trade links:"
+    ])],
+    ["Trade Plan", tplBody([
+      "Plan name:",
+      "Market:",
+      "",
+      "HTF BIAS",
+      "How bias is decided:",
+      "Current bias:",
+      "",
+      "LTF EXECUTION",
+      "Entry model:",
+      "Trigger:",
+      "Entry timeframe:",
+      "",
+      "TRADE MANAGEMENT",
+      "Partial / scale-out rules:",
+      "When to move to breakeven:",
+      "Exit rules:",
+      "",
+      "RISK RULES",
+      "Risk per trade:",
+      "Max trades per day:",
+      "Daily stop (loss limit):",
+      "",
+      "REMINDERS",
+      "When this plan is OFF (news, conditions):",
+      "Stats so far (link trades in Journal):"
+    ])]
   ]}
 ];
-let tplPreview = null; // {group, ix} selected in the template library
-function openTemplates(){
-  tplPreview = null;
-  openModal('<h3>Template library</h3><div class="small" style="margin-bottom:6px">15 built-in templates. Tap one to preview it first — then use it if it fits.</div>'
-    + NOTE_TEMPLATES.map(g=>'<div class="small" style="font-weight:800;margin:14px 0 7px;color:var(--pine)">'+esc(g.group.toUpperCase())+'</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:7px">'+g.items.map((it,ix)=>'<button class="folder-chip" data-tpl="'+esc(g.group)+'|'+ix+'" onclick="previewTemplate(\''+esc(g.group)+'\','+ix+')">'+esc(it[0])+'</button>').join("")+'</div>').join("")
-    + '<div id="tpl-preview-slot"></div>'
-    + '<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">Close</button></div>');
+function nbTplFind(name){
+  for(let gi=0; gi<NOTE_TEMPLATES.length; gi++){ const ix = NOTE_TEMPLATES[gi].items.findIndex(it=>it[0]===name); if(ix>=0) return { gi:gi, ix:ix }; }
+  return null;
 }
-function previewTemplate(group, ix){
-  tplPreview = { group:group, ix:ix };
-  const g = NOTE_TEMPLATES.find(x=>x.group===group); if(!g) return;
-  const t = g.items[ix];
-  document.querySelectorAll("[data-tpl]").forEach(b=> b.classList.toggle("on", b.getAttribute("data-tpl")===group+"|"+ix));
-  const slot = document.getElementById("tpl-preview-slot"); if(!slot) return;
-  slot.innerHTML = '<div class="divider"></div><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><strong>'+esc(t[0])+'</strong><span class="chip">'+esc(group)+'</span></div>'
-    + '<div class="tpl-preview">'+esc(t[1])+'</div>'
-    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn primary" onclick="useTemplate(\''+esc(group)+'\','+ix+')">Use this template</button></div>';
+function nbTplCardHTML(name, sub, key, useFn, pinFn, pinned, deleteFn){
+  const menuOpen = nbTplMenu===key;
+  return '<div class="plan-wrap"><div class="tpl-card">'
+    + '<button class="tpl-main" onclick="'+useFn+'"><span class="tpl-name">'+esc(name)+'</span><span class="tpl-sub">'+esc(sub)+'</span></button>'
+    + (pinned? '<span class="chip" title="Pinned template">★</span>' : "")
+    + '<button class="dots-btn" title="More actions" aria-label="More actions for '+esc(name)+'" onclick="nbToggleTplMenu(\''+key+'\')">&#8943;</button>'
+    + '</div>'
+    + (menuOpen? '<div class="pop-menu">'
+        + '<button onclick="'+useFn+'">Use Template</button>'
+        + '<button onclick="'+pinFn+'">'+(pinned? "Unpin Template" : "Pin Template")+'</button>'
+        + (deleteFn? '<button class="danger" onclick="'+deleteFn+'">Delete Template</button>' : "")
+      + '</div>' : "")
+    + '</div>';
 }
-function useTemplate(group, ix){
-  const g = NOTE_TEMPLATES.find(x=>x.group===group); if(!g) return;
-  const t = g.items[ix];
+function nbTemplatesPanelHTML(){
+  const pins = DB.pinnedTemplates || [];
+  const mine = DB.myTemplates || [];
+  const pinCards = [];
+  pins.forEach(name=>{ const f = nbTplFind(name); if(f) pinCards.push(nbTplCardHTML(name, NOTE_TEMPLATES[f.gi].group, "p"+f.gi+"i"+f.ix, "useTemplate("+f.gi+","+f.ix+")", "nbTogglePinName('"+name+"')", true, "")); });
+  mine.forEach((t,ix)=>{ if(t.pinned) pinCards.push(nbTplCardHTML(t.name, "My template", "pm"+ix, "useMyTemplate("+ix+")", "nbTogglePinMy("+ix+")", true, "")); });
+  let h = '<div class="card nb-tpl-panel" id="nb-templates"><h3 style="font-size:16px">Templates</h3>'
+    + '<div class="nb-tpl-sec"><span class="t">Pinned Templates</span><span class="nb-tpl-count">'+pinCards.length+'</span></div>'
+    + (pinCards.length? '<div class="nb-tpl-grid">'+pinCards.join("")+'</div>' : '<div class="small">No pinned templates yet — pin one from its ⋯ menu below.</div>')
+    + '<div class="nb-tpl-sec"><span class="t">My Templates</span><span class="nb-tpl-count">'+mine.length+'</span><button class="icon-btn" style="width:28px;height:28px;font-size:16px" title="Create my template" aria-label="Create my template" onclick="addMyTemplate()">+</button></div>'
+    + (mine.length? '<div class="nb-tpl-grid">'+mine.map((t,ix)=> nbTplCardHTML(t.name, "My template", "m"+ix, "useMyTemplate("+ix+")", "nbTogglePinMy("+ix+")", !!t.pinned, "deleteMyTemplate("+ix+")")).join("")+'</div>' : '<div class="small">No custom templates yet — tap + to save your own.</div>');
+  NOTE_TEMPLATES.forEach((g,gi)=>{
+    h += '<div class="nb-tpl-sec"><span class="t">'+g.emoji+' '+esc(g.group)+'</span><span class="nb-tpl-count">'+g.items.length+'</span></div>'
+      + '<div class="nb-tpl-grid">'+g.items.map((it,ix)=> nbTplCardHTML(it[0], g.group, "g"+gi+"i"+ix, "useTemplate("+gi+","+ix+")", "nbTogglePinName('"+it[0]+"')", pins.includes(it[0]), "")).join("")+'</div>';
+  });
+  return h + '</div>';
+}
+function nbToggleTplMenu(key){ nbTplMenu = nbTplMenu===key? null : key; nbNewOpen = false; RENDER.notebook(); }
+function nbTogglePinName(name){
+  if(!DB.pinnedTemplates) DB.pinnedTemplates = [];
+  const i = DB.pinnedTemplates.indexOf(name);
+  if(i>=0) DB.pinnedTemplates.splice(i,1); else DB.pinnedTemplates.push(name);
+  nbTplMenu = null; saveDB(); RENDER.notebook();
+  toast(i>=0? "Template unpinned." : "Template pinned.");
+}
+function nbTogglePinMy(ix){ const t = (DB.myTemplates||[])[ix]; if(!t) return; t.pinned = !t.pinned; nbTplMenu = null; saveDB(); RENDER.notebook(); }
+function nbNoteFromTemplate(name, body){
   const folderName = "Templates";
   if(!DB.folders.includes(folderName)) DB.folders.push(folderName);
-  const n = { id:uid(), title: t[0]+" — "+todayStr(), body: t[1], folder: folderName, pinned:false, color:"", emoji:"", updated: todayStr() };
-  DB.notes.push(n); nbActive = n.id; nbFolder = "All"; nbSearch = "";
-  saveDB(); closeModal(); RENDER.notebook(); toast("Template opened — make it yours.");
+  const n = { id:uid(), title: name+" — "+todayStr(), body: body, folder: folderName, pinned:false, color:"", emoji:"", updated: todayStr() };
+  DB.notes.push(n); nbActive = n.id; nbFolder = "All"; nbSearch = ""; nbTplMenu = null; nbNewOpen = false;
+  saveDB(); RENDER.notebook(); toast("Template opened — make it yours.");
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+function useTemplate(gi, ix){
+  const g = NOTE_TEMPLATES[gi]; if(!g) return;
+  const t = g.items[ix]; if(!t) return;
+  nbNoteFromTemplate(t[0], t[1]);
+}
+function useMyTemplate(ix){ const t = (DB.myTemplates||[])[ix]; if(!t) return; nbNoteFromTemplate(t.name, t.body); }
+function addMyTemplate(){
+  openModal('<h3>New template</h3><div class="small" style="margin-bottom:6px">Save your own notebook template — it will live under My Templates.</div>'
+    + '<div class="field" style="margin-top:10px"><label class="f">Template name</label><input class="input" id="myt-name" placeholder="e.g. London Session Review"></div>'
+    + '<div class="field"><label class="f">Template content</label><textarea class="input" id="myt-body" rows="9" placeholder="Section headings, checklists, prompts…"></textarea></div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveMyTemplate()">Save template</button></div>');
+}
+function saveMyTemplate(){
+  const nameEl = $("#myt-name"); const name = nameEl? nameEl.value.trim() : "";
+  if(!name){ toast("Give your template a name first."); return; }
+  const bodyEl = $("#myt-body");
+  if(!DB.myTemplates) DB.myTemplates = [];
+  DB.myTemplates.push({ name:name, body: bodyEl? bodyEl.value : "", pinned:false });
+  saveDB(); closeModal(); RENDER.notebook(); toast("Template saved to My Templates.");
+}
+function deleteMyTemplate(ix){
+  if(!DB.myTemplates) return;
+  DB.myTemplates.splice(ix,1); nbTplMenu = null; saveDB(); RENDER.notebook(); toast("Template deleted.");
 }
 
 /* ================= SANCTUARY ================= */
