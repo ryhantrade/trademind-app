@@ -509,6 +509,11 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .twl-scroll::-webkit-scrollbar{width:8px}
 .twl-scroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}
 .twl-scroll::-webkit-scrollbar-track{background:transparent}
+.wl-pin-toggle{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;border-radius:99px;padding:4px 11px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.wl-pin-toggle.on{color:var(--pine);border-color:var(--pine);background:var(--pine-soft)}
+.range-track{position:relative;height:6px;border-radius:99px;background:var(--bg2);margin:7px 0 5px}
+.range-track .range-fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--pine)}
+.range-track .range-dot{position:absolute;top:50%;width:11px;height:11px;border-radius:50%;background:var(--pine);border:2px solid var(--card);transform:translate(-50%,-50%);box-shadow:var(--shadow-sm);z-index:1}
 /* Trading header stats live in the top bar on the Trading view (EdgeFlo:
    title + subtitle left, account stats + Trade on the right of one row). */
 .tb-trading{margin-left:auto;display:none;align-items:center;gap:22px;flex-wrap:wrap}
@@ -1586,6 +1591,12 @@ function fmtHMS(ms){
   const s = Math.floor(ms/1000);
   return String(Math.floor(s/3600)).padStart(2,"0")+":"+String(Math.floor((s%3600)/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
 }
+/* Local wall-clock time as HH:MM:SS — the Trading header clock (EdgeFlo
+   shows the current local time there, ticking every second). */
+function localTimeHMS(d){
+  d = d || new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":"+String(d.getSeconds()).padStart(2,"0");
+}
 function sessionInfo(){
   const g = DB.guardrails; const now = new Date();
   const start = hmToDate(g.winStart, 0), end = hmToDate(g.winEnd, 0);
@@ -1608,7 +1619,7 @@ setInterval(()=>{
   const c = $("#sb-count"); if(c){ const info = sessionInfo(); c.textContent = fmtCountdown(info.target - new Date()); }
   const ck = $("#sb-clock"); if(ck) ck.textContent = new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12: !(DB.settings && DB.settings.profile && DB.settings.profile.time24)});
   document.querySelectorAll(".tw-count").forEach(e=>{ e.textContent = fmtCountdownHM(sessionInfo().target - new Date()); });
-  const sessT = $("#th-sess-timer"); if(sessT) sessT.textContent = fmtHMS(sessionInfo().target - new Date());
+  const hdrCk = $("#th-clock"); if(hdrCk) hdrCk.textContent = localTimeHMS(new Date());
   document.querySelectorAll("[data-posdur]").forEach(e=>{ const p = DB.paper.positions.find(x=>x.id===e.getAttribute("data-posdur")); if(p) e.textContent = posDurText(p); });
   if(new Date().getSeconds()===0) renderSessionBar();
 }, 1000);
@@ -2861,7 +2872,7 @@ function startPosResize(e){
   document.addEventListener("pointermove", move);
   document.addEventListener("pointerup", up);
 }
-let sideSessionOpen = true, twlPinnedOnly = false, twlPinFirst = false;
+let sideSessionOpen = true, twlPinnedOnly = false, twlClassFilter = "All";
 function setChartSymbol(sym){
   /* Pair selection ONLY: switch the chart symbol in place. Clicking a
      pair never opens the Trading page and never opens the order panel —
@@ -2880,6 +2891,14 @@ function paintTradingLive(){
   const openPnl = openPnlNow();
   const op = $("#th-openpnl"); if(op){ op.textContent = (openPnl>=0?"+":"")+fmt$(openPnl); op.className = openPnl>=0? "pos":"neg"; }
   const eq = $("#th-equity"); if(eq) eq.textContent = bal$(activePaperBalance().amount + openPnl);
+  const fm = $("#th-freemargin"), mu = $("#th-marginused"), ml = $("#th-marginlevel");
+  if(fm || mu || ml){
+    const eqv = activePaperBalance().amount + openPnl;
+    const mUsed = DB.paper.positions.reduce((a,p)=> a + Math.abs(p.size * p.entry) * 0.01, 0);
+    if(fm) fm.textContent = fmt$(eqv - mUsed);
+    if(mu) mu.textContent = fmt$(mUsed);
+    if(ml) ml.textContent = mUsed>0? (eqv / mUsed * 100).toLocaleString("en-US",{maximumFractionDigits:1})+"%" : "N/A";
+  }
   const bc = $("#th-balance"); if(bc) bc.textContent = bal$(activePaperBalance().amount);
   const acp = $("#th-acct"); if(acp) acp.textContent = activePaperBalance().cap || "";
   if(Date.now() - brokerStatusAt > 60000){ try{ loadBrokerStatus(); }catch(e){} }
@@ -2942,6 +2961,11 @@ function tradingHeaderHTML(lockedOut){
   const mh = freePct===null? "N/A" : ((DB.guardrails.marginInvert? 100 - freePct : freePct).toFixed(1) + "%");
   const activePlan = DB.plans.find(p=>p.id===DB.activePlanId) || null;
   const lockSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="vertical-align:-1px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const powerSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="vertical-align:-1px"><path d="M12 3v8"/><path d="M6.3 6.5a8 8 0 1 0 11.4 0"/></svg>';
+  /* Trading window closed (and not overridden today): the one-click
+     bolt is in EdgeFlo's "One Click Trading (Blocked)" state and opens
+     the Outside Your Trading Window dialog instead of the panel. */
+  const windowBlocked = DB.guardrails.enabled && !sessionInfo().open && !windowOverriddenToday();
   const chevD = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:0;margin-left:3px"><path d="'+(marginPopOpen? "M5 15l7-7 7 7":"M5 9l7 7 7-7")+'"/></svg>';
   /* EdgeFlo header: the page title + subtitle sit on the left of the top
      bar; these account stats + Trade controls fill its right side — no
@@ -2956,9 +2980,12 @@ function tradingHeaderHTML(lockedOut){
       + '<div class="mp-row"><span>Margin Level</span><strong>'+(marginLevel===null? "N/A" : marginLevel.toLocaleString("en-US",{maximumFractionDigits:1})+"%")+'</strong></div>'
       + '<div class="small" style="margin-top:6px">1% margin per open position on the paper feed.</div></div>' : "")
     + '</div>'
-    + '<div class="acct-cell hide-m"><div class="acct-label">Session Timer <span class="info-i" title="Countdown to your trading window target — the session target from sessionInfo()">i</span></div><div class="acct-val mono" id="th-sess-timer">'+fmtHMS(sessionInfo().target - new Date())+'</div></div>'
-    + (unlockSeenDate===todayStr()? '<button class="btn primary sm" onclick="endTradingSession()">End Session</button>' : "")
-    + '<button class="icon-btn" title="'+(lockedOut? "One Click Trading (Blocked)":"One Click Trading — show / hide the floating panel")+'" '+(lockedOut?"disabled":"")+' onclick="octToggle()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
+    + '<div class="acct-cell"><div class="acct-label">Free Margin <span class="info-i" title="Equity minus margin used — the capital free to open new positions (1% margin per position)">i</span></div><div class="acct-val mono" id="th-freemargin">'+fmt$(freeMargin)+'</div></div>'
+    + '<div class="acct-cell"><div class="acct-label">Margin Used <span class="info-i" title="Margin locked by open positions — 1% of each position&rsquo;s notional on the paper feed">i</span></div><div class="acct-val mono" id="th-marginused">'+fmt$(marginUsed)+'</div></div>'
+    + '<div class="acct-cell"><div class="acct-label">Margin Level <span class="info-i" title="Equity as a percentage of margin used. N/A when no margin is used">i</span></div><div class="acct-val mono" id="th-marginlevel">'+(marginLevel===null? "N/A" : marginLevel.toLocaleString("en-US",{maximumFractionDigits:1})+"%")+'</div></div>'
+    + '<div class="acct-cell hide-m"><div class="acct-label">Local Time <span class="info-i" title="Current local time">i</span></div><div class="acct-val mono" id="th-clock">'+localTimeHMS(new Date())+'</div></div>'
+    + '<button class="btn sm" title="End the current trading session for today" onclick="endTradingSession()">'+powerSvg+' End Session</button>'
+    + '<button class="icon-btn" title="'+((lockedOut || windowBlocked)? "One Click Trading (Blocked)":"One Click Trading — show / hide the floating panel")+'" '+(lockedOut?"disabled":"")+' onclick="'+(windowBlocked && !lockedOut? "winAfterOverride='oct';showWindowModal()":"octToggle()")+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
     + '<button class="btn '+(lockedOut?"":"primary")+'" '+(lockedOut?"disabled":"")+' onclick="openTradePanel()">'+lockSvg+' Trade</button>'
     + '<button class="icon-btn" title="'+(tradeWide?"Show sidebar":"Expand chart")+'" onclick="toggleTradeWide()">'+(tradeWide?"&laquo;":"&raquo;")+'</button>';
 }
@@ -3831,6 +3858,10 @@ const ord = { type:"Market", side:null, unit:"Price", entry:"", expiry:"GTC", sl
    disciplined just closes it; overriding asks for an optional
    reason, logs the rule break to DB.overrides, then opens the
    order panel. ---- */
+/* What to continue after a window override is logged: "oct" when the
+   dialog was opened from the One Click Trading bolt (show the panel),
+   null for the Trade button / order flow (opens the order panel). */
+let winAfterOverride = null;
 function windowOverriddenToday(){
   return DB.overrides.some(o=> o.date===todayStr() && (o.reasons||[]).some(r=> String(r).indexOf("Trading window override")===0));
 }
@@ -3849,7 +3880,7 @@ function windowModalHTML(){
     + '<div style="flex:1;min-width:0"><div style="font-weight:800">Trading window '+esc(g.winStart)+' - '+esc(g.winEnd)+'</div><div class="small" style="margin-top:2px">Current time '+hm+'</div></div>'
     + '<span class="chip amber" style="flex:0 0 auto">Window closed</span>'
     + '</div>'
-    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" onclick="overrideWindowWithReason()">Override With Reason</button><button class="btn primary" onclick="closeModal()">Stay Disciplined</button></div>'
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" onclick="overrideWindowWithReason()">Override With Reason</button><button class="btn primary" onclick="winAfterOverride=null;closeModal()">Stay Disciplined</button></div>'
     + '</div>';
 }
 function showWindowModal(){ openModal(windowModalHTML()); }
@@ -3864,12 +3895,21 @@ function overrideWindowWithReason(){
 function confirmWindowOverride(){
   const g = DB.guardrails;
   const el = $("#win-override-reason"); const reason = el? el.value.trim() : "";
+  const after = winAfterOverride; winAfterOverride = null;
   DB.overrides.push({ id:uid(), date:todayStr(), reasons:["Trading window override ("+g.winStart+" - "+g.winEnd+")"+(reason? " \u2014 "+reason : "")], at:new Date().toLocaleTimeString() });
   saveDB(); closeModal();
+  toast("Window override logged. Trade the plan, not the impulse.");
+  if(after==="oct"){
+    /* Opened from the one-click bolt: unlock and show the panel. */
+    octVisible = true;
+    try{ localStorage.setItem("tm-oct-visible", "1"); }catch(e){}
+    if(currentView!=="trading"){ go("trading"); }
+    else { paintTradingHeader(tradeLockedNow); repaintTradingSidebar(); octShowPanel(); }
+    return;
+  }
   orderOpen = true;
   if(currentView!=="trading"){ go("trading"); } else repaintTradingSidebar();
   setTimeout(()=>{ const p = document.getElementById("order-panel"); if(p) p.scrollIntoView({behavior:"smooth", block:"nearest"}); }, 60);
-  toast("Window override logged. Trade the plan, not the impulse.");
 }
 /* ---- Pre-Market Routine Lock modal ----
    Shown when a trade action is attempted while the routine gate locks
@@ -4330,6 +4370,65 @@ function mktHoursOpen(sym){
   if(day===5) return mins<1320;  // Friday — closes 22:00 UTC
   return true;                   // Mon–Thu
 }
+/* Current forex session by UTC hour (Sydney / Tokyo / London / New York). */
+function mktSessionName(){
+  const h = new Date().getUTCHours();
+  if(h>=21) return "Sydney";
+  if(h<7) return "Tokyo";
+  if(h<12) return "London";
+  if(h<17) return "London / New York";
+  return "New York";
+}
+function fmtDurHM(ms){
+  if(ms<0) ms = 0;
+  const mins = Math.floor(ms/60000), d = Math.floor(mins/1440), h = Math.floor((mins%1440)/60), m = mins%60;
+  return d>0? d+"d "+h+"h" : h+"h "+String(m).padStart(2,"0")+"m";
+}
+/* "Market closes in Xh Ym" for the detail card, from the same market-hours
+   rules as mktHoursOpen: crypto is 24/7 (market-open state instead),
+   indices follow the US cash session, forex/metals the Sun 22:00 UTC –
+   Fri 22:00 UTC week. When closed, reports the next open instead. */
+function mktCloseText(sym){
+  const s = wlState[sym]; if(!s) return "";
+  if(s.cls==="Crypto") return "Market open · trades 24/7";
+  const now = new Date(), day = now.getUTCDay(), mins = now.getUTCHours()*60 + now.getUTCMinutes();
+  const atUTC = (addDays, hm)=>{ const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()+addDays)); return d.getTime() + hm*60000; };
+  if(mktHoursOpen(sym)){
+    if(s.cls==="Indices") return "Market closes in " + fmtDurHM(atUTC(0, 1200) - now.getTime());
+    const add = day===5? 0 : (5 - day + 7) % 7; // next Friday 22:00 UTC (today if Friday)
+    return "Market closes in " + fmtDurHM(atUTC(add, 1320) - now.getTime());
+  }
+  if(s.cls==="Indices"){
+    let add = 0;
+    if(day===6) add = 2; else if(day===0) add = 1;
+    else if(day===5 && mins>=1200) add = 3;
+    else if(mins>=1200) add = 1;
+    return "Market opens in " + fmtDurHM(atUTC(add, 810) - now.getTime());
+  }
+  let add = 0; // next Sunday 22:00 UTC open
+  if(day===6) add = 1; else if(day===0 && mins<1320) add = 0; else if(day===5) add = 2; else add = (7 - day) % 7;
+  return "Market opens in " + fmtDurHM(atUTC(add, 1320) - now.getTime());
+}
+/* The day's high/low for the detail card's range bar, from the app's
+   candle data: today's bars on the chart (lwBars) when available, the
+   seeded practice candles next, the watchlist open/last as last resort. */
+function dayRangeInfo(sym){
+  const s = wlState[sym]; if(!s) return null;
+  let lo = Infinity, hi = -Infinity;
+  if(sym===simMarket && typeof lwBars!=="undefined" && lwBars.length){
+    const now = new Date(), y = now.getUTCFullYear(), mo = now.getUTCMonth(), da = now.getUTCDate();
+    lwBars.forEach(b=>{ const d = new Date(b.time*1000);
+      if(d.getUTCFullYear()===y && d.getUTCMonth()===mo && d.getUTCDate()===da){ lo = Math.min(lo, b.low); hi = Math.max(hi, b.high); } });
+    if(!isFinite(lo)){ const b = lwBars[lwBars.length-1]; lo = b.low; hi = b.high; } // weekly/monthly bars: the forming bar
+  }
+  if(!isFinite(lo) && sym===simMarket && simCandles.length) simCandles.forEach(c=>{ lo = Math.min(lo, c.l); hi = Math.max(hi, c.h); });
+  if(!isFinite(lo)){ lo = Math.min(s.open, s.last); hi = Math.max(s.open, s.last); if(hi-lo<=0){ hi = lo*1.0005; lo = lo*0.9995; } }
+  const pct = hi>lo? Math.max(0, Math.min(100, (s.last-lo)/(hi-lo)*100)) : 50;
+  let label;
+  if(s.cls==="Forex"){ const pip = sym.indexOf("JPY")>=0? 0.01 : 0.0001; label = "DAY'S RANGE: " + ((hi-lo)/pip).toFixed(1) + " PIPS"; }
+  else label = "DAY'S RANGE: " + (hi-lo).toLocaleString("en-US",{maximumFractionDigits:2}) + " POINTS";
+  return { lo:lo, hi:hi, pct:pct, label:label };
+}
 function symbolDetailHTML(){
   const s = wlState[simMarket]; if(!s) return "";
   const row = WL_INSTRUMENTS.find(r=>r[0]===simMarket);
@@ -4349,7 +4448,20 @@ function symbolDetailHTML(){
     + '<span class="mono '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+simMarket+'" style="font-weight:700">'+fmtPct(chg)+'</span></div>'
     + '<div class="grid g3" style="gap:10px;margin-top:9px">'
     + cell("BID", bid.toFixed(s.dec), "data-sym-bid") + cell("ASK", ask.toFixed(s.dec), "data-sym-ask") + cell("SPREAD", spread.toFixed(s.dec), "data-sym-spread")
-    + '</div></div>';
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:11px">'
+    + cell("SESSION", mktSessionName(), "data-sym-session")
+    + '<div class="small" style="font-weight:700;text-align:right" data-mkt-close>'+esc(mktCloseText(simMarket))+'</div>'
+    + '</div>'
+    + dayRangeHTML(simMarket)
+    + '</div>';
+}
+function dayRangeHTML(sym){
+  const dr = dayRangeInfo(sym); if(!dr) return "";
+  const s = wlState[sym];
+  return '<div style="margin-top:11px"><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)" data-range-label>'+esc(dr.label)+'</div>'
+    + '<div class="range-track"><span class="range-fill" data-range-fill style="width:'+dr.pct+'%"></span><span class="range-dot" data-range-dot style="left:'+dr.pct+'%"></span></div>'
+    + '<div style="display:flex;justify-content:space-between" class="small mono"><span data-range-lo>'+dr.lo.toFixed(s.dec)+'</span><span data-range-hi>'+dr.hi.toFixed(s.dec)+'</span></div></div>';
 }
 function sideWatchlistRowsHTML(){
   const q = twlSearch.trim().toUpperCase();
@@ -4363,38 +4475,25 @@ function sideWatchlistRowsHTML(){
       + '<span class="mono '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+s.sym+'" style="min-width:56px;text-align:right">'+fmtPct(chg)+'</span>'
       + '<button class="wl-pin '+(pinned?"on":"")+'" title="'+(pinned? "Unpin":"Pin to top")+'" onclick="event.stopPropagation();toggleWlPin(\''+s.sym+'\');refreshSideWatchlist()">'+(pinned? "&#9733;":"&#9734;")+'</button></div>';
   };
-  const all = WL_INSTRUMENTS.map(r=> wlState[r[0]]).filter(s=> (!q || s.sym.includes(q)) && (!twlPinnedOnly || DB.wlPins.includes(s.sym)));
+  const all = WL_INSTRUMENTS.map(r=> wlState[r[0]]).filter(s=> (!q || s.sym.includes(q)) && (!twlPinnedOnly || DB.wlPins.includes(s.sym)) && (twlClassFilter==="All" || s.cls===twlClassFilter));
   let rows = "";
-  if(twlPinFirst){ const pins = all.filter(s=> DB.wlPins.includes(s.sym)); if(pins.length) rows += '<div class="wl-group-head">Pinned</div>' + pins.map(rowHTML).join(""); }
   ["Forex","Indices","Crypto","Metals"].forEach(cls=>{
     const items = all.filter(s=> s.cls===cls);
     if(!items.length) return;
     rows += '<div class="wl-group-head">'+cls+'</div>' + items.map(rowHTML).join("");
   });
-  return rows || '<div class="empty" style="padding:16px"><div class="e-title">No instruments match</div>Try a different search or clear the pinned-only filter.</div>';
+  return rows || '<div class="empty" style="padding:16px"><div class="e-title">No instruments match</div>Try a different search or clear the filters.</div>';
 }
 function sideWatchlistHTML(){
-  const funnelSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg>';
-  const pinSvgB = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 3h6l-1 7 3 3H7l3-7z"/></svg>';
-  const act = on=> on? ' style="color:var(--pine);border-color:var(--pine)"' : "";
-  return '<div style="display:flex;gap:8px;margin-bottom:2px"><input class="input" style="flex:1;min-width:0;padding:7px 11px;font-size:13.5px" placeholder="Search all instruments…" value="'+esc(twlSearch)+'" oninput="twlSearch=this.value;refreshSideWatchlist()">'
-    + '<button class="icon-btn"'+act(twlPinnedOnly)+' title="Filter: pinned instruments only" onclick="twlPinnedOnly=!twlPinnedOnly;refreshSideWatchlist();paintWlFilterBtns()">'+funnelSvg+'</button>'
-    + '<button class="icon-btn"'+act(twlPinFirst)+' title="Float pinned instruments to the top" onclick="twlPinFirst=!twlPinFirst;refreshSideWatchlist();paintWlFilterBtns()">'+pinSvgB+'</button></div>'
+  const clsOpt = c=> '<option value="'+c+'"'+(twlClassFilter===c? " selected":"")+'>'+(c==="All"? "All classes" : c)+'</option>';
+  return '<div style="display:flex;gap:8px;margin-bottom:6px"><input class="input" style="flex:1;min-width:0;padding:7px 11px;font-size:13.5px" placeholder="Search all instruments…" value="'+esc(twlSearch)+'" oninput="twlSearch=this.value;refreshSideWatchlist()">'
+    + '<select class="input" style="flex:0 0 auto;width:auto;padding:7px 8px;font-size:13px" title="Filter by asset class" aria-label="Filter by asset class" onchange="twlClassFilter=this.value;refreshSideWatchlist()">'
+    + ["All","Forex","Crypto","Metals","Indices"].map(clsOpt).join("") + '</select></div>'
+    + '<div style="display:flex;align-items:center;margin-bottom:4px"><button type="button" class="wl-pin-toggle'+(twlPinnedOnly? " on":"")+'" title="Show only pinned symbols" aria-pressed="'+(twlPinnedOnly? "true":"false")+'" onclick="twlPinnedOnly=!twlPinnedOnly;this.classList.toggle(\'on\',twlPinnedOnly);this.setAttribute(\'aria-pressed\',twlPinnedOnly);refreshSideWatchlist()">&#9733; Show only pinned symbols</button></div>'
     + '<div style="display:flex;gap:10px;padding:1px 6px 2px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800"><span style="flex:1">Instrument</span><span>Last</span><span style="min-width:56px;text-align:right">Chg</span><span id="twl-live" title="Live prices — refreshed every 60 seconds" style="display:'+(wlAnyLive? "inline-flex":"none")+';align-items:center;gap:5px;color:var(--green)"><i style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></i>Live</span><span style="width:26px"></span></div>'
     + '<div id="twl-list" class="twl-scroll">'+sideWatchlistRowsHTML()+'</div>';
 }
 function refreshSideWatchlist(){ const l = $("#twl-list"); if(l) l.innerHTML = sideWatchlistRowsHTML(); }
-/* Keep the two watchlist filter toggles' active styling in sync after a
-   list-only repaint (the buttons themselves are not rebuilt). */
-function paintWlFilterBtns(){
-  const body = document.getElementById("trading-tabs-body"); if(!body) return;
-  const btns = body.querySelectorAll(".icon-btn[title^='Filter: pinned'], .icon-btn[title^='Float pinned']");
-  btns.forEach(b=>{
-    const on = b.title.indexOf("Filter:")===0? twlPinnedOnly : twlPinFirst;
-    b.style.color = on? "var(--pine)" : "";
-    b.style.borderColor = on? "var(--pine)" : "";
-  });
-}
 function paintTradingWlPrices(){
   if(currentView!=="trading") return;
   WL_INSTRUMENTS.forEach(r=>{ const s = wlState[r[0]];
@@ -4407,6 +4506,16 @@ function paintTradingWlPrices(){
   if(cs2){
     const dBid = document.querySelector("[data-sym-bid]"), dAsk = document.querySelector("[data-sym-ask]"), dSpr = document.querySelector("[data-sym-spread]");
     if(dBid && dAsk && dSpr){ const spr = Math.max(cs2.last*0.00018, Math.pow(10,-cs2.dec)); dBid.textContent = (cs2.last - spr/2).toFixed(cs2.dec); dAsk.textContent = (cs2.last + spr/2).toFixed(cs2.dec); dSpr.textContent = spr.toFixed(cs2.dec); }
+    const dSes = document.querySelector("[data-sym-session]"); if(dSes) dSes.textContent = mktSessionName();
+    const dMc = document.querySelector("[data-mkt-close]"); if(dMc) dMc.textContent = mktCloseText(simMarket);
+    const dr = dayRangeInfo(simMarket);
+    if(dr){
+      const rl = document.querySelector("[data-range-label]"); if(rl) rl.textContent = dr.label;
+      const rf = document.querySelector("[data-range-fill]"); if(rf) rf.style.width = dr.pct+"%";
+      const rd = document.querySelector("[data-range-dot]"); if(rd) rd.style.left = dr.pct+"%";
+      const rlo = document.querySelector("[data-range-lo]"); if(rlo) rlo.textContent = dr.lo.toFixed(cs2.dec);
+      const rhi = document.querySelector("[data-range-hi]"); if(rhi) rhi.textContent = dr.hi.toFixed(cs2.dec);
+    }
     const oq = opQuote(simMarket);
     document.querySelectorAll("[data-op-ask]").forEach(el=> el.textContent = "@ "+oq.ask.toFixed(oq.pd));
     document.querySelectorAll("[data-op-bid]").forEach(el=> el.textContent = "@ "+oq.bid.toFixed(oq.pd));
