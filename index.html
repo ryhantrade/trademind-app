@@ -2998,6 +2998,7 @@ const LW_TF_SEC = { "1":60, "5":300, "15":900, "30":1800, "60":3600, "240":14400
 const LW_UP = "#1E9E62", LW_DN = "#D64545";
 let lwChart = null, lwSeries = null, lwMountEl = null, lwRO = null;
 let lwBars = [], lwBarsKey = "", lwRangeKey = "", lwFetchSeq = 0;
+let lwBarsSrc = "";   /* source of the bars currently on the chart: "real" | "cache" | "seed" */
 let lwFetchMark = { key:"", okAt:0 };
 let lwPosLines = {};   /* posId -> { entry, sl, tp, ghostSl, ghostTp } native price-line handles */
 let lwOrdLineSet = {}; /* draft lines: { entry, sl, tp } */
@@ -3086,12 +3087,93 @@ function lwSeedBars(){
   const src = simCandles.length? simCandles : [{ o: base, h: base, l: base, c: base }];
   return src.map((cd, i)=>({ time: end - (src.length - 1 - i) * tf, open: cd.o, high: cd.h, low: cd.l, close: cd.c, volume: null }));
 }
+/* ---- Candle cache: localStorage, stale-while-revalidate ----
+   Every successful /api/candles fetch is persisted (slim OHLC bars, most
+   recent 500) under "lwBarsCache:<market>|<tf>". On a symbol/timeframe
+   switch the cached bars paint instantly — even when stale — and the
+   fresh fetch replaces them in the background. The cache is bounded to
+   ~10 entries via a timestamp index; every operation is wrapped so a
+   storage failure can never break the chart. */
+const LW_CACHE_PREFIX = "lwBarsCache:";
+const LW_CACHE_INDEX_KEY = "lwBarsCacheIndex";
+const LW_CACHE_MAX_ENTRIES = 10;
+const LW_CACHE_MAX_BARS = 500;
+function lwCacheIndex(){
+  try{
+    const raw = localStorage.getItem(LW_CACHE_INDEX_KEY);
+    const idx = raw? JSON.parse(raw) : {};
+    return (idx && typeof idx === "object" && !Array.isArray(idx))? idx : {};
+  }catch(e){ return {}; }
+}
+function lwCacheRead(key){
+  try{
+    const raw = localStorage.getItem(LW_CACHE_PREFIX + key);
+    if(!raw) return null;
+    const arr = JSON.parse(raw);
+    if(!Array.isArray(arr) || !arr.length) return null;
+    const bars = arr.map(b=>({ time: +b.time, open: +b.open, high: +b.high, low: +b.low, close: +b.close, volume: null }))
+      .filter(b=> isFinite(b.time) && b.time > 0 && b.high > 0 && b.low > 0)
+      .sort((a, b)=> a.time - b.time)
+      .filter((b, i, a)=> i === 0 || b.time > a[i - 1].time);
+    return bars.length? bars : null;
+  }catch(e){ return null; }
+}
+function lwCachePrune(idx){
+  const keys = Object.keys(idx);
+  if(keys.length <= LW_CACHE_MAX_ENTRIES) return;
+  keys.sort((a, b)=> (idx[a] || 0) - (idx[b] || 0));
+  const drop = keys.length - LW_CACHE_MAX_ENTRIES;
+  for(let i = 0; i < drop; i++){
+    try{ localStorage.removeItem(LW_CACHE_PREFIX + keys[i]); }catch(e){}
+    delete idx[keys[i]];
+  }
+}
+function lwCacheStore(key, bars){
+  try{
+    if(!bars || !bars.length) return;
+    const slim = bars.slice(-LW_CACHE_MAX_BARS).map(b=>({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }));
+    const idx = lwCacheIndex();
+    idx[key] = Date.now();
+    lwCachePrune(idx);
+    const payload = JSON.stringify(slim);
+    try{
+      localStorage.setItem(LW_CACHE_PREFIX + key, payload);
+      localStorage.setItem(LW_CACHE_INDEX_KEY, JSON.stringify(idx));
+    }catch(e){
+      /* Quota: prune the older entries and retry once. */
+      const others = Object.keys(idx).filter(k=> k !== key).sort((a, b)=> (idx[a] || 0) - (idx[b] || 0));
+      others.forEach(k=>{ try{ localStorage.removeItem(LW_CACHE_PREFIX + k); }catch(e2){} delete idx[k]; });
+      try{
+        localStorage.setItem(LW_CACHE_PREFIX + key, payload);
+        localStorage.setItem(LW_CACHE_INDEX_KEY, JSON.stringify(idx));
+      }catch(e2){}
+    }
+  }catch(e){}
+}
 function lwFetchCandles(force){
   if(!lwChart) return;
   const key = simMarket + "|" + tvInterval;
+  /* Stale-while-revalidate: on a key switch, paint this key's cached bars
+     immediately (even if stale) so the chart never waits on the network;
+     the fetch below still runs and swaps in the fresh bars. lwSetBars
+     only resets the visible range when the key changes, so the fresh
+     swap keeps the user's current view. */
+  let paintedCache = false;
+  if(lwBarsKey !== key){
+    const cached = lwCacheRead(key);
+    if(cached){ lwSetBars(cached, key, "cache"); paintedCache = true; }
+  }
   if(!force && lwFetchMark.key === key && Date.now() - lwFetchMark.okAt < 30000) return;
   const seq = ++lwFetchSeq;
-  const fallback = ()=>{ if(seq === lwFetchSeq) lwSetBars(lwSeedBars(), key); };
+  const fallback = ()=>{
+    if(seq !== lwFetchSeq) return;
+    /* Seeded bars are a HARD-FAILURE-only fallback: never paint them when
+       cached bars were already painted for this key, and never downgrade
+       bars already on the chart that are real or cached for this key. */
+    if(paintedCache) return;
+    if(lwBarsKey === key && lwBarsSrc !== "seed") return;
+    lwSetBars(lwSeedBars(), key, "seed");
+  };
   try{
     fetch(BROKER_API + "/api/candles?market=" + encodeURIComponent(simMarket) + "&tf=" + encodeURIComponent(tvInterval))
       .then(r=>{ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
@@ -3103,14 +3185,14 @@ function lwFetchCandles(force){
           .filter(b=> isFinite(b.time) && b.time > 0 && b.high > 0 && b.low > 0)
           .sort((a, b)=> a.time - b.time)
           .filter((b, i, a)=> i === 0 || b.time > a[i - 1].time);
-        if(bars.length){ lwFetchMark = { key: key, okAt: Date.now() }; lwSetBars(bars, key); }
+        if(bars.length){ lwFetchMark = { key: key, okAt: Date.now() }; lwCacheStore(key, bars); lwSetBars(bars, key, "real"); }
         else fallback();
       })
       .catch(fallback);
   }catch(e){ fallback(); }
 }
-function lwSetBars(bars, key){
-  lwBars = bars; lwBarsKey = key;
+function lwSetBars(bars, key, src){
+  lwBars = bars; lwBarsKey = key; lwBarsSrc = src || "real";
   if(!lwSeries) return;
   const dec = lwDecimals();
   try{ lwSeries.applyOptions({ priceFormat: { type: "price", precision: dec, minMove: Math.pow(10, -dec) } }); }catch(e){}
