@@ -219,12 +219,19 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
    to adjust the level; entry lines stay non-interactive. */
 .tv-wrap>.pos-lines{position:absolute;inset:0;height:auto;pointer-events:none;z-index:6}
 .pl-line.sl,.pl-line.tp{pointer-events:auto;cursor:ns-resize;touch-action:none}
-.pl-line.sl::before,.pl-line.tp::before{content:"";position:absolute;left:0;right:0;top:-8px;height:16px;cursor:ns-resize}
+.pl-line.sl::before,.pl-line.tp::before{content:"";position:absolute;left:0;right:0;top:-15px;height:30px;cursor:ns-resize}
 .pl-line{position:absolute;left:0;right:0;height:0}
 .pl-line.sl{border-top:2px dashed var(--red)}
 .pl-line.tp{border-top:2px dashed var(--green)}
 .pl-line.entry{border-top:2px solid var(--pine)}
-.pl-tag{position:absolute;right:8px;top:0;transform:translateY(-50%);font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;white-space:nowrap;line-height:1.5;box-shadow:var(--shadow-sm)}
+.pl-tag{position:absolute;right:8px;top:0;transform:translateY(-50%);font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;white-space:nowrap;line-height:1.5;box-shadow:var(--shadow-sm);touch-action:none}
+/* Ghost "Set SL / Set TP" lines for positions with no level yet: same drag
+   machinery as the solid lines, rendered semi-transparent until set. */
+.pl-line.ghost{opacity:.55}
+.pl-line.ghost .pl-tag{box-shadow:none}
+/* While a line is being dragged: thicker line, tag lifted above the rest. */
+.pl-line.pl-dragging{border-top-width:3px;z-index:8;opacity:1}
+.pl-line.pl-dragging .pl-tag{transform:translateY(-50%) scale(1.08);box-shadow:var(--shadow-md,0 6px 18px rgba(0,0,0,.25));z-index:9}
 .pl-line.sl .pl-tag{background:var(--red);color:#fff}
 .pl-line.tp .pl-tag{background:var(--green);color:#fff}
 .pl-line.entry .pl-tag{background:var(--card);border:1.5px solid var(--pine);color:var(--ink)}
@@ -487,8 +494,8 @@ table.pos-tbl td,table.pos-tbl th{white-space:nowrap}
 .tb-trading{margin-left:auto;display:none;align-items:center;gap:22px;flex-wrap:wrap}
 .tb-trading .acct-cell{min-width:0}
 .tb-trading .acct-val{font-size:15px;white-space:nowrap}
-@media (max-width:1080px){ .tb-trading{gap:14px} .tb-trading .acct-cell.hide-m{display:none} }
-@media (max-width:860px){ .tb-trading{gap:10px} .tb-trading .acct-val{font-size:13px} .tb-trading .acct-label{font-size:10.5px} }
+@media (max-width:1080px){ .tb-trading{gap:12px} .tb-trading .acct-val{font-size:13px} .tb-trading .acct-label{font-size:10px} .tb-trading .acct-cell.hide-m{display:none} }
+@media (max-width:860px){ .tb-trading{gap:10px} }
 /* Chart card: EdgeFlo-style chart toolbar + symbol info bar above the chart.
    Left: timeframe pills (active = solid violet), a "more timeframes"
    dropdown, chart-type icons, the ƒx Indicators menu and undo/redo.
@@ -2652,10 +2659,14 @@ function tickSim(){
   simCandles.push({o:p, h:Math.max(p,c)+Math.random()*p*0.0004, l:Math.min(p,c)-Math.random()*p*0.0004, c});
   if(simCandles.length>60) simCandles.shift();
   drawChart(); updateTicker(); paintTradingLive();
-  // auto SL/TP checks
-  DB.paper.positions.filter(pos=>pos.market===simMarket).forEach(pos=>{
-    if(pos.sl && ((pos.dir==="Long" && c<=pos.sl) || (pos.dir==="Short" && c>=pos.sl))) closePosition(pos.id, pos.sl, "Stop loss hit");
-    else if(pos.tp && ((pos.dir==="Long" && c>=pos.tp) || (pos.dir==="Short" && c<=pos.tp))) closePosition(pos.id, pos.tp, "Take profit hit");
+  // auto SL/TP checks — marked against the LIVE price for every position;
+  // the sim candle close is only a fallback when no live price exists.
+  DB.paper.positions.slice().forEach(pos=>{
+    let mark = liveMark(pos.market);
+    if(mark==null && pos.market===simMarket) mark = c;
+    if(mark==null) return;
+    if(pos.sl && ((pos.dir==="Long" && mark<=pos.sl) || (pos.dir==="Short" && mark>=pos.sl))) closePosition(pos.id, pos.sl, "Stop loss hit");
+    else if(pos.tp && ((pos.dir==="Long" && mark>=pos.tp) || (pos.dir==="Short" && mark<=pos.tp))) closePosition(pos.id, pos.tp, "Take profit hit");
   });
   // pending Limit / Stop orders fill when the feed trades through the trigger
   (DB.paper.orders||[]).filter(o=>o.market===simMarket).slice().forEach(o=>{
@@ -2704,7 +2715,7 @@ function updateTicker(){
   t.innerHTML = '<span class="t-price mono">'+p.toFixed(simCandles.dec)+'</span><span class="chip '+(chg>=0?"green":"red")+'">'+fmtPct(chg)+' today (simulated feed)</span>';
 }
 /* ---- Trading page state (EdgeFlo layout) ---- */
-let posTab = "open", posPanelHidden = true, tradeWide = false, sideTab = "plan", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
+let posTab = "open", posPanelHidden = true, tradeWide = false, sideTab = "watchlist", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
 let tradeLockedNow = false; /* header Trade-button lock state (guardrails lockout only — routine/window locks open their Override modals instead), kept for header repaints */
 /* Bottom positions panel height (px) — user-resizable via the grabber on
    the panel's top edge; 0 = natural height. Persisted across reloads. */
@@ -2785,8 +2796,8 @@ function tradingHeaderHTML(lockedOut){
      bar; these account stats + Trade controls fill its right side — no
      separate account card inside the page. */
   return '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="'+(pb.connected? "Connected Paper Trading account balance" : "Paper account cash balance (local simulator)")+'">i</span></div><div class="acct-val mono" id="th-balance">'+bal$(pb.amount)+'</div></div>'
-    + '<div class="acct-cell hide-m"><div class="acct-label">Open PnL <span class="info-i" title="Unrealised P&amp;L across open paper positions">i</span></div><div class="acct-val mono"><span id="th-openpnl" class="'+(openPnl>=0?"pos":"neg")+'">'+(openPnl>=0?"+":"")+fmt$(openPnl)+'</span></div></div>'
-    + '<div class="acct-cell hide-m"><div class="acct-label">Equity <span class="info-i" title="Balance plus open P&amp;L">i</span></div><div class="acct-val mono" id="th-equity">'+bal$(equity)+'</div></div>'
+    + '<div class="acct-cell"><div class="acct-label">Open PnL <span class="info-i" title="Unrealised P&amp;L across open paper positions">i</span></div><div class="acct-val mono"><span id="th-openpnl" class="'+(openPnl>=0?"pos":"neg")+'">'+(openPnl>=0?"+":"")+fmt$(openPnl)+'</span></div></div>'
+    + '<div class="acct-cell"><div class="acct-label">Equity <span class="info-i" title="Balance plus open P&amp;L">i</span></div><div class="acct-val mono" id="th-equity">'+bal$(equity)+'</div></div>'
     + '<div class="acct-cell margin-cell"><div class="acct-label">Margin Health <span class="info-i" title="'+(DB.guardrails.marginInvert? "Margin level inverted in Guardrails: showing margin USED as a share of equity (1% margin per position)." : "Free margin as a share of equity (1% margin per position). N/A with no open positions.")+'">i</span></div><div class="acct-val mono" title="Margin breakdown" onclick="toggleMarginPop()">'+mh+chevD+'</div>'
     + (marginPopOpen? '<div class="margin-pop">'
       + '<div class="mp-row"><span>Free Margin</span><strong>'+fmt$(Math.max(0, freeMargin))+'</strong></div>'
@@ -2929,7 +2940,7 @@ function exitAllPositions(){
    opening a trade (positionGate mirrors openTradePanel). ---- */
 function dispDec(sym){ const s = wlState[sym]; if(!s) return 2; if(s.cls==="Indices") return 0; return Math.max(2, Math.min(4, s.dec)); }
 function fmtPx(sym, v){ if(v==null || isNaN(v)) return "—"; const d = dispDec(sym); return Number(v).toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d}); }
-function posCurPrice(pos){ if(pos.market===simMarket) return curPrice(); const m = liveMark(pos.market); return m!=null? m : pos.entry; }
+function posCurPrice(pos){ const m = liveMark(pos.market); if(m!=null) return m; return pos.market===simMarket? curPrice() : pos.entry; }
 function posLots(pos){ return pos.size / contractSizeFor(pos.market); }
 function posOpenedMs(pos){
   if(pos.openedAt) return pos.openedAt;
@@ -2953,14 +2964,26 @@ function posOpenedLabel(pos){
 }
 /* SL / TP / entry lines for the chart symbol's open positions, drawn on the
    .pos-lines overlay inside .tv-wrap (the #tv-chart-mount subtree is never
-   rebuilt or touched). Price → Y uses the practice feed's visible range —
-   the same scale the built-in candle renderer uses. Dollar risk / reward
-   use the app's position math: |entry − level| × size (size is units). */
-function posLineScale(){
-  const ov = document.getElementById("pos-lines"); if(!ov) return null;
+   rebuilt or touched). Price → Y uses a LIVE-ANCHORED window centred on the
+   current price: the TradingView chart auto-scales around live price, so
+   anchoring the overlay window on the live price (with the practice feed's
+   recent range as the volatility proxy, widened so every position level
+   renders inside with headroom) keeps the lines glued to the chart's price
+   action — repainted on every tick via paintTradingLive(). Dollar risk /
+   reward use the app's position math: |entry − level| × size (size is
+   units). */
+function posLineScale(ovEl){
+  const ov = ovEl || document.getElementById("pos-lines"); if(!ov) return null;
   const H = ov.clientHeight || 400;
-  let min=Infinity, max=-Infinity; simCandles.forEach(c=>{ min=Math.min(min,c.l); max=Math.max(max,c.h); });
-  const pad=(max-min)*0.12||1; min-=pad; max+=pad;
+  const anchor = (typeof wlState!=="undefined" && wlState[simMarket] && wlState[simMarket].last>0)? wlState[simMarket].last : curPrice();
+  let fmin=Infinity, fmax=-Infinity; simCandles.forEach(c=>{ fmin=Math.min(fmin,c.l); fmax=Math.max(fmax,c.h); });
+  const feedRange = (fmax>fmin)? fmax-fmin : 0;
+  let span = Math.max(feedRange, anchor*0.0025);
+  DB.paper.positions.filter(p=>p.market===simMarket).forEach(p=>{
+    [p.entry, p.sl, p.tp].forEach(v=>{ if(v!=null && !isNaN(v)) span = Math.max(span, 2.6*Math.abs(v-anchor)); });
+  });
+  if(!(span>0)) span = anchor*0.0025 || 1;
+  const min = anchor - span/2, max = anchor + span/2;
   const Y = v=> H-18 - ((v-min)/(max-min))*(H-36);
   const P = y=> min + ((H-18-y)/(H-36))*(max-min);
   return { ov, H, min, max, Y, P };
@@ -2973,12 +2996,22 @@ function paintPosLines(){
   if(!poss.length || !simCandles.length){ if(ov.innerHTML) ov.innerHTML = ""; return; }
   const sc = posLineScale(); if(!sc) return;
   const min = sc.min, max = sc.max, Y = sc.Y;
+  const span = max - min;
+  const clampW = v=> Math.min(max, Math.max(min, v));
   ov.innerHTML = poss.map(pos=>{
     const pnl = posPnl(pos);
     const line = (v, cls, tag, key)=> (v==null || isNaN(v) || v<min || v>max)? "" :
       '<div class="pl-line '+cls+'"'+(key? ' data-pl="'+key+'" data-posid="'+pos.id+'"' : "")+' style="top:'+Y(v).toFixed(1)+'px"><span class="pl-tag">'+tag+'</span></div>';
-    return line(pos.sl, "sl", "SL "+fmt$(-Math.abs(pos.entry-pos.sl)*pos.size), "sl")
-      + line(pos.tp, "tp", "TP +"+fmt$(Math.abs(pos.tp-pos.entry)*pos.size), "tp")
+    const hasSl = pos.sl!=null && pos.sl!=="" && +pos.sl>0;
+    const hasTp = pos.tp!=null && pos.tp!=="" && +pos.tp>0;
+    /* No SL/TP yet → EdgeFlo-style ghost SET lines at a default offset from
+       entry, inside the live-anchored window. Dragging one sets the level. */
+    const ghostSl = clampW(pos.dir==="Short"? pos.entry + span*0.18 : pos.entry - span*0.18);
+    const ghostTp = clampW(pos.dir==="Short"? pos.entry - span*0.36 : pos.entry + span*0.36);
+    return (hasSl? line(pos.sl, "sl", "SL "+fmt$(-Math.abs(pos.entry-pos.sl)*pos.size), "sl")
+                  : line(ghostSl, "sl ghost", "＋ Set SL", "sl"))
+      + (hasTp? line(pos.tp, "tp", "TP +"+fmt$(Math.abs(pos.tp-pos.entry)*pos.size), "tp")
+                  : line(ghostTp, "tp ghost", "＋ Set TP", "tp"))
       + line(pos.entry, "entry", posLots(pos).toFixed(2)+' lots <span class="'+(pnl>=0?"pos":"neg")+'">'+(pnl>=0?"+":"")+fmt$(pnl)+'</span>');
   }).join("");
 }
@@ -2988,30 +3021,68 @@ function posLineDragStart(e){
   if(!positionGate()) return;
   const sc = posLineScale(); if(!sc) return;
   e.preventDefault();
+  const key = ln.getAttribute("data-pl");
+  const ghost = ln.classList.contains("ghost");
   const s = (typeof wlState!=="undefined")? wlState[pos.market] : null;
   const r = Math.pow(10, (s && s.dec!=null)? s.dec+1 : 3);
-  plDrag = { pos: pos, key: ln.getAttribute("data-pl") };
+  const round = v=> Math.round(v*r)/r;
+  /* Capture the pointer on the line itself: the TradingView iframe beside
+     the overlay is cross-origin, so document-level listeners alone lose the
+     gesture the moment the pointer crosses it (and a lost pointerup leaves
+     plDrag stuck, freezing every later repaint). Capture keeps all moves
+     and the release flowing to the line; document listeners stay as a
+     fallback, and pointercancel persists exactly like pointerup. */
+  try{ ln.setPointerCapture(e.pointerId); }catch(err){}
+  ln.classList.add("pl-dragging");
+  plDrag = { pos: pos, key: key, ghost: ghost, pid: (e.pointerId!=null? e.pointerId : null) };
+  const tag = ln.querySelector(".pl-tag");
+  const paintTag = v=>{
+    if(!tag) return;
+    if(ghost) tag.textContent = (key==="sl"? "Set SL @ " : "Set TP @ ") + fmtPx(simMarket, v);
+    else if(key==="sl") tag.textContent = "SL " + fmtPx(simMarket, v) + " · " + fmt$(-Math.abs(pos.entry - v) * pos.size);
+    else tag.textContent = "TP " + fmtPx(simMarket, v) + " · +" + fmt$(Math.abs(v - pos.entry) * pos.size);
+  };
+  if(ghost && !(pos[key]>0)){
+    /* Seed the ghost's level from its rendered position so the tag shows a
+       price from the first move and a press-release still sets it. */
+    pos[key] = round(Math.max(sc.min, Math.min(sc.max, sc.P(parseFloat(ln.style.top)||0))));
+    paintTag(pos[key]);
+  }
   const move = ev=>{
     if(!plDrag) return;
+    if(plDrag.pid!=null && ev.pointerId!=null && ev.pointerId!==plDrag.pid) return;
     const rect = sc.ov.getBoundingClientRect();
     let v = sc.P(ev.clientY - rect.top);
     v = Math.max(sc.min, Math.min(sc.max, v));
-    v = Math.round(v*r)/r;
-    pos[plDrag.key] = v;
+    v = round(v);
+    pos[key] = v;
     ln.style.top = sc.Y(v).toFixed(1)+"px";
-    const tag = ln.querySelector(".pl-tag");
-    if(tag) tag.textContent = plDrag.key==="sl"? "SL "+fmt$(-Math.abs(pos.entry-pos.sl)*pos.size) : "TP +"+fmt$(Math.abs(pos.tp-pos.entry)*pos.size);
+    paintTag(v);
   };
   const up = ()=>{
+    ln.removeEventListener("pointermove", move);
+    ln.removeEventListener("pointerup", up);
+    ln.removeEventListener("pointercancel", up);
     document.removeEventListener("pointermove", move);
     document.removeEventListener("pointerup", up);
+    document.removeEventListener("pointercancel", up);
+    try{ ln.releasePointerCapture(e.pointerId); }catch(err){}
+    ln.classList.remove("pl-dragging");
     const was = plDrag; plDrag = null;
-    if(was){ saveDB(); repaintPositionsPanel(); paintPosLines(); }
+    if(was){
+      saveDB(); repaintPositionsPanel(); paintPosLines();
+      if(was.ghost) toast((was.key==="sl"? "Stop loss" : "Take profit") + " set @ " + fmtPx(simMarket, was.pos[was.key]));
+    }
   };
+  ln.addEventListener("pointermove", move);
+  ln.addEventListener("pointerup", up);
+  ln.addEventListener("pointercancel", up);
   document.addEventListener("pointermove", move);
   document.addEventListener("pointerup", up);
+  document.addEventListener("pointercancel", up);
 }
 document.addEventListener("pointerdown", e=>{ if(e.target && e.target.closest && e.target.closest("#pos-lines [data-pl]")) posLineDragStart(e); });
+window.addEventListener("resize", ()=>{ if(currentView==="trading"){ paintPosLines(); paintOrdLines(); } });
 function positionGate(){
   if(routineLocked()){ showRoutineModal(); return false; }
   const st = guardrailStatus();
@@ -3291,10 +3362,8 @@ function paintOrdLines(){
   if(!orderOpen || !ord.side || !simCandles.length){ clear(); return; }
   const c = opCalc();
   if(c.entry==null){ clear(); return; }
-  const H = ov.clientHeight || 400;
-  let min=Infinity, max=-Infinity; simCandles.forEach(cd=>{ min=Math.min(min,cd.l); max=Math.max(max,cd.h); });
-  const pad=(max-min)*0.12||1; min-=pad; max+=pad;
-  const Y = v=> H-18 - ((v-min)/(max-min))*(H-36);
+  const sc = posLineScale(ov); if(!sc){ clear(); return; }
+  const min = sc.min, max = sc.max, Y = sc.Y;
   const line = (v, cls, tag)=> (v==null || isNaN(v) || v<min || v>max)? "" :
     '<div class="pl-line '+cls+'" style="top:'+Y(v).toFixed(1)+'px"><span class="pl-tag">'+tag+'</span></div>';
   let h = line(c.entry, "draft-entry", fmtLots(c.lots)+' lots '+(ord.side==="Long"?"Buy":"Sell")+' '+ord.type+' @ '+fmtPx(simMarket, c.entry));
@@ -3919,8 +3988,9 @@ function setTvInterval(iv){
   tvInterval = iv;
   paintTfPills(); closeCtbMenus(); paintSymBar(true);
   const ch = tvChartApi();
-  if(ch && ch.setResolution){ try{ ch.setResolution(iv); return; }catch(e){} }
+  if(ch && ch.setResolution){ try{ ch.setResolution(iv); paintPosLines(); return; }catch(e){} }
   if(currentView==="trading") RENDER.trading({chart:"reload"});
+  paintPosLines();
 }
 function setTvChartType(t){
   tvChartType = t;
@@ -4108,7 +4178,7 @@ function loadTvChart(force){
 let simDir = "Long";
 function setDir(d){ simDir=d; const l=$("#dir-long"), s=$("#dir-short"); if(l&&s){ l.classList.toggle("on", d==="Long"); s.classList.toggle("on", d==="Short"); } }
 function liveMark(sym){ const s = (typeof wlState!=="undefined")? wlState[sym] : null; return (s && s.last>0)? s.last : null; }
-function posPnl(pos){ let px = pos.market===simMarket? curPrice() : liveMark(pos.market); if(px==null) px = pos.entry; const dir = pos.dir==="Long"?1:-1; return (px - pos.entry)*dir*pos.size; }
+function posPnl(pos){ let px = liveMark(pos.market); if(px==null) px = pos.market===simMarket? curPrice() : pos.entry; const dir = pos.dir==="Long"?1:-1; return (px - pos.entry)*dir*pos.size; }
 function openPosition(){
   if(routineLocked()){ showRoutineModal(); return; }
   const st = guardrailStatus();
@@ -4126,7 +4196,7 @@ function closePosition(id, exitPrice, why, reflection){
   const i = DB.paper.positions.findIndex(p=>p.id===id); if(i<0) return;
   const pos = DB.paper.positions[i];
   DB.paper.positions.splice(i,1);
-  const exit = exitPrice || (pos.market===simMarket? curPrice() : pos.entry);
+  const exit = exitPrice || posCurPrice(pos);
   const noteBits = ["Paper trade"+(why? " — "+why:"")];
   if(pos.openNote) noteBits.push("At entry: "+pos.openNote);
   if(reflection && reflection.note) noteBits.push("At close: "+reflection.note);
