@@ -93,10 +93,21 @@ h1,h2,h3,h4{margin:0;color:var(--pine-ink);letter-spacing:-.01em}
 .ru-name{font-size:13.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ru-cap{font-size:11.5px;color:#8E97B8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rail-avatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
-#rail.collapsed{display:none}
-#rail-reopen{display:none;position:fixed;left:12px;bottom:16px;z-index:46;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:#0B1130;color:#C9CFEA;font-size:18px;cursor:pointer;box-shadow:var(--shadow)}
-#rail-reopen.on{display:block}
-@media (max-width:860px){#rail-reopen.on{display:none}}
+/* Collapsed rail (EdgeFlo): the nav shrinks to a ~76px icon-only rail —
+   same items, same order, brand mark on top, account avatar at the bottom,
+   and the collapse toggle stays in the rail as an expand control. Labels
+   hide; hovering an icon shows its label as a tooltip. */
+#rail{transition:width .18s ease,flex-basis .18s ease}
+#rail.rail-collapsed{width:76px;flex:0 0 76px;padding:16px 12px}
+#rail.rail-collapsed .brand{justify-content:center;padding:2px 0 18px}
+#rail.rail-collapsed .brand>div:not(.brand-mark){display:none}
+#rail.rail-collapsed .nav-item{justify-content:center;padding:10px 0;gap:0}
+#rail.rail-collapsed .nav-item>span:not(.nav-badge):not(.rail-avatar){display:none}
+#rail.rail-collapsed #rail-user .ru-meta{display:none}
+#rail.rail-collapsed #rail-user .nav-item{padding:8px 0}
+#rail.rail-collapsed .nav-item>span.nav-badge{position:absolute;top:3px;right:7px;margin:0}
+#rail.rail-collapsed [data-act="collapse"]>svg{transform:scaleX(-1)}
+#rail.rail-collapsed .nav-item:hover::after{content:attr(data-tip);position:absolute;left:calc(100% + 14px);top:50%;transform:translateY(-50%);background:#0B1130;border:1px solid rgba(255,255,255,.14);color:#fff;font-size:12px;font-weight:600;line-height:1.3;padding:6px 10px;border-radius:8px;white-space:nowrap;z-index:60;box-shadow:var(--shadow);pointer-events:none}
 .nav-item .lock{position:absolute;top:2px;right:2px;margin:0;color:var(--amber);display:flex}
 .nav-item .lock svg{width:11px;height:11px}
 /* Labeled nav: no hover tooltips — the text label is always visible. */
@@ -1293,8 +1304,6 @@ input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px
     <div id="nav-extra"></div>
     <div id="rail-user"></div>
   </nav>
-  <button id="rail-reopen" aria-label="Show sidebar" title="Show sidebar">&#187;</button>
-
   <!-- ============ MAIN ============ -->
   <div id="main">
     <header id="topbar">
@@ -2014,16 +2023,16 @@ function buildNav(){
   $("#nav-main").innerHTML = NAV_MAIN.map(n=>navItemHTML(n[0],n[1])).join("");
   const nx = $("#nav-extra");
   if(nx) nx.innerHTML =
-      '<button class="nav-item" data-act="collapse" aria-label="Collapse sidebar">'+ICONS.collapse+'<span>Collapse</span></button>'
-    + '<button class="nav-item" data-act="tutorial" aria-label="Tutorial">'+ICONS.tutorial+'<span>Tutorial</span></button>'
-    + '<button class="nav-item" data-act="contact" aria-label="Contact Us">'+ICONS.contact+'<span>Contact Us</span></button>';
+      '<button class="nav-item" data-act="collapse" data-tip="Collapse" aria-label="Collapse sidebar">'+ICONS.collapse+'<span>Collapse</span></button>'
+    + '<button class="nav-item" data-act="tutorial" data-tip="Tutorial" aria-label="Tutorial">'+ICONS.tutorial+'<span>Tutorial</span></button>'
+    + '<button class="nav-item" data-act="contact" data-tip="Contact Us" aria-label="Contact Us">'+ICONS.contact+'<span>Contact Us</span></button>';
   const ru = $("#rail-user");
   if(ru){
     const prof = (DB.settings && DB.settings.profile) || {};
     const nm = prof.name || (DB.user? DB.user.name : "Guest");
     const face = prof.avatar || (nm? nm.trim().charAt(0).toUpperCase() : "?");
     const cap = ((PLANS[DB.sub.plan]||{}).name || "Free") + " plan";
-    ru.innerHTML = '<button class="nav-item" data-act="account" aria-label="Account — '+esc(nm)+'"><span class="rail-avatar">'+esc(face)+'</span><span class="ru-meta"><span class="ru-name">'+esc(nm)+'</span><span class="ru-cap">'+esc(cap)+'</span></span></button>';
+    ru.innerHTML = '<button class="nav-item" data-act="account" data-tip="Account" aria-label="Account — '+esc(nm)+'"><span class="rail-avatar">'+esc(face)+'</span><span class="ru-meta"><span class="ru-name">'+esc(nm)+'</span><span class="ru-cap">'+esc(cap)+'</span></span></button>';
   }
   const prim = ["dashboard","journal","trading","news"];
   const SHORT = { dashboard:"Home", journal:"Journal", trading:"Trading", news:"News" };
@@ -2043,15 +2052,34 @@ function buildNav(){
   /* The rebuild above wipes the active highlight — re-apply it for the
      current view so the violet active state survives logins/re-renders. */
   $$("[data-nav]").forEach(b=> b.classList.toggle("active", b.getAttribute("data-nav")===currentView));
+  applyRailState();
   updateJournalBadge();
 }
 /* Rail extras (EdgeFlo): Tutorial modal, Contact → Settings → Support,
-   Collapse toggle. The rail is icon-only, so collapsing hides it outright
-   and leaves a floating reopen button. */
+   Collapse toggle. Collapsing shrinks the rail to a ~76px icon-only rail
+   (never hidden); the toggle stays in the rail and expands it back. The
+   state persists per account, keyed like the rest of the app's store. */
+function railPrefKey(){ return "tm-rail-collapsed:" + ACTIVE_DB_KEY; }
+function railCollapsedPref(){ try{ return localStorage.getItem(railPrefKey())==="1"; }catch(e){ return false; } }
+function syncCollapseBtn(){
+  const rail = $("#rail"); if(!rail) return;
+  const collapsed = rail.classList.contains("rail-collapsed");
+  const btn = document.querySelector('#nav-extra [data-act="collapse"]');
+  if(!btn) return;
+  btn.setAttribute("data-tip", collapsed? "Expand" : "Collapse");
+  btn.setAttribute("aria-label", collapsed? "Expand sidebar" : "Collapse sidebar");
+  const sp = btn.querySelector("span"); if(sp) sp.textContent = collapsed? "Expand" : "Collapse";
+}
+function applyRailState(){
+  const rail = $("#rail"); if(!rail) return;
+  rail.classList.toggle("rail-collapsed", railCollapsedPref());
+  syncCollapseBtn();
+}
 function toggleRail(){
   const rail = $("#rail"); if(!rail) return;
-  const collapsed = rail.classList.toggle("collapsed");
-  const ro = $("#rail-reopen"); if(ro) ro.classList.toggle("on", collapsed);
+  const collapsed = rail.classList.toggle("rail-collapsed");
+  try{ localStorage.setItem(railPrefKey(), collapsed? "1" : "0"); }catch(e){}
+  syncCollapseBtn();
 }
 function openTutorial(){
   const steps = [
@@ -2095,7 +2123,6 @@ document.addEventListener("click", e=>{
     const sh2 = $("#more-sheet"); if(sh2) sh2.classList.remove("on");
     return;
   }
-  if(e.target.id==="rail-reopen"){ toggleRail(); return; }
   const b = e.target.closest("[data-nav]");
   if(b){ go(b.getAttribute("data-nav")); const sh = $("#more-sheet"); if(sh) sh.classList.remove("on"); return; }
   if(e.target.id==="more-sheet") e.target.classList.remove("on");
@@ -2325,7 +2352,7 @@ RENDER.dashboard = function(){
   const pfArc = (a0,a1)=>{ const pt = a=> [32+29*Math.cos(a*Math.PI/180), 32+29*Math.sin(a*Math.PI/180)]; const p0 = pt(a0), p1 = pt(a1);
     return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A29 29 0 "+((a1-a0)>180?1:0)+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); };
   const pfGA0 = -90 + PF_GAP, pfGA1 = pfGA0 + pfGSpan, pfRA0 = 90 + PF_GAP, pfRA1 = pfRA0 + pfRSpan;
-  const pfFace = !s.n? "😐" : (s.pf===Infinity || s.pf>=1? "🙂" : "🙁");
+  const pfFace = !s.n? "😐" : (s.pf===Infinity || s.pf>=1? "🙂" : "😐");
   const rMax = Math.max(Math.abs(avgWinR), Math.abs(avgLossR));
   const winBar = wins.length && rMax? Math.round(Math.abs(avgWinR)/rMax*100) : 0;
   const lossBar = losses.length && rMax? Math.round(Math.abs(avgLossR)/rMax*100) : 0;
@@ -2349,8 +2376,8 @@ RENDER.dashboard = function(){
       + '<div style="flex:1;min-width:0"><div class="mono pos" style="font-size:12px;font-weight:700">+'+Math.abs(avgWinR).toFixed(2)+'R</div><div class="progress green" style="height:4px;margin-top:3px"><i style="width:'+winBar+'%"></i></div></div>'
       + '<div style="flex:1;min-width:0"><div class="mono neg" style="font-size:12px;font-weight:700">-'+Math.abs(avgLossR).toFixed(2)+'R</div><div class="progress red" style="height:4px;margin-top:3px"><i style="width:'+lossBar+'%"></i></div></div>'
       + '</div></div>')
-    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0">'+(s.n? (s.pf===Infinity? "&infin;" : s.pf.toFixed(2)) : "&mdash;")+' <span style="font-size:20px">'+pfFace+'</span></div>'
-      + '<svg width="64" height="64" viewBox="0 0 64 64" style="margin-left:auto;flex:0 0 64px" role="img" aria-label="Profit factor gauge">'
+    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0;font-size:29px">'+(s.n? (s.pf===Infinity? "&infin;" : s.pf.toFixed(2)) : "&mdash;")+' <span style="font-size:20px">'+pfFace+'</span></div>'
+      + '<svg width="62" height="62" viewBox="0 0 64 64" style="margin-left:auto;flex:0 0 62px" role="img" aria-label="Profit factor gauge">'
       + (pfGSpan>0.5? '<path d="'+pfArc(pfGA0,pfGA1)+'" fill="none" stroke="'+pfGreen+'" stroke-width="5.5" stroke-linecap="round"/>':"")
       + (pfRSpan>0.5? '<path d="'+pfArc(pfRA0,pfRA1)+'" fill="none" stroke="'+pfRed+'" stroke-width="5.5" stroke-linecap="round"/>':"")
       + '</svg></div>')
