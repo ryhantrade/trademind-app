@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
 :root{
-  --pine:#01796F; --pine-deep:#015C54; --pine-soft:#E2F0EA; --pine-ink:#0B2B25;
+  --pine:#7C3AED; --pine-deep:#6D28D9; --pine-soft:#EDE9FE; --pine-ink:#2E1065;
   
   --bg:#F2F6EF; --bg2:#EAF1E4; --card:#FFFFFF; --card2:#F7FAF4;
   --ink:#17251F; --muted:#5D7167; --faint:#8CA197;
@@ -29,7 +29,7 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --pine:#2DB3A4; --pine-deep:#5CC9BB; --pine-soft:#123029; --pine-ink:#D9F2EC;
+    --pine:#A78BFA; --pine-deep:#C4B5FD; --pine-soft:#2A1B52; --pine-ink:#EDE9FE;
     
     --bg:#0B1512; --bg2:#0E1B16; --card:#132019; --card2:#172720;
     --ink:#E4EFE8; --muted:#9DB3A7; --faint:#6E877B;
@@ -42,7 +42,7 @@
   }
 }
 :root[data-theme="dark"]{
-  --pine:#2DB3A4; --pine-deep:#5CC9BB; --pine-soft:#123029; --pine-ink:#D9F2EC;
+  --pine:#A78BFA; --pine-deep:#C4B5FD; --pine-soft:#2A1B52; --pine-ink:#EDE9FE;
   
   --bg:#0B1512; --bg2:#0E1B16; --card:#132019; --card2:#172720;
   --ink:#E4EFE8; --muted:#9DB3A7; --faint:#6E877B;
@@ -235,7 +235,7 @@ canvas#chart{width:100%;height:340px;display:block;background:var(--card2);borde
 /* In-chart position edit bar: floats over the top of the chart while a
    position's SL/TP lines are being modified; Save commits, Cancel
    restores. Never intercepts chart gestures outside its own buttons. */
-.lw-editbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;width:max-content;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 16px);background:var(--card);border:1.5px solid var(--pine);border-radius:999px;padding:6px 8px 6px 14px;box-shadow:0 0 0 3px rgba(1,121,111,.18),var(--shadow);font-size:13px;font-weight:700;color:var(--ink)}
+.lw-editbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;width:max-content;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 16px);background:var(--card);border:1.5px solid var(--pine);border-radius:999px;padding:6px 8px 6px 14px;box-shadow:0 0 0 3px rgba(124,58,237,.18),var(--shadow);font-size:13px;font-weight:700;color:var(--ink)}
 .tv-wrap>.lw-editbar{height:auto}
 .lw-editbar .eb-sub{color:var(--muted);font-weight:600}
 .lw-editbar .eb-vals{color:var(--muted);font-weight:700;font-size:12.5px}
@@ -1093,7 +1093,7 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .tk-meta{position:absolute;left:12px;right:12px;bottom:11px;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;color:#fff}
 .tk-name{font-weight:800;font-size:14px;text-shadow:0 1px 6px rgba(0,0,0,.5)}
 .tk-dur{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;text-shadow:0 1px 6px rgba(0,0,0,.5)}
-.tk-playing{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:2;background:rgba(1,121,111,.94);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:3px 9px;border-radius:99px}
+.tk-playing{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:2;background:rgba(124,58,237,.94);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:3px 9px;border-radius:99px}
 .tk-prog{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.3);z-index:3;border-radius:0;margin:0}
 .tk-prog>i{display:block;height:100%;background:var(--pine);width:0}
 @media (max-width:1180px){ .toolkit-cards{grid-template-columns:repeat(2,1fr)} }
@@ -1126,7 +1126,7 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .op-rr-box.reward{background:var(--green-bg);color:var(--green);text-align:right}
 .model-drop{border:1.5px dashed var(--line);border-radius:12px;padding:10px;outline:none;transition:border-color .15s,background .15s}
 .model-drop:focus{border-color:var(--pine)}
-.model-drop.drag{border-color:var(--pine);background:rgba(1,121,111,.07)}
+.model-drop.drag{border-color:var(--pine);background:rgba(124,58,237,.07)}
 /* Entry-model pictures: both tiles share one fixed frame so the two
    screenshots line up at the same height whatever their own aspect
    ratio is; contain keeps the whole chart visible (no cropping). */
@@ -3133,8 +3133,8 @@ function drawChart(){
   // open position lines for this market
   ctx.font = "11px Inter";
   DB.paper.positions.filter(p=>p.market===simMarket).forEach(pos=>{
-    ctx.strokeStyle = "#01796F"; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(0,Y(pos.entry)); ctx.lineTo(W,Y(pos.entry)); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = "#01796F"; ctx.fillText(pos.dir+" @ "+pos.entry, 6, Y(pos.entry)-5);
+    ctx.strokeStyle = "#7C3AED"; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(0,Y(pos.entry)); ctx.lineTo(W,Y(pos.entry)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#7C3AED"; ctx.fillText(pos.dir+" @ "+pos.entry, 6, Y(pos.entry)-5);
   });
   ctx.fillStyle = dark? "#9DB3A7":"#5D7167";
   ctx.fillText(max.toFixed(simCandles.dec), 6, 13); ctx.fillText(min.toFixed(simCandles.dec), 6, H-6);
@@ -3510,11 +3510,11 @@ function lwThemeColors(){
   const dark = tvThemeOverride? tvThemeOverride==="dark" : isDark();
   return dark
     ? { bg:"#172720", text:"#9DB3A7", grid:"rgba(157,179,167,.13)", border:"#2C463A",
-        entry:"#2DB3A4", sl:"#F07676", tp:"#3ECF8E", ghostSl:"rgba(240,118,118,.55)", ghostTp:"rgba(62,207,142,.55)", draft:"#5CC9BB",
-        entryHot:"#2EE6D6", slHot:"#FF4D4D", tpHot:"#3DFFA2" }
-    : { bg:"#F7FAF4", text:"#5D7167", grid:"rgba(11,43,37,.09)", border:"#CBDAC6",
-        entry:"#01796F", sl:"#D64545", tp:"#1E9E62", ghostSl:"rgba(214,69,69,.55)", ghostTp:"rgba(30,158,98,.55)", draft:"#015C54",
-        entryHot:"#00BFA5", slHot:"#E62117", tpHot:"#00C853" };
+        entry:"#A78BFA", sl:"#F07676", tp:"#3ECF8E", ghostSl:"rgba(240,118,118,.55)", ghostTp:"rgba(62,207,142,.55)", draft:"#C4B5FD",
+        entryHot:"#DDD6FE", slHot:"#FF4D4D", tpHot:"#3DFFA2" }
+    : { bg:"#F7FAF4", text:"#5D7167", grid:"rgba(46,16,101,.09)", border:"#CBDAC6",
+        entry:"#7C3AED", sl:"#D64545", tp:"#1E9E62", ghostSl:"rgba(214,69,69,.55)", ghostTp:"rgba(30,158,98,.55)", draft:"#6D28D9",
+        entryHot:"#A78BFA", slHot:"#E62117", tpHot:"#00C853" };
 }
 /* Re-emit a theme color (#RRGGBB or rgba(...)) at a given opacity —
    used to dim non-edited positions while an edit is active and to
@@ -5202,9 +5202,9 @@ function lwAddIndicator(name){
         const sd = Math.sqrt(v / period), t = lwBars[i].time;
         mid.push({ time: t, value: m }); up.push({ time: t, value: m + mult * sd }); low.push({ time: t, value: m - mult * sd });
       }
-      const a = line({ color: "#2DB3A4" }); a.setData(up); list.push(a);
+      const a = line({ color: "#7C3AED" }); a.setData(up); list.push(a);
       const b2 = line({ color: "#8A97A5" }); b2.setData(mid); list.push(b2);
-      const c2 = line({ color: "#2DB3A4" }); c2.setData(low); list.push(c2);
+      const c2 = line({ color: "#7C3AED" }); c2.setData(low); list.push(c2);
     } else if(name === "VWAP"){
       /* Cumulative VWAP over the loaded bars; when the feed carries no
          volume, bars weigh equally (a cumulative typical-price mean). */
@@ -5214,7 +5214,7 @@ function lwAddIndicator(name){
         cumPV += tp * v; cumV += v;
         if(cumV > 0) out.push({ time: b.time, value: cumPV / cumV });
       });
-      const s = line({ color: "#2DB3A4", lineWidth: 2 }); s.setData(out); list.push(s);
+      const s = line({ color: "#7C3AED", lineWidth: 2 }); s.setData(out); list.push(s);
     } else if(name === "Volume Index"){
       const s = lwChart.addSeries(LC.HistogramSeries, { priceFormat: { type: "volume" }, priceScaleId: "lw-vol", priceLineVisible: false, lastValueVisible: false });
       try{ lwChart.priceScale("lw-vol").applyOptions({ scaleMargins: { top: 0.84, bottom: 0 }, visible: false }); }catch(e){}
@@ -5223,7 +5223,7 @@ function lwAddIndicator(name){
         color: b.close >= b.open? "rgba(30,158,98,.45)" : "rgba(214,69,69,.45)" })));
       list.push(s);
     } else if(name === "Relative Strength Index"){
-      const s = line({ color: "#2DB3A4", lineWidth: 2 }, lwIndPaneIndex()); s.setData(lwRSI(14)); list.push(s);
+      const s = line({ color: "#7C3AED", lineWidth: 2 }, lwIndPaneIndex()); s.setData(lwRSI(14)); list.push(s);
     } else if(name === "MACD"){
       const pane = lwIndPaneIndex();
       const fast = lwEMA(12), slow = lwEMA(26);
@@ -7017,7 +7017,7 @@ let nbNewOpen = false;        // "New Note" dropdown open
 let nbCollapsed = false, nbNotesOpen = true, nbNewOpenE = false; // panel collapse / ALL NOTES section / empty-state menu
 function nbToggleNewMenuE(){ nbNewOpenE = !nbNewOpenE; RENDER.notebook(); }
 let nbTplMenu = null;         // template key whose "⋯" menu is open ("g<gi>i<ix>" / "m<ix>")
-const NOTE_COLORS = [ ["", "None", ""], ["pine","Pine","#01796F"], ["leaf","Leaf","#1E9E62"], ["amber","Amber","#C07F10"], ["rust","Rust","#D64545"], ["ocean","Ocean","#2F7FC1"], ["slate","Slate","#5D7167"] ];
+const NOTE_COLORS = [ ["", "None", ""], ["pine","Violet","#7C3AED"], ["leaf","Leaf","#1E9E62"], ["amber","Amber","#C07F10"], ["rust","Rust","#D64545"], ["ocean","Ocean","#2F7FC1"], ["slate","Slate","#5D7167"] ];
 const NOTE_EMOJIS = ["", "📈", "🧠", "🎯", "🔥", "📊", "💡", "⚠️", "✅", "📝", "🏦", "🌊"];
 function noteColorHex(n){ const c = NOTE_COLORS.find(x=>x[0]===(n.color||"")); return c? c[2] : ""; }
 function nbHarvest(id){
