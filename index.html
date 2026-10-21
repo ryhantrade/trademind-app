@@ -16,7 +16,7 @@
 :root{
   --pine:#7C3AED; --pine-deep:#6D28D9; --pine-soft:#EDE9FE; --pine-ink:#2E1065;
   
-  --bg:#F2F6EF; --bg2:#EAF1E4; --card:#FFFFFF; --card2:#F7FAF4;
+  --bg:#F5F3FA; --bg2:#ECE9F4; --card:#FFFFFF; --card2:#FAF9FC;
   --ink:#17251F; --muted:#5D7167; --faint:#8CA197;
   --line:#DEE8DA; --line2:#CBDAC6;
   --green:#1E9E62; --green-bg:#E4F4EA;
@@ -25,7 +25,7 @@
   --shadow:0 8px 28px rgba(18,48,38,.08);
   --shadow-sm:0 2px 10px rgba(18,48,38,.06);
   --r:16px; --r-sm:10px;
-  --rail:72px;
+  --rail:210px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -70,35 +70,36 @@ h1,h2,h3,h4{margin:0;color:var(--pine-ink);letter-spacing:-.01em}
 
 /* ---------- Layout ---------- */
 #app{display:flex;min-height:100vh}
-#rail{width:var(--rail);flex:0 0 var(--rail);background:#0B1130;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;position:sticky;top:0;height:100vh;padding:16px 0;z-index:40}
-.brand{display:flex;align-items:center;justify-content:center;padding:2px 0 16px}
-.brand>div:not(.brand-mark){display:none}
+#rail{width:var(--rail);flex:0 0 var(--rail);background:#0B1130;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:stretch;position:sticky;top:0;height:100vh;padding:16px 12px;z-index:40}
+.brand{display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:2px 8px 18px}
 .brand-mark{width:36px;height:36px;border-radius:10px;background:var(--pine);display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 36px}
-.brand-name{font-weight:800;font-size:17px;color:var(--pine-ink)}
-@media (prefers-color-scheme: dark){.brand-name{color:var(--ink)}}
-.brand-sub{font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.brand-name{font-weight:800;font-size:17px;color:#fff}
+.brand-sub{font-size:11px;color:#8E97B8;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .nav-group{display:none}
-#nav-main{width:100%;display:flex;flex-direction:column;align-items:center;gap:3px}
-.nav-item{position:relative;display:flex;align-items:center;justify-content:center;width:46px;height:46px;padding:0;border:0;background:transparent;border-radius:12px;color:var(--muted);transition:background .15s,color .15s}
-.nav-item>svg{flex:0 0 34px;width:34px;height:34px;padding:6px;border-radius:10px;background:rgba(255,255,255,.07);color:#8E97B8;transition:background .15s,color .15s}
+#nav-main{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:2px}
+.nav-item{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;background:transparent;border-radius:10px;color:#9AA3C7;font-size:14px;font-weight:600;text-align:left;transition:background .15s,color .15s}
+.nav-item>svg{flex:0 0 20px;width:20px;height:20px;color:#8E97B8;transition:color .15s}
 .nav-item:hover>svg{color:#fff}
-.nav-item.active>svg{background:var(--pine);color:#fff}
+.nav-item.active>svg{color:#fff}
 .nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
-.nav-item.active{background:color-mix(in srgb,var(--pine) 24%,transparent);color:var(--pine)}
-.nav-item>span:not(.lock):not(.soon-badge):not(.rail-avatar):not(.nav-badge){display:none}
-.soon-badge{position:absolute;top:-1px;right:-5px;background:rgba(255,255,255,.16);color:#D8DCEF;font-size:8px;font-weight:800;padding:1.5px 5px;border-radius:99px;letter-spacing:.03em;line-height:1.3}
-.nav-item.soon{opacity:.5;cursor:default}
+.nav-item.active{background:var(--pine);color:#fff}
+.soon-badge{margin-left:auto;background:rgba(255,255,255,.16);color:#D8DCEF;font-size:9px;font-weight:800;padding:2px 7px;border-radius:99px;letter-spacing:.03em;line-height:1.3}
+.nav-item.soon{opacity:.55;cursor:default}
 .nav-item.soon:hover{background:transparent;color:#9AA3C7}
-#nav-extra{width:100%;display:flex;flex-direction:column;align-items:center;gap:3px;margin-bottom:10px}
-.rail-avatar{width:34px;height:34px;border-radius:50%;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+#nav-extra{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:2px;margin-bottom:8px}
+#rail-user{width:100%;border-top:1px solid rgba(255,255,255,.09);padding-top:10px}
+#rail-user .nav-item{padding:8px 10px}
+.ru-meta{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.ru-name{font-size:13.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ru-cap{font-size:11.5px;color:#8E97B8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rail-avatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
 #rail.collapsed{display:none}
 #rail-reopen{display:none;position:fixed;left:12px;bottom:16px;z-index:46;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:#0B1130;color:#C9CFEA;font-size:18px;cursor:pointer;box-shadow:var(--shadow)}
 #rail-reopen.on{display:block}
 @media (max-width:860px){#rail-reopen.on{display:none}}
 .nav-item .lock{position:absolute;top:2px;right:2px;margin:0;color:var(--amber);display:flex}
 .nav-item .lock svg{width:11px;height:11px}
-.nav-item::after{content:attr(data-tip);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%) translateX(-4px);background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:700;line-height:1;padding:7px 11px;border-radius:8px;white-space:nowrap;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .15s .1s,transform .15s .1s;z-index:60}
-.nav-item:hover::after,.nav-item:focus-visible::after{opacity:1;transform:translateY(-50%) translateX(0)}
+/* Labeled nav: no hover tooltips — the text label is always visible. */
 .rail-spacer{flex:1}
 .plan-card{background:transparent;border-radius:12px;padding:0;margin-top:10px;display:flex;justify-content:center}
 .plan-card .pc-name{font-weight:800;font-size:13px;color:var(--pine-ink)}
@@ -106,7 +107,7 @@ h1,h2,h3,h4{margin:0;color:var(--pine-ink);letter-spacing:-.01em}
 .plan-card .pc-sub{font-size:12px;color:var(--muted);margin:2px 0 10px}
 #main{flex:1;min-width:0;display:flex;flex-direction:column}
 #topbar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--line)}
-#topbar h1{font-size:21px;font-weight:800}
+#topbar h1{font-size:21px;font-weight:800;color:var(--ink)}
 #topbar .tb-sub{font-size:12.5px;color:var(--muted)}
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .plan-badge{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--pine-soft);color:var(--pine)}
@@ -340,7 +341,7 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .rp-caret:hover{color:var(--pine)}
 .rp-step{display:flex;align-items:center;gap:11px;padding:7px 0}
 .rp-ico{width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.rp-ico.lotus{background:var(--green-bg);color:var(--green)}
+.rp-ico.lotus{background:var(--pine-soft);color:var(--pine)}
 .rp-ico.compass{background:var(--pine-soft);color:var(--pine)}
 .rp-ico.eye{background:var(--pine-soft);color:var(--pine)}
 .rp-main{flex:1;min-width:0}
@@ -361,7 +362,10 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .rp-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);margin-top:11px;padding-top:10px;font-size:12px;color:var(--muted)}
 .rp-later{border:0;background:transparent;color:var(--pine);font-weight:700;font-size:12.5px;padding:0;white-space:nowrap;cursor:pointer}
 .rp-later:hover{text-decoration:underline}
-@media (max-width:860px){ #routine-panel{top:auto;bottom:84px;right:12px;left:12px;width:auto;max-width:none} }
+@media (max-width:860px){ #routine-panel{top:auto;bottom:calc(74px + env(safe-area-inset-bottom));right:12px;left:12px;width:auto;max-width:none} }
+/* Phone: the Dashboard header's pill + range tabs don't fit one row —
+   the tabs wrap to their own full-width row instead of running off-screen. */
+@media (max-width:860px){ body.on-dashboard .tb-right{flex-wrap:wrap;row-gap:8px} body.on-dashboard #tb-range-tabs{flex:1 1 100%} }
 /* While the panel floats, keep the Dashboard's header row (routine pill +
    range tabs) clear of it on wide screens. */
 @media (min-width:861px){ body.rp-on [data-view="dashboard"]>div:first-child{padding-right:332px} }
@@ -466,7 +470,7 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .margin-pop .mp-row strong{font-variant-numeric:tabular-nums}
 .acct-label{font-size:11.5px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px}
 .acct-val{font-size:16px;font-weight:800;margin-top:1px}
-.acct-cap{font-size:10.5px;font-weight:700;color:var(--faint);margin-top:2px}
+.acct-cap{font-size:10.5px;font-weight:700;color:#847C9F;margin-top:2px}
 .info-i{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--faint);color:var(--faint);font-size:9px;font-weight:800;font-style:normal;cursor:help;flex:0 0 14px}
 .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line2);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;padding:0}
 .icon-btn:hover{color:var(--pine);border-color:var(--pine)}
@@ -841,7 +845,7 @@ body.on-trading #lockout-slot{padding:0 14px !important}
 .day-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
 .day-row:last-child{border-bottom:0}
 .day-row>span:first-child{color:var(--muted);font-weight:600}
-.nav-item>span.nav-badge{display:inline-flex;position:absolute;top:1px;right:1px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:var(--red);color:#fff;font-size:10px;font-weight:800;align-items:center;justify-content:center;line-height:1;z-index:2}
+.nav-item>span.nav-badge{display:inline-flex;margin-left:auto;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--red);color:#fff;font-size:10.5px;font-weight:800;align-items:center;justify-content:center;line-height:1}
 #mobilebar button .nav-badge{position:absolute;top:1px;right:calc(50% - 21px);min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--red);color:#fff;font-size:9.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 table.tbl.jt th,table.tbl.jt td{padding:8px 7px}
 table.tbl.jt tbody tr{cursor:pointer}
@@ -939,7 +943,7 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .news-scroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}
 .news-scroll::-webkit-scrollbar-track{background:transparent}
 .news-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.news-head h2{font-size:20px;font-weight:800}
+.news-head h2{font-size:20px;font-weight:800;color:var(--ink)}
 .news-sub{font-size:13px;color:var(--muted);margin-top:1px}
 .view-tgl{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:var(--card)}
 .view-tgl button{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:8px 14px;display:inline-flex;align-items:center;gap:7px}
@@ -1248,7 +1252,7 @@ input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px
 
 /* ---------- Notebook header + templates panel ---------- */
 .nb-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.nb-head h2{font-size:20px;font-weight:800}
+.nb-head h2{font-size:20px;font-weight:800;color:var(--ink)}
 .nb-sub{font-size:13px;color:var(--muted);margin-top:1px}
 .nb-new-wrap{position:relative;flex:0 0 auto}
 .nb-new-wrap .pop-menu{left:0;right:auto;min-width:204px}
@@ -1858,10 +1862,11 @@ function renderRoutinePanel(){
   const total = DB.routine.steps.length;
   const rp = (DB.settings && DB.settings.routinePrefs) || {};
   const complete = routineCompleteToday();
-  /* "Show banner on all pages" off → the panel only floats on Dashboard
-     and Trading; "Auto-hide after completion" off → a finished routine
-     stays visible (all steps ticked) instead of disappearing. */
-  const offPage = rp.allPages===false && currentView!=="dashboard" && currentView!=="trading";
+  /* The panel lives on the Dashboard only (EdgeFlo parity): it never
+     floats over any other page. The Trading page keeps its own in-page
+     pre-market banner instead. "Auto-hide after completion" off → a
+     finished routine stays visible (all steps ticked). */
+  const offPage = currentView!=="dashboard";
   if(!DB.routine.enabled || !total || routinePanelHidden || offPage || (complete && rp.autoHide!==false)){ el.className=""; el.innerHTML=""; document.body.classList.remove("rp-on"); return; }
   document.body.classList.add("rp-on");
   const doneArr = routineToday();
@@ -1890,7 +1895,7 @@ function renderRoutinePanel(){
   el.className = "on"; el.innerHTML = h;
 }
 function toggleRoutinePanel(){ routinePanelOpen = !routinePanelOpen; renderRoutinePanel(); }
-function openRoutinePanel(){ routinePanelHidden = false; routinePanelOpen = true; renderRoutinePanel(); }
+function openRoutinePanel(){ routinePanelHidden = false; routinePanelOpen = true; if(currentView!=="dashboard"){ go("dashboard"); return; } renderRoutinePanel(); }
 function dismissRoutinePanel(){ routinePanelHidden = true; renderRoutinePanel(); toast("Routine panel hidden for now — your progress is saved. Reopen it any time from the Dashboard pill."); }
 /* The panel's single Continue / Finish button acts on the first
    incomplete step: a meditation step → Sanctuary (timer preset from the
@@ -1991,7 +1996,7 @@ const ICONS = {
    Trading Preferences; Pricing & Account sit behind the topbar / profile row. */
 const NAV_MAIN = [
   ["dashboard","Dashboard"],["trading","Trading"],["edge","Edge"],["journal","Journal"],
-  ["notebook","Notebook"],["news","News"],["sanctuary","Sanctuary"],["coach","FloAI"],["performance","Performance"]
+  ["notebook","Notebook"],["news","News"],["sanctuary","Sanctuary"],["coach","AI Coach"],["performance","Performance"]
 ];
 const NAV_ACCT = [];
 const TITLES = { dashboard:"Dashboard", journal:"Trade Journal", addtrade:"Add Trade", trading:"Trading", guardrails:"Guardrails", edge:"Edge",
@@ -2009,15 +2014,16 @@ function buildNav(){
   $("#nav-main").innerHTML = NAV_MAIN.map(n=>navItemHTML(n[0],n[1])).join("");
   const nx = $("#nav-extra");
   if(nx) nx.innerHTML =
-      '<button class="nav-item" data-act="tutorial" data-tip="Tutorial" aria-label="Tutorial" title="">'+ICONS.tutorial+'</button>'
-    + '<button class="nav-item" data-act="contact" data-tip="Contact Us" aria-label="Contact Us" title="">'+ICONS.contact+'</button>'
-    + '<button class="nav-item" data-act="collapse" data-tip="Collapse" aria-label="Collapse sidebar" title="">'+ICONS.collapse+'</button>';
+      '<button class="nav-item" data-act="collapse" aria-label="Collapse sidebar">'+ICONS.collapse+'<span>Collapse</span></button>'
+    + '<button class="nav-item" data-act="tutorial" aria-label="Tutorial">'+ICONS.tutorial+'<span>Tutorial</span></button>'
+    + '<button class="nav-item" data-act="contact" aria-label="Contact Us">'+ICONS.contact+'<span>Contact Us</span></button>';
   const ru = $("#rail-user");
   if(ru){
     const prof = (DB.settings && DB.settings.profile) || {};
     const nm = prof.name || (DB.user? DB.user.name : "Guest");
     const face = prof.avatar || (nm? nm.trim().charAt(0).toUpperCase() : "?");
-    ru.innerHTML = '<button class="nav-item" data-act="account" data-tip="'+esc(nm)+' — Account" aria-label="Account — '+esc(nm)+'" title=""><span class="rail-avatar">'+esc(face)+'</span></button>';
+    const cap = ((PLANS[DB.sub.plan]||{}).name || "Free") + " plan";
+    ru.innerHTML = '<button class="nav-item" data-act="account" aria-label="Account — '+esc(nm)+'"><span class="rail-avatar">'+esc(face)+'</span><span class="ru-meta"><span class="ru-name">'+esc(nm)+'</span><span class="ru-cap">'+esc(cap)+'</span></span></button>';
   }
   const prim = ["dashboard","journal","trading","news"];
   const SHORT = { dashboard:"Home", journal:"Journal", trading:"Trading", news:"News" };
@@ -2034,6 +2040,9 @@ function buildNav(){
   $("#tb-upgrade").style.display = DB.sub.plan==="plus" ? "none" : "";
   const u = DB.user;
   $("#tb-avatar").textContent = u ? ((DB.settings && DB.settings.profile.avatar) || u.name.trim().charAt(0).toUpperCase()) : "?";
+  /* The rebuild above wipes the active highlight — re-apply it for the
+     current view so the violet active state survives logins/re-renders. */
+  $$("[data-nav]").forEach(b=> b.classList.toggle("active", b.getAttribute("data-nav")===currentView));
   updateJournalBadge();
 }
 /* Rail extras (EdgeFlo): Tutorial modal, Contact → Settings → Support,
@@ -2452,7 +2461,7 @@ RENDER.journal = function(){
   el.innerHTML =
     journalAttentionHTML()
     + '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">'
-    + '<h2 style="font-size:20px;font-weight:800">Journal</h2>'
+    + '<h2 style="font-size:20px;font-weight:800;color:var(--ink)">Journal</h2>'
     + '<span style="font-size:12.5px;color:var(--muted)">Review your trades, emotions, and patterns to build consistency and self-awareness.</span>'
     + '<span style="flex:1"></span>'
     + '<div class="seg solid" role="group" aria-label="PnL display unit">'+["$","%","R"].map(u=>'<button class="'+(journalUnit===u?"on":"")+'" onclick="journalUnit=\''+u+'\';RENDER.journal()">'+u+'</button>').join("")+'</div>'
@@ -2833,7 +2842,7 @@ RENDER.addtrade = function(){
   const listSvg = n=> '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M9 6h12M9 12h12M9 18h12"/>'+(n? '<path d="M3.5 5.5l1.2-.7v4M3.2 12h2.3M3.5 19.5l1.2-.7v4" stroke-width="1.7"/>' : '<circle cx="4.5" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1.4" fill="currentColor" stroke="none"/>')+'</svg>';
   const reviewed = !!(f.planId || f.followed!==null || f.setupQ || f.execQ || f.confluences || f.mistakes || f.entryEmotion || f.exitEmotion || (f.noteHtml && f.noteHtml.replace(/<[^>]*>/g,"").trim()));
   el.innerHTML =
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><button class="icon-btn" title="Back to Journal" onclick="go(\'journal\')">&larr;</button><h2 style="font-size:20px;font-weight:800">'+(atEditId? "Edit Trade":"Add Trade")+'</h2></div>'
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><button class="icon-btn" title="Back to Journal" onclick="go(\'journal\')">&larr;</button><h2 style="font-size:20px;font-weight:800;color:var(--ink)">'+(atEditId? "Edit Trade":"Add Trade")+'</h2></div>'
     + '<div class="addtrade-layout"><div class="card" style="padding:18px"><h3 style="margin-bottom:12px">Trade Details</h3>'
     + '<div class="tf-grid">'
     + atFld("Entry Date", '<input class="input" type="date" id="at-entry-date" value="'+f.entryDate+'">')
@@ -3022,7 +3031,7 @@ function deleteTrade(id){
   DB.trades = DB.trades.filter(t=>t.id!==id); saveDB(); renderAll(); toast("Trade deleted.");
 }
 function openModal(html){ $("#modal-box").innerHTML = html; $("#modal-bk").classList.add("on"); }
-function closeModal(){ $("#modal-bk").classList.remove("on"); }
+function closeModal(){ $("#modal-bk").classList.remove("on"); if(currentView==="trading"){ const tv = document.querySelector('[data-view="trading"]'); if(tv) syncPremarketBanner(tv); } }
 $("#modal-bk").addEventListener("click", e=>{ if(e.target.id==="modal-bk") closeModal(); });
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && $("#modal-bk").classList.contains("on") && document.getElementById("entry-models-modal")) closeModal(); });
 
@@ -3352,6 +3361,7 @@ function repaintTradingSidebar(){
   const fresh = document.createElement("div"); fresh.className = "side-col";
   fresh.innerHTML = tradingSidebarHTML(st, tradeLocked);
   sc.replaceWith(fresh);
+  syncPremarketBanner(el);
   const alert = document.getElementById("trading-lockout-alert");
   if(lockedOut && !alert){
     const grid = el.querySelector(".trade-grid");
@@ -3394,6 +3404,32 @@ function premarketBannerHTML(){
     + '<button class="btn pine sm" onclick="openRoutinePanel()">Continue pre-market routine</button></div>';
 }
 function startTradingSession(){ unlockSeenDate = todayStr(); RENDER.trading(); toast("Session started — trade your plan."); }
+/* Keeps the rendered pre-market banner in step with routine state on
+   surgical repaints of the Trading view (the full render inlines
+   premarketBannerHTML() directly): insert it at the top of the view,
+   above the chart grid, when it appears; refresh it in place when its
+   content changes; remove it when it clears. */
+function syncPremarketBanner(el){
+  const html = premarketBannerHTML();
+  const cur = el.querySelector(".premarket-banner");
+  if(!html){ if(cur) cur.remove(); return; }
+  if(cur){
+    const sig = cur.getAttribute("data-pm-sig");
+    if(sig !== html){
+      const tmp = document.createElement("div"); tmp.innerHTML = html;
+      const fresh = tmp.firstElementChild;
+      fresh.setAttribute("data-pm-sig", html);
+      cur.replaceWith(fresh);
+    }
+    return;
+  }
+  const grid = el.querySelector(".trade-grid");
+  if(grid){
+    grid.insertAdjacentHTML("beforebegin", html);
+    const fresh = el.querySelector(".premarket-banner");
+    if(fresh) fresh.setAttribute("data-pm-sig", html);
+  }
+}
 function positionsPanelHTML(){
   const open = DB.paper.positions, closed = tradesNewestFirst(DB.trades.filter(t=>t.source==="paper"));
   const tabBtn = (id,label,n)=> '<button class="pos-tab '+(posTab===id?"on":"")+'" onclick="setPosTab(\''+id+'\')">'+label+' <span class="mono">'+n+'</span></button>';
@@ -5023,7 +5059,8 @@ RENDER.trading = function(opts){
   const needFull = !grid || opts.chart==="reload";
   if(needFull){
     el.innerHTML =
-      (lockedOut? tradingLockoutAlertHTML() : "")
+      premarketBannerHTML()
+      + (lockedOut? tradingLockoutAlertHTML() : "")
       + '<div class="trade-grid'+(tradeWide? " wide":"")+(sideWide? " panel-wide":"")+'"><div class="trade-leftcol" style="min-width:0">'
       + '<div class="card mb chart-card chart-card-flush">'
       + chartToolbarHTML()
@@ -5036,9 +5073,11 @@ RENDER.trading = function(opts){
     seedCandles(simMarket);
     initLwChart();
   } else {
-    /* Surgical repaint: sidebar, positions panel and the lockout alert are
-       refreshed in place — the chart mount (and the live chart) is never
-       touched, so the candles survive tab/filter/toggle clicks. */
+    /* Surgical repaint: sidebar, positions panel, the pre-market banner
+       and the lockout alert are refreshed in place — the chart mount
+       (and the live chart) is never touched, so the candles survive
+       tab/filter/toggle clicks. */
+    syncPremarketBanner(el);
     const alert = document.getElementById("trading-lockout-alert");
     if(lockedOut && !alert) grid.insertAdjacentHTML("beforebegin", tradingLockoutAlertHTML());
     else if(!lockedOut && alert) alert.remove();
@@ -8170,12 +8209,11 @@ function acctTabRoutine(){
       + '<input class="input" value="'+esc(s)+'" maxlength="80" placeholder="Step name" aria-label="Step '+(i+1)+' name" onchange="pmStepName('+i+',this.value)">'
       + '<select class="input" aria-label="Step '+(i+1)+' action" onchange="pmStepAction('+i+',this.value)">'+opts+'</select>'
       + '<button class="icon-btn" style="width:32px;height:32px" title="Delete step" aria-label="Delete step '+(i+1)+'" onclick="pmRemoveStep('+i+')">'+PM_TRASH_SVG+'</button></div>'; }).join("");
-  return settingsCard("Pre-Market Routine", "This checklist shows up before you trade and stays pinned across EdgeFlo until you complete it. Build your flow once, then run it daily.",
+  return settingsCard("Pre-Market Routine", "This checklist shows up before you trade, on your Dashboard, until you complete it. Build your flow once, then run it daily.",
     '<div style="margin-top:8px;font-size:13px;color:var(--muted)">Need help building your routine? <a href="#" onclick="go(\'tutorial\');return false" style="color:var(--pine);font-weight:600">Watch Brad&rsquo;s walkthrough.</a></div>'
     + '<div class="pm-toggles">'
     + tog("banner", "Enable Pre-Market Banner", "Shows the pre-market routine banner and floating panel before you trade. Turning it off also lifts the routine trading lock.")
     + tog("startPrompt", "Enable start session prompt", "Shows the start-session prompt on the Trading page until the routine is complete.")
-    + tog("allPages", "Show banner on all pages", "Keeps the routine panel pinned on every page. Off = Dashboard and Trading only.")
     + tog("autoHide", "Auto-hide after completion", "Hides the routine panel automatically once every step is ticked.")
     + '</div>'
     + '<div class="field" style="margin-bottom:4px"><label class="f">Daily reset time ('+esc(tz)+')</label><div class="pm-time-wrap">'+PM_CLOCK_SVG+'<input class="input" type="time" value="'+esc(d.resetTime)+'" aria-label="Daily reset time" onchange="pmTog(\'resetTime\',this.value)"></div></div>'
