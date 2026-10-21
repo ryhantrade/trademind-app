@@ -866,15 +866,15 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 /* The whole Edge workspace is bounded to the viewport: the plans list
    (left) and the stats/risk/window rail (right) stay fixed in place,
    and only the center plan content scrolls vertically. */
-.edge-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:stretch;height:calc(100dvh - 170px);min-height:440px}
+.edge-layout{display:grid;grid-template-columns:315px minmax(0,1fr);gap:16px;align-items:stretch;height:calc(100dvh - 170px);min-height:440px}
 .edge-plans{overflow-y:auto;min-height:0}
 .edge-detail{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden}
-.edge-body{flex:1;min-height:0;display:flex;gap:20px;margin-top:14px}
-.edge-center{flex:1;min-width:0;overflow-y:auto;padding-right:8px;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.edge-body{flex:1;min-height:0;display:flex;gap:24px;margin-top:14px}
+.edge-center{flex:0 1 590px;width:590px;min-width:0;overflow-y:auto;padding-right:8px;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
 .edge-center::-webkit-scrollbar{width:8px}
 .edge-center::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}
 .edge-center::-webkit-scrollbar-track{background:transparent}
-.edge-rail{width:262px;flex:0 0 262px;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.edge-rail{width:320px;flex:0 2 320px;margin-left:auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
 .edge-rail::-webkit-scrollbar{width:8px}
 .edge-rail::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}
 .edge-rail::-webkit-scrollbar-track{background:transparent}
@@ -883,6 +883,7 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .plan-item:hover{background:var(--card2)}
 .plan-item.sel{background:var(--pine-soft);border-color:var(--line2)}
 .pi-name{display:block;font-weight:800;font-size:13.5px;color:var(--ink)}
+.plan-item.sel .pi-name{color:var(--pine)}
 .pi-sub{display:block;font-size:11.5px;color:var(--muted)}
 .num-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:14px;counter-reset:estep}
 .num-list li{display:flex;gap:10px;align-items:flex-start}
@@ -920,8 +921,10 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .ed-num{width:22px;height:22px;flex:0 0 22px;border-radius:50%;background:var(--pine-soft);color:var(--pine);font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
 .ed-x{width:26px;height:26px;flex:0 0 26px;border:0;background:transparent;color:var(--faint);font-size:16px;line-height:1;border-radius:7px;cursor:pointer;padding:0}
 .ed-x:hover{background:var(--card2);color:var(--red)}
-.plan-name-edit{font-size:18px;font-weight:800;border-color:transparent;background:transparent;padding:6px 8px;width:100%;min-width:220px}
-.plan-name-edit:hover{border-color:var(--line2)}
+.plan-name-edit{font-size:18px;font-weight:800;border-color:transparent;background:transparent;padding:6px 8px;width:100%;min-width:0}
+.plan-name-edit:not([readonly]):hover{border-color:var(--line2)}
+.plan-name-edit[readonly]{cursor:default}
+.plan-name-edit[readonly]:focus{border-color:transparent;background:transparent;box-shadow:none;outline:none}
 .plan-name-edit:focus{border-color:var(--pine);background:var(--card);outline:none}
 .plan-name-edit::placeholder{color:var(--faint);font-weight:700}
 .sec-add{margin-left:auto}
@@ -937,6 +940,7 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .upload-box:hover{border-color:var(--pine);color:var(--pine)}
 .hdr-icons{display:flex;gap:7px;align-items:center;flex:0 0 auto}
 .hdr-icons .icon-btn{width:34px;height:34px}
+.hdr-icons .icon-btn.dim{color:var(--faint);opacity:.55}
 
 /* ---------- News page (EdgeFlo layout) ---------- */
 /* The News workspace is bounded to the viewport like EdgeFlo: the page
@@ -1178,8 +1182,8 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
   .edge-plans{overflow:visible}
   .edge-detail{height:auto;overflow:visible}
   .edge-body{flex-direction:column}
-  .edge-center{overflow:visible;padding-right:0}
-  .edge-rail{width:100%;flex:none;overflow:visible}
+  .edge-center{overflow:visible;padding-right:0;width:auto;flex:none}
+  .edge-rail{width:100%;flex:none;overflow:visible;margin-left:0}
 }
 
 /* ---------- Mobile nav ---------- */
@@ -6268,17 +6272,19 @@ function edgeDetailHTML(sel){
   const _revToday = ((DB.routine||{}).reviewed||{})[todayStr()];
   const sec = (icon, title, inner, addList)=> '<div style="margin-top:20px"><div class="sec-head">'+icon+'<span>'+title+'</span>'
     + (addList? '<button class="btn sm sec-add" onclick="edgeAddRow(\''+addList+'\')">+ Add</button>' : "") + '</div>'+inner+'</div>';
-  let h = '<div class="card edge-detail"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="font-size:18px;display:flex;align-items:center">'+planDotHTML(p)+(editing? '<input class="input plan-name-edit" value="'+esc(dr.name)+'" placeholder="Enter trade plan name" aria-label="Trade plan name" oninput="edgeDraftField(\'name\',this.value)">' : esc(p.name))+'</h3></div>'
+  let h = '<div class="card edge-detail"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:0;display:flex;align-items:center">'+planDotHTML(p)+'<input class="input plan-name-edit" value="'+esc(editing? dr.name : (p.name||""))+'" placeholder="Enter trade plan name" aria-label="Trade plan name" '+(editing? 'oninput="edgeDraftField(\'name\',this.value)"' : 'readonly tabindex="-1"')+'></div>'
     + (isPlan
       ? '<div class="hdr-icons">'
+        + '<button class="icon-btn dim" title="Delete plan" aria-label="Delete plan" onclick="deletePlan(\''+p.id+'\')">'+EDGE_SVG.trash+'</button>'
         + '<button class="icon-btn" title="Duplicate plan" aria-label="Duplicate plan" onclick="duplicatePlan(\''+p.id+'\')">'+EDGE_SVG.copy+'</button>'
-        + '<button class="icon-btn" title="Delete plan" aria-label="Delete plan" onclick="deletePlan(\''+p.id+'\')">'+EDGE_SVG.trash+'</button></div>'
+        + (editing? "" : '<button class="btn sm" onclick="edgeStartEdit(\''+p.id+'\')">'+SEC_ICONS.pencil+'<span>Edit</span></button>')
+        + '</div>'
       : '<button class="btn pine sm" onclick="useEdgePreset(\''+p.id+'\')">Use this Preset</button>')
-    + '</div>'
-    + '<div class="edge-body"><div class="edge-center">';
+    + '</div>';
   if(isPlan){
     h += '<div class="active-bar"><label class="switch"><input type="checkbox" '+(isActive?"checked":"")+' onchange="'+(editing? "edgeDraftActive(this.checked)" : "edgeToggleActive('"+p.id+"',this.checked)")+'"><span class="sl"></span></label><span class="ab-label">Active</span><span class="info-i" title="The active plan loads first in the Trading plan tab, and its checklist and risk controls apply to your session.">i</span></div>';
   }
+  h += '<div class="edge-body"><div class="edge-center">';
   h += '<div class="plan-type-lab">Plan Type</div>'
     + (editing
       ? '<input class="input" value="'+esc(typeVal)+'" placeholder="e.g. Weekly Range, Liquidity Sweep, Break & Retest" oninput="edgeDraftField(\'type\',this.value)">'
@@ -6324,17 +6330,17 @@ function edgeDetailHTML(sel){
         + '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><label class="btn sm" style="cursor:pointer">Upload Image<input type="file" accept="image/*" style="display:none" onchange="uploadModelImage(\''+p.id+'\',\''+slot+'\',this)"></label></div></div>';
     }
     if(!val){
+      /* View mode, empty box: the dashed box itself is the placeholder
+         (picture icon + "Upload Image") — uploads happen in edit mode. */
       return '<div>' + head
-        + (isPlan? uploadBox : '<div class="upload-box" style="cursor:default">'+EDGE_SVG.img+'<span>Upload Image</span></div>')
+        + '<div class="upload-box" style="cursor:default">'+EDGE_SVG.img+'<span>Upload Image</span></div>'
         + '</div>';
     }
-    /* View mode with a picture: clicking it opens the viewer with
-       ONLY that model's image — never both together. */
+    /* View mode with a picture: one clean dashed box holding the image;
+       clicking it opens the viewer with ONLY that model's image. */
     return '<div>' + head
-      + '<div class="model-view" onclick="viewModelShots(\''+sel.kind+'\',\''+p.id+'\',\''+slot+'\')" title="Click to view full size"><img class="model-img" src="'+val+'" alt="'+label+'"><span class="model-view-all">&#9678; View All</span></div>'
-      + '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" onclick="viewModelShots(\''+sel.kind+'\',\''+p.id+'\',\''+slot+'\')">View All</button>'
-      + (isPlan? '<label class="btn sm" style="cursor:pointer">Upload Image<input type="file" accept="image/*" style="display:none" onchange="uploadModelImage(\''+p.id+'\',\''+slot+'\',this)"></label>' : "")
-      + '</div></div>';
+      + '<div class="model-view" style="border:1.5px dashed var(--line2);border-radius:10px;padding:8px;background:var(--card2)" onclick="viewModelShots(\''+sel.kind+'\',\''+p.id+'\',\''+slot+'\')" title="Click to view full size"><img class="model-img" src="'+val+'" alt="'+label+'"></div>'
+      + '</div>';
   };
   h += sec(SEC_ICONS.models, "ENTRY MODELS",
       '<div class="grid g2" style="gap:14px">' + modelTile("setup", "Setup screenshot") + modelTile("examples", "Entry examples") + '</div>'
@@ -6347,15 +6353,24 @@ function edgeDetailHTML(sel){
     h += sec(SEC_ICONS.mgmt, "TRADE MANAGEMENT RULES", mgmt? '<div style="font-size:14px">'+esc(mgmt)+'</div>' : '<div class="small">—</div>');
     h += sec(SEC_ICONS.exit, "EXIT CRITERIA", exitTxt? '<div style="font-size:14px;white-space:pre-wrap'+(exitTxt.indexOf("Add your exit rules")===0? ';color:var(--muted)' : '')+'">'+esc(exitTxt)+'</div>' : '<div class="small" style="color:var(--muted)">Add your exit rules so you don\'t freestyle</div>');
     h += sec(SEC_ICONS.notes, "TRADING NOTES", notes? '<div style="font-size:14px;white-space:pre-wrap">'+esc(notes)+'</div>' : '<div class="small" style="color:var(--muted)">Not Set</div>');
-    h += '<div class="divider"></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
-      + (isPlan
-          ? (running && criteria.length && criteria.every((c,i)=>checks[i])? '<button class="btn primary sm" onclick="go(\'trading\')">Checklist complete → Trade</button>' : '<span class="small">'+(running? checklistStatus(p) : "Tick every entry criterion to arm this plan.")+'</span>')
-          : '<button class="btn primary sm" onclick="useEdgePreset(\''+p.id+'\')">Use this preset</button><span class="small">Creates your own editable copy</span>')
-      + '</div>'
-      + (isPlan? '<div class="divider"></div><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'
+    const armBits = isPlan
+      ? (running && criteria.length && criteria.every((c,i)=>checks[i])? '<button class="btn primary sm" onclick="go(\'trading\')">Checklist complete → Trade</button>' : (running? '<span class="small">'+checklistStatus(p)+'</span>' : ""))
+      : '<button class="btn primary sm" onclick="useEdgePreset(\''+p.id+'\')">Use this preset</button><span class="small">Creates your own editable copy</span>';
+    if(armBits) h += '<div class="divider"></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + armBits + '</div>';
+    if(isPlan){
+      const revMap = (DB.routine||{}).reviewed || {};
+      const revDates = Object.keys(revMap).sort();
+      let revTxt = "Not reviewed yet";
+      if(revDates.length){
+        const rd = revDates[revDates.length-1];
+        const rdLabel = rd===todayStr()? "today" : (function(){ const dt = new Date(rd+"T00:00:00"); return isNaN(dt)? rd : "on "+dt.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); })();
+        revTxt = "Last reviewed " + rdLabel + " at " + revMap[rd];
+      }
+      h += '<div class="divider"></div><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'
         + '<button class="btn primary" onclick="edgeMarkReviewed()">&#10003; Mark as reviewed</button>'
-        + (_revToday? '<span class="small">Reviewed today at '+esc(_revToday)+'</span>' : "")
-        + '</div>' : "");
+        + '<span class="small" style="color:var(--muted)">'+esc(revTxt)+'</span>'
+        + '</div>';
+    }
   }
   h += '</div><div class="edge-rail">' + planStatsCardHTML() + riskCardHTML(p, isPlan) + windowCardHTML() + '</div></div>';
   if(editing){
