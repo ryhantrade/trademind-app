@@ -889,6 +889,20 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .num-list li{display:flex;gap:10px;align-items:flex-start}
 .num-list li::before{content:counter(estep);counter-increment:estep;width:22px;height:22px;flex:0 0 22px;border-radius:50%;background:var(--pine-soft);color:var(--pine);font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
 .pi-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:1px;flex:0 0 auto}
+/* Plan color picker (EdgeFlo "Change color:"): in the plan detail header
+   the dot is a button; clicking it opens this palette popup, and the
+   chosen color is stored per plan (DB.planColors) so the dot recolors in
+   the detail header and the MY PLANS / PRESETS list alike. */
+.dot-picker{position:relative;display:inline-flex;flex:0 0 auto;margin-right:2px}
+.dot-btn{width:15px;height:15px;flex:0 0 15px;border-radius:50%;border:0;padding:0;cursor:pointer;box-shadow:0 0 0 1px var(--line2),0 0 0 3px var(--card)}
+.dot-btn:hover{box-shadow:0 0 0 1px var(--line2),0 0 0 3px var(--pine-soft)}
+.color-pop-bk{position:fixed;inset:0;z-index:94;display:block}
+.color-pop{position:absolute;top:calc(100% + 10px);left:-2px;z-index:95;display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:11px 12px 12px;width:208px}
+.color-pop .cp-label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:9px}
+.color-pop .cp-grid{display:grid;grid-template-columns:repeat(4,34px);gap:8px}
+.cp-swatch{width:34px;height:34px;border-radius:50%;border:0;padding:0;cursor:pointer;transition:transform .12s}
+.cp-swatch:hover{transform:scale(1.1)}
+.cp-swatch.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
 .model-box{border:1.5px dashed var(--line2);border-radius:12px;padding:26px 16px;text-align:center;color:var(--muted);font-size:13px;background:var(--card2)}
 .plan-wrap{position:relative}
 .plan-item{align-items:center}
@@ -925,13 +939,17 @@ table.tbl.jt tbody tr:hover td{background:var(--pine-soft)}
 .ed-num{width:22px;height:22px;flex:0 0 22px;border-radius:50%;background:var(--pine-soft);color:var(--pine);font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
 .ed-x{width:26px;height:26px;flex:0 0 26px;border:0;background:transparent;color:var(--faint);font-size:16px;line-height:1;border-radius:7px;cursor:pointer;padding:0}
 .ed-x:hover{background:var(--card2);color:var(--red)}
+.ed-btn{width:28px;height:28px;flex:0 0 28px;border:1px solid var(--line2);background:var(--card);color:var(--muted);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.ed-btn:hover{color:var(--pine);border-color:var(--pine)}
+.ed-btn.danger:hover{color:var(--red);border-color:var(--red)}
+.ed-btn svg{width:14px;height:14px}
 .plan-name-edit{font-size:18px;font-weight:800;border-color:transparent;background:transparent;padding:6px 8px;width:100%;min-width:0}
 .plan-name-edit:not([readonly]):hover{border-color:var(--line2)}
 .plan-name-edit[readonly]{cursor:default}
 .plan-name-edit[readonly]:focus{border-color:transparent;background:transparent;box-shadow:none;outline:none}
 .plan-name-edit:focus{border-color:var(--pine);background:var(--card);outline:none}
 .plan-name-edit::placeholder{color:var(--faint);font-weight:700}
-.sec-add{margin-left:auto}
+.sec-add{margin-left:2px}
 .edge-savebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding:13px 2px 2px;margin-top:14px}
 .save-status{display:flex;align-items:center;gap:10px;min-width:0}
 .save-status .ss-main{font-weight:800;font-size:13.5px;line-height:1.25}
@@ -1438,9 +1456,11 @@ const DEFAULTS = {
   trades: [],                                   // journal + closed paper trades
   plans: [],                                    // Edge plans
   activePlanId: null,                           // Edge plan marked Active
+  planColors: {},                               // Edge plan/preset id -> dot color picked in the detail header ("Change color:")
   edgeSeeded: false,                            // starter Edge plan copied in once
   edgeSyncV3: false,                            // seeded Market Mechanics plan synced to the EdgeFlo wording/values once
   edgeSyncV4: false,                            // MM plan risk corrected 10% -> 1% to match EdgeFlo once
+  edgeExitHintV1: false,                        // seeded plan's exit-hint placeholder row stripped once (it is a hint, not a stored row)
   notes: [], folders: ["General","Reviews","Ideas"],
   pinnedTemplates: [],                        // notebook template names pinned by the user
   myTemplates: [],                            // user-created notebook templates {name, body}
@@ -1538,6 +1558,7 @@ function loadDB(){
   if(DB.settings.routinePrefs.resetTime === "04:00") DB.settings.routinePrefs.resetTime = "00:00";
   DB.routine.enabled = DB.settings.routinePrefs.banner !== false;
   if(!DB.integrations || typeof DB.integrations!=="object") DB.integrations = {};
+  if(!DB.planColors || typeof DB.planColors!=="object") DB.planColors = {};
 }
 function saveDB(){ try{ localStorage.setItem(ACTIVE_DB_KEY, JSON.stringify(DB)); }catch(e){ toast("Storage full — screenshot images may be too large."); } }
 loadDB();
@@ -5863,16 +5884,47 @@ const EDGE_PLAN_PRESETS = [
     notes:"One A+ weekly setup beats five forced ones. If there is no sweep by Wednesday, stand aside.",
     risk:{ maxTrades:2, maxLoss:250, maxProfit:500, risk:1 } }
 ];
-function planDotColor(p){ var id=(p&&p.id)||"", nm=((p&&p.name)||"").toLowerCase(); return (id==="market-mechanics-plan"||nm.indexOf("market mechanics")===0) ? "#EAB308" : "#EF4444"; }
+/* Plan dot colors (EdgeFlo "Change color:"): a color the user picks in
+   the plan detail header is stored in DB.planColors keyed by plan/preset
+   id, so it persists in the per-account store and recolors the dot in
+   the detail header and the plans list alike. Until a plan is recolored
+   it keeps its default: Market Mechanics yellow, everything else red. */
+const PLAN_DOT_COLORS = ["#EAB308","#EF4444","#7C3AED","#3B82F6","#22C55E","#F97316","#EC4899","#9CA3AF"];
+function planDotColor(p){
+  if(p && p.id && DB.planColors && DB.planColors[p.id]) return DB.planColors[p.id];
+  var id=(p&&p.id)||"", nm=((p&&p.name)||"").toLowerCase();
+  return (id==="market-mechanics-plan"||nm.indexOf("market mechanics")===0) ? "#EAB308" : "#EF4444";
+}
 function planDotHTML(p){ return '<span class="pi-dot" style="background:'+planDotColor(p)+'"></span>'; }
+let edgeColorOpen = false;   // "Change color:" palette open in the plan detail header
+function togglePlanColorPop(){ edgeColorOpen = !edgeColorOpen; RENDER.edge(); }
+function closePlanColorPop(){ if(!edgeColorOpen) return; edgeColorOpen = false; RENDER.edge(); }
+function setPlanColor(id, color){
+  if(!DB.planColors || typeof DB.planColors!=="object") DB.planColors = {};
+  DB.planColors[id] = color;
+  edgeColorOpen = false; saveDB(); RENDER.edge();
+}
+/* Detail-header dot: a working color picker in view AND edit mode. */
+function planDotPickerHTML(p){
+  const cur = planDotColor(p);
+  let h = '<span class="dot-picker"><button type="button" class="dot-btn" style="background:'+cur+'" title="Change color" aria-label="Change plan color" onclick="togglePlanColorPop()"></button>';
+  if(edgeColorOpen){
+    h += '<span class="color-pop-bk" onclick="closePlanColorPop()"></span>'
+      + '<span class="color-pop"><span class="cp-label">Change color:</span><span class="cp-grid">'
+      + PLAN_DOT_COLORS.map(c=>'<button type="button" class="cp-swatch'+(c.toLowerCase()===String(cur).toLowerCase()? " on" : "")+'" style="background:'+c+'" title="'+c+'" aria-label="Set plan color '+c+'" onclick="setPlanColor(\''+p.id+'\',\''+c+'\')"></button>').join("")
+      + '</span></span>';
+  }
+  return h + '</span>';
+}
 function useEdgePreset(id){
   const p = EDGE_PLAN_PRESETS.find(x=>x.id===id); if(!p) return;
   if(!canCreatePlan()){ planPaywallModal(); return; }
   const np = { id:uid(), name:p.name, type:p.type, desc:p.desc||"", market:"", bias:"",
     charting:(p.charting||[]).slice(), criteria:p.criteria.slice(),
-    mgmt:p.mgmt||"", exit:p.exit||"", exitRules:p.exit||"", notes:p.notes||"",
+    mgmt:p.mgmt||"", exit:planExitStored(p.exit), exitRules:planExitStored(p.exit), notes:p.notes||"",
     risk: p.risk? Object.assign({}, p.risk) : null, modelShot:"", modelExamples:"" };
-  DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id };
+  if(DB.planColors && DB.planColors[p.id]) DB.planColors[np.id] = DB.planColors[p.id];
+  DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id }; edgeColToDetail();
   saveDB(); RENDER.edge(); toast("“"+p.name+"” copied to your plans — edit it freely.");
 }
 
@@ -5893,10 +5945,20 @@ function paintEdgeTopNew(){
       + '</span>' : "");
 }
 let edgeColOpen = true;          // left column (MY PLANS + PRESETS) visible
+let edgeColTouched = false;      // user explicitly showed/hid the plans column this session
+function edgeIsPhone(){ return !!(window.matchMedia && window.matchMedia("(max-width: 860px)").matches); }
+/* Until the user toggles the column themselves it follows the viewport:
+   open beside the detail on desktop; on phone it starts hidden so the
+   Edge page opens straight on the active plan's detail — EdgeFlo's
+   clicked-in view as the default (the "»" button in the detail header
+   opens the list, "«" hides it again). */
+function edgeColAuto(){ if(!edgeColTouched) edgeColOpen = !edgeIsPhone(); }
+/* After picking a plan/preset on phone, land on that item's detail. */
+function edgeColToDetail(){ if(edgeIsPhone()){ edgeColOpen = false; edgeColTouched = true; } }
 function canCreatePlan(){ return planRank() >= PLANS.basic.rank; }
 function togglePlanMenu(id){ edgeMenuId = edgeMenuId===id? null : id; edgeNewOpen = false; RENDER.edge(); paintEdgeTopNew(); }
 function toggleNewMenu(){ edgeNewOpen = !edgeNewOpen; edgeMenuId = null; RENDER.edge(); paintEdgeTopNew(); }
-function toggleEdgeCol(){ edgeColOpen = !edgeColOpen; RENDER.edge(); paintEdgeTopNew(); }
+function toggleEdgeCol(){ edgeColOpen = !edgeColOpen; edgeColTouched = true; RENDER.edge(); paintEdgeTopNew(); }
 function createBlankPlan(){ edgeNewOpen = false; edgeMenuId = null; RENDER.edge(); paintEdgeTopNew(); newPlanGate(); }
 function createFromPresetModal(){
   edgeNewOpen = false; edgeMenuId = null; RENDER.edge(); paintEdgeTopNew();
@@ -5943,7 +6005,7 @@ function seedEdgePlans(){
     if(src){
       const np = { id:uid(), name:src.name, type:src.type, desc:src.desc||"", market:"", bias:"",
         charting:(src.charting||[]).slice(), criteria:src.criteria.slice(),
-        mgmt:src.mgmt||"", exit:src.exit||"", exitRules:src.exit||"", notes:src.notes||"",
+        mgmt:src.mgmt||"", exit:planExitStored(src.exit), exitRules:planExitStored(src.exit), notes:src.notes||"",
         risk: src.risk? Object.assign({}, src.risk) : null, modelShot:"", modelExamples:"" };
       DB.plans.push(np); DB.activePlanId = np.id;
     }
@@ -5961,7 +6023,7 @@ function syncMarketMechanicsPlan(){
   const mine = DB.plans.find(p=>p.name==="Market Mechanics Plan");
   if(src && mine){
     mine.charting = src.charting.slice(); mine.criteria = src.criteria.slice();
-    mine.mgmt = src.mgmt; mine.exit = src.exit; mine.exitRules = src.exitRules;
+    mine.mgmt = src.mgmt; mine.exit = planExitStored(src.exit); mine.exitRules = mine.exit;
     mine.notes = src.notes; mine.risk = Object.assign({}, src.risk);
   }
   saveDB();
@@ -5977,7 +6039,7 @@ function createBlankPlanPage(){
     charting:[""], criteria:[""], mgmt:"", exit:"", exitRules:"", notes:"",
     risk:null, modelShot:"", modelExamples:"" };
   DB.plans.push(np); saveDB();
-  edgeSel = { kind:"plan", id:np.id };
+  edgeSel = { kind:"plan", id:np.id }; edgeColToDetail();
   edgeStartEdit(np.id, true);
 }
 function edgeSelection(){
@@ -5991,7 +6053,7 @@ function edgeSelection(){
   }
   return { kind:"preset", id: EDGE_PLAN_PRESETS[0].id };
 }
-function selectEdge(kind, id){ edgeSel = { kind:kind, id:id }; edgeEdit = null; RENDER.edge(); paintEdgeTopNew(); }
+function selectEdge(kind, id){ edgeSel = { kind:kind, id:id }; edgeEdit = null; edgeColorOpen = false; edgeColToDetail(); RENDER.edge(); paintEdgeTopNew(); }
 function setActivePlan(id){ DB.activePlanId = id; saveDB(); RENDER.edge(); toast("Active plan set — it loads first in the Trading plan tab."); }
 function viewModelShots(kind, id, slot){
   const p = kind==="plan"? DB.plans.find(x=>x.id===id) : EDGE_PLAN_PRESETS.find(x=>x.id===id);
@@ -6200,6 +6262,19 @@ function edgeAddRow(list){
   if(inp) inp.focus();
 }
 function edgeRemoveRow(list, i){ if(!edgeEdit) return; edgeEdit.draft[list].splice(i,1); edgeMarkDirty(); RENDER.edge(); }
+function edgeDuplicateRow(list, i){ if(!edgeEdit) return; edgeEdit.draft[list].splice(i+1, 0, edgeEdit.draft[list][i]); edgeMarkDirty(); RENDER.edge(); }
+/* Plan Type dropdown options (edit mode): the distinct types already in
+   use across the presets and the user's own plans, plus the plan's
+   current value when it is not among them. */
+function planTypeOptionsHTML(cur){
+  const vals = [];
+  const push = v=>{ v = String(v||"").trim(); if(v && vals.indexOf(v)<0) vals.push(v); };
+  EDGE_PLAN_PRESETS.forEach(p=>push(p.type));
+  DB.plans.forEach(p=>push(p.type));
+  push(cur);
+  return (cur? "" : '<option value="" selected></option>')
+    + vals.map(v=>'<option value="'+esc(v)+'"'+(v===cur? " selected" : "")+'>'+esc(v)+'</option>').join("");
+}
 function edgeDragStart(e, list, i){
   edgeDragCtx = { list:list, i:i };
   if(e.dataTransfer){ e.dataTransfer.effectAllowed = "move"; try{ e.dataTransfer.setData("text/plain", String(i)); }catch(_){ } }
@@ -6267,10 +6342,10 @@ function edgeDetailHTML(sel){
   const _revToday = ((DB.routine||{}).reviewed||{})[todayStr()];
   const sec = (icon, title, inner, addList)=> '<div style="margin-top:20px"><div class="sec-head">'+icon+'<span>'+title+'</span>'
     + (addList? '<button class="btn sm sec-add" onclick="edgeAddRow(\''+addList+'\')">+ Add</button>' : "") + '</div>'+inner+'</div>';
-  let h = '<div class="card edge-detail"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:0;display:flex;align-items:center">'+(edgeColOpen? "" : '<button class="icon-btn collapse-btn" style="margin-right:4px;flex:0 0 auto" title="Show plans list" aria-label="Show plans list" onclick="toggleEdgeCol()">&raquo;</button>')+planDotHTML(p)+'<input class="input plan-name-edit" value="'+esc(editing? dr.name : (p.name||""))+'" placeholder="Enter trade plan name" aria-label="Trade plan name" '+(editing? 'oninput="edgeDraftField(\'name\',this.value)"' : 'readonly tabindex="-1"')+'></div>'
+  let h = '<div class="card edge-detail"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:0;display:flex;align-items:center">'+(edgeColOpen? "" : '<button class="icon-btn collapse-btn" style="margin-right:4px;flex:0 0 auto" title="Show plans list" aria-label="Show plans list" onclick="toggleEdgeCol()">&raquo;</button>')+planDotPickerHTML(p)+'<input class="input plan-name-edit" value="'+esc(editing? dr.name : (p.name||""))+'" placeholder="Enter trade plan name" aria-label="Trade plan name" '+(editing? 'oninput="edgeDraftField(\'name\',this.value)"' : 'readonly tabindex="-1"')+'></div>'
     + (isPlan
       ? '<div class="hdr-icons">'
-        + '<button class="icon-btn dim" title="Delete plan" aria-label="Delete plan" onclick="deletePlan(\''+p.id+'\')">'+EDGE_SVG.trash+'</button>'
+        + '<button class="icon-btn dim" title="Delete plan" aria-label="Delete plan" '+(editing? 'disabled' : 'onclick="deletePlan(\''+p.id+'\')"')+'>'+EDGE_SVG.trash+'</button>'
         + '<button class="icon-btn" title="Duplicate plan" aria-label="Duplicate plan" onclick="duplicatePlan(\''+p.id+'\')">'+EDGE_SVG.copy+'</button>'
         + (editing? "" : '<button class="btn sm" onclick="edgeStartEdit(\''+p.id+'\')">'+SEC_ICONS.pencil+'<span>Edit</span></button>')
         + '</div>'
@@ -6282,13 +6357,14 @@ function edgeDetailHTML(sel){
   h += '<div class="edge-body"><div class="edge-center">';
   h += '<div class="plan-type-lab">Plan Type</div>'
     + (editing
-      ? '<input class="input" value="'+esc(typeVal)+'" placeholder="e.g. Weekly Range, Liquidity Sweep, Break & Retest" oninput="edgeDraftField(\'type\',this.value)">'
+      ? '<select class="input" aria-label="Plan Type" onchange="edgeDraftField(\'type\',this.value)">'+planTypeOptionsHTML(typeVal)+'</select>'
       : '<div style="font-weight:600;font-size:14.5px">'+esc(typeVal || "Custom plan")+'</div>');
   const edRow = (list, x, i, numbered)=> '<div class="ed-row" ondragstart="edgeDragStart(event,\''+list+'\','+i+')" ondragover="edgeDragOver(event)" ondrop="edgeDrop(event,\''+list+'\','+i+')" ondragend="this.draggable=false">'
     + '<span class="ed-grip" title="Drag to reorder" onmousedown="this.parentElement.draggable=true" onmouseup="this.parentElement.draggable=false">'+EDGE_SVG.grip+'</span>'
     + (numbered? '<span class="ed-num">'+(i+1)+'</span>' : "")
-    + '<input class="input" data-edrow="'+list+'-'+i+'" value="'+esc(x)+'" placeholder="'+(list==="charting"? "e.g. Mark HTF levels (4H/1H) + daily bias" : list==="exitRows"? "e.g. Exit at the opposing HTF liquidity pool" : "e.g. Price breaks above 4H/1H resistance")+'" oninput="edgeDraftRow(\''+list+'\','+i+',this.value)">'
-    + '<button class="ed-x" title="Remove" aria-label="Remove row" onclick="edgeRemoveRow(\''+list+'\','+i+')">&times;</button></div>';
+    + '<input class="input" data-edrow="'+list+'-'+i+'" value="'+esc(x)+'" placeholder="'+(list==="charting"? "e.g. Mark HTF levels (4H/1H) + daily bias" : list==="exitRows"? "Add your exit rules so you don\'t freestyle" : "e.g. Price breaks above 4H/1H resistance")+'" oninput="edgeDraftRow(\''+list+'\','+i+',this.value)">'
+    + '<button type="button" class="ed-btn" title="Duplicate row" aria-label="Duplicate row" onclick="edgeDuplicateRow(\''+list+'\','+i+')">'+EDGE_SVG.copy+'</button>'
+    + '<button type="button" class="ed-btn danger" title="Delete row" aria-label="Delete row" onclick="edgeRemoveRow(\''+list+'\','+i+')">'+EDGE_SVG.trash+'</button></div>';
   if(editing){
     h += sec(SEC_ICONS.chart, "CHARTING PROCESS", charting.length? charting.map((x,i)=>edRow("charting", x, i, true)).join("") : '<div class="small">No steps yet — add your first charting step.</div>', "charting");
     h += sec(SEC_ICONS.criteria, "ENTRY CRITERIA", criteria.length? criteria.map((x,i)=>edRow("criteria", x, i, false)).join("") : '<div class="small">No criteria yet — add your first entry criterion.</div>', "criteria");
@@ -6311,7 +6387,7 @@ function edgeDetailHTML(sel){
       if(!val){
         return '<div class="model-drop" tabindex="0" data-slot="'+slot+'" onclick="modelPasteTarget=\''+slot+'\'" ondragover="event.preventDefault();this.classList.add(\'drag\')" ondragleave="this.classList.remove(\'drag\')" ondrop="dropModelImage(event,\''+p.id+'\',\''+slot+'\')">' + head
           + uploadBox
-          + '<div class="small" style="margin-top:6px">or drop an image on this box, or click it and paste (Ctrl+V)</div></div>';
+          + '</div>';
       }
       /* Picture present: a centered overlay on the image carries
          Preview (eye — opens the single-image viewer) and Delete
@@ -6396,6 +6472,24 @@ function attachDemoModelImagesOnce(){
    those seeded asset paths wherever they appear on a plan — a picture
    the user uploaded through the app is a data: URL and is never
    touched, and user-created plans never held these asset paths. */
+/* The Exit Criteria hint is placeholder copy, never plan content: a
+   plan whose stored exit text IS the hint actually has no exit rules —
+   the hint renders as the empty state's placeholder text instead.
+   stripExitHintOnce() applies that to a stored copy of the seeded plan
+   (same one-time pattern as the Entry Models image cleanup): it removes
+   only rows whose text is exactly the hint, never a user-typed row. */
+const PLAN_EXIT_HINT = "Add your exit rules so you don't freestyle";
+function planExitStored(v){ return (!v || v===PLAN_EXIT_HINT)? "" : v; }
+function stripExitHintOnce(){
+  if(DB.edgeExitHintV1) return;
+  DB.edgeExitHintV1 = true;
+  const mine = DB.plans.find(p=>p.name==="Market Mechanics Plan");
+  if(mine){
+    const ex = String(mine.exit || mine.exitRules || "").split("\n").filter(r=>r.trim()!==PLAN_EXIT_HINT).join("\n");
+    mine.exit = ex; mine.exitRules = ex;
+  }
+  saveDB();
+}
 function stripSeededModelImagesOnce(){
   if(DB.edgeImagesV2) return;
   DB.edgeImagesV2 = true;
@@ -6419,11 +6513,13 @@ function repointDemoModelImages(){
   if(changed) saveDB();
 }
 RENDER.edge = function(){
+  edgeColAuto();
   syncMarketMechanicsPlan();
   fixMMRiskOnce();
   attachDemoModelImagesOnce();
   repointDemoModelImages();
   stripSeededModelImagesOnce();
+  stripExitHintOnce();
   const el = document.querySelector('[data-view="edge"]');
   const sel = edgeSelection();
   const planItem = (p)=>{
