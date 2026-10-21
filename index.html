@@ -1617,21 +1617,28 @@ function computeStats(trades){
   return s;
 }
 /* ---- Journal review state (EdgeFlo attention flow) ----
-   A closed trade counts as reviewed once the trader has recorded
-   anything for it: an emotion, a plan link, a followed-plan answer,
-   quality grades, confluences / mistakes / management notes, a chart
-   screenshot, a voice note, or a hand-written journal note. The auto
-   "Paper trade — …" label stamped when a paper position closes is NOT
-   a review. Sample trades never count toward the review queue. */
+   A closed trade counts as reviewed once the trader has recorded a
+   review for it: an emotion, a followed-plan answer, quality grades,
+   confluences / mistakes / management notes, a chart screenshot, a
+   voice note, a hand-written journal note, or the note written in the
+   close debrief ("At close: …"). Two things stamped on the trade
+   automatically are NOT a review: the plan link (every paper position
+   is opened under the Active plan, so planId is execution metadata,
+   not a review — counting it hid every unreviewed paper trade from
+   the attention banner and the nav badge) and the "At entry: …" note
+   from the open check-in, which is written before the trade closes.
+   The auto "Paper trade — …" label stamped when a paper position
+   closes is NOT a review either. Sample trades never count toward
+   the review queue. */
 function tradeReviewed(t){
   if(t.emotion || t.exitEmotion) return true;
-  if(t.planId || (t.followed!==null && t.followed!==undefined)) return true;
+  if(t.followed!==null && t.followed!==undefined) return true;
   if(t.setupQ || t.execQ || t.confluences || t.mistakes || t.mgmt) return true;
   if(t.shot || (t.shots && (t.shots.HTF || t.shots.MTF || t.shots.LTF))) return true;
   if(t.voices && t.voices.length) return true;
   const n = (t.notes||"").trim();
   if(n && !/^Paper trade\b/.test(n)) return true;
-  if(/At (entry|close):\s*\S/.test(n)) return true;
+  if(/At close:\s*\S/.test(n)) return true;
   return false;
 }
 function unreviewedTrades(){
