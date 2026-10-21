@@ -509,6 +509,19 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .twl-scroll::-webkit-scrollbar{width:8px}
 .twl-scroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}
 .twl-scroll::-webkit-scrollbar-track{background:transparent}
+/* Market (symbol detail) card: a slim strip under the Watchlist / Alerts /
+   Trading Plan tabs card — symbol, live price and day % on one line, then a
+   single line of quote facts. Kept deliberately short so the watchlist above
+   it keeps most of the sidebar height. */
+.sym-strip{padding:8px 12px}
+.sym-strip .sym-line1{display:flex;align-items:baseline;gap:8px;min-width:0}
+.sym-strip .sym-name{font-size:14px;font-weight:800;white-space:nowrap}
+.sym-strip .sym-full{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sym-strip .sym-price{margin-left:auto;font-size:17px;font-weight:800;white-space:nowrap}
+.sym-strip .sym-chg{font-size:12.5px;font-weight:700;white-space:nowrap}
+.sym-strip .sym-facts{display:flex;flex-wrap:wrap;gap:3px 14px;margin-top:5px;padding-top:6px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+.sym-strip .sym-facts b{color:var(--ink);font-weight:700}
+.sym-strip .sym-facts .lab{font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--faint);margin-right:4px}
 .wl-pin-toggle{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;border-radius:99px;padding:4px 11px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
 .wl-pin-toggle.on{color:var(--pine);border-color:var(--pine);background:var(--pine-soft)}
 .range-track{position:relative;height:6px;border-radius:99px;background:var(--bg2);margin:7px 0 5px}
@@ -4675,21 +4688,18 @@ function symbolDetailHTML(){
   const mktOpen = mktHoursOpen(simMarket);
   const spread = Math.max(s.last*0.00018, Math.pow(10,-s.dec));
   const bid = s.last - spread/2, ask = s.last + spread/2;
-  const cell = (label, val, attr)=> '<div><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)">'+label+'</div><div class="mono" style="font-weight:700;margin-top:2px"'+(attr? " "+attr:"")+'>'+val+'</div></div>';
-  return '<div class="card side-card"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
-    + '<strong style="font-size:15px">'+esc(simMarket)+'</strong>'
+  const fact = (label, val, attr)=> '<span style="white-space:nowrap"><span class="lab">'+label+'</span><b class="mono"'+(attr? " "+attr:"")+'>'+val+'</b></span>';
+  return '<div class="card side-card sym-strip">'
+    + '<div class="sym-line1"><span class="sym-name">'+esc(simMarket)+'</span>'
     + (row? '<span class="chip">'+esc(row[1])+'</span>' : "")
-    + '<span style="flex:1"></span>'
-    + '<span class="chip '+(mktOpen? "green":"amber")+'">&#9679; '+(mktOpen? "Market Open":"Market Closed")+'</span></div>'
-    + '<div class="small" style="margin-top:3px">'+esc(SYMBOL_NAMES[simMarket] || simMarket)+'</div>'
-    + '<div style="display:flex;align-items:baseline;gap:9px;margin-top:8px;flex-wrap:wrap"><span class="mono" style="font-size:27px;font-weight:800" data-sym-price>'+s.last.toFixed(pd)+'</span><span class="small" style="font-weight:800">USD</span>'
-    + '<span class="mono '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+simMarket+'" style="font-weight:700">'+fmtPct(chg)+'</span></div>'
-    + '<div class="grid g3" style="gap:10px;margin-top:9px">'
-    + cell("BID", bid.toFixed(s.dec), "data-sym-bid") + cell("ASK", ask.toFixed(s.dec), "data-sym-ask") + cell("SPREAD", spread.toFixed(s.dec), "data-sym-spread")
-    + '</div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:11px">'
-    + cell("SESSION", mktSessionName(), "data-sym-session")
-    + '<div class="small" style="font-weight:700;text-align:right" data-mkt-close>'+esc(mktCloseText(simMarket))+'</div>'
+    + '<span class="sym-full">'+esc(SYMBOL_NAMES[simMarket] || simMarket)+'</span>'
+    + '<span class="mono sym-price" data-sym-price>'+s.last.toFixed(pd)+'</span>'
+    + '<span class="mono sym-chg '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+simMarket+'">'+fmtPct(chg)+'</span></div>'
+    + '<div class="sym-facts">'
+    + '<span style="white-space:nowrap"><span class="lab">MARKET</span><b style="color:'+(mktOpen? "var(--green)":"var(--amber, #b45309)")+'">&#9679; '+(mktOpen? "Open":"Closed")+'</b></span>'
+    + fact("BID", bid.toFixed(s.dec), "data-sym-bid") + fact("ASK", ask.toFixed(s.dec), "data-sym-ask") + fact("SPREAD", spread.toFixed(s.dec), "data-sym-spread")
+    + fact("SESSION", mktSessionName(), "data-sym-session")
+    + '<span style="white-space:nowrap" data-mkt-close>'+esc(mktCloseText(simMarket))+'</span>'
     + '</div>'
     + dayRangeHTML(simMarket)
     + '</div>';
@@ -4697,7 +4707,7 @@ function symbolDetailHTML(){
 function dayRangeHTML(sym){
   const dr = dayRangeInfo(sym); if(!dr) return "";
   const s = wlState[sym];
-  return '<div style="margin-top:11px"><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)" data-range-label>'+esc(dr.label)+'</div>'
+  return '<div style="margin-top:7px"><div class="small" style="font-weight:800;font-size:11px;letter-spacing:.05em;color:var(--faint)" data-range-label>'+esc(dr.label)+'</div>'
     + '<div class="range-track"><span class="range-fill" data-range-fill style="width:'+dr.pct+'%"></span><span class="range-dot" data-range-dot style="left:'+dr.pct+'%"></span></div>'
     + '<div style="display:flex;justify-content:space-between" class="small mono"><span data-range-lo>'+dr.lo.toFixed(s.dec)+'</span><span data-range-hi>'+dr.hi.toFixed(s.dec)+'</span></div></div>';
 }
