@@ -140,6 +140,8 @@ h1,h2,h3,h4{margin:0;color:var(--pine-ink);letter-spacing:-.01em}
 .btn.primary{background:var(--pine);border-color:var(--pine);color:#fff}
 .btn.primary:hover{background:var(--pine-deep)}
 .btn.danger{background:var(--red);border-color:var(--red);color:#fff}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff}
+.btn.green:hover{filter:brightness(1.06)}
 .btn.ghost{border-color:transparent;background:transparent;color:var(--pine)}
 .btn.sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
 .btn.block{width:100%}
@@ -417,8 +419,9 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .wl-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .wl-row:last-child{border-bottom:0}
 .wl-sym{font-weight:800;font-size:14px;min-width:76px}
-.wl-pin{border:0;background:transparent;font-size:17px;color:var(--faint);padding:2px 4px;line-height:1}
-.wl-pin.on{color:var(--amber)}
+.wl-pin{border:0;background:transparent;color:var(--faint);padding:3px 5px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border-radius:6px}
+.wl-pin:hover{color:var(--pine);background:var(--card2)}
+.wl-pin.on{color:var(--pine)}
 .up-flash{animation:wlUp .7s}
 .dn-flash{animation:wlDn .7s}
 @keyframes wlUp{0%{background:var(--green-bg)}100%{background:transparent}}
@@ -474,11 +477,15 @@ table.pos-tbl td.pos-pair:hover strong{color:var(--pine);text-decoration:underli
 .acct-cell{min-width:110px}
 .margin-cell{position:relative}
 .margin-cell .acct-val{cursor:pointer}
-.margin-pop{position:absolute;top:calc(100% + 10px);left:0;min-width:230px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px;z-index:50}
-.margin-pop .mp-row{display:flex;justify-content:space-between;align-items:baseline;gap:18px;padding:5px 0;font-size:13.5px}
+.margin-pop{position:absolute;top:calc(100% + 10px);right:0;min-width:248px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px 14px;z-index:50}
+.margin-pop .mp-row{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:7px 0;font-size:13.5px}
 .margin-pop .mp-row+.mp-row{border-top:1px solid var(--line)}
-.margin-pop .mp-row span{color:var(--muted);font-weight:600}
+.margin-pop .mp-row span{color:var(--muted);font-weight:600;display:inline-flex;align-items:center;gap:5px}
 .margin-pop .mp-row strong{font-variant-numeric:tabular-nums}
+.margin-pop .mp-pill{background:var(--pine);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
+.sess-cluster{display:inline-flex;align-items:center;gap:9px;flex:0 0 auto}
+.sess-dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex:0 0 9px}
+.sess-timer{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 .acct-label{font-size:11.5px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px}
 .acct-val{font-size:16px;font-weight:800;margin-top:1px}
 .acct-cap{font-size:10.5px;font-weight:700;color:#847C9F;margin-top:2px}
@@ -748,7 +755,7 @@ body.on-trading #lockout-slot{padding:0 14px !important}
 .legal-row:last-child{border-bottom:0}
 .legal-row:hover{color:var(--pine)}
 .twl-sym{font-weight:800;flex:1}
-.wl-group-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:7px 4px 2px}
+.wl-group-head{font-size:12.5px;font-weight:700;color:var(--muted);padding:9px 4px 3px}
 .alert-row{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 .alert-row:last-child{border-bottom:0}
 
@@ -1306,6 +1313,113 @@ input[type="range"].vol::-webkit-slider-thumb{-webkit-appearance:none;width:18px
 .tpl-name{font-weight:700;font-size:13.5px;display:block;line-height:1.3}
 .tpl-sub{font-size:12px;color:var(--muted);display:block;margin-top:1px}
 
+/* ---------- Trading watchlist controls (EdgeFlo icon buttons) ---------- */
+.wl-ctl{position:relative;display:inline-flex;flex:0 0 auto}
+.wl-ico-btn{width:34px;height:34px;flex:0 0 34px;border-radius:9px;border:1px solid var(--line2);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.wl-ico-btn:hover{color:var(--pine);border-color:var(--pine)}
+.wl-ico-btn.on{color:var(--pine);border-color:var(--pine);background:var(--pine-soft)}
+.wl-filter-menu{left:0;right:auto;top:calc(100% + 6px);min-width:158px}
+.wl-filter-menu button.on{color:var(--pine);font-weight:800}
+.wl-filter-menu button .ck{margin-left:auto;color:var(--pine);font-weight:800}
+.twl-head{display:flex;align-items:center;gap:10px;padding:2px 6px 5px;font-size:11.5px;font-weight:700;color:var(--faint)}
+.twl-row .twl-sym{flex:1;min-width:0;font-weight:700}
+.twl-row .twl-last{font-variant-numeric:tabular-nums;white-space:nowrap}
+.twl-row sup.wl-sup{font-size:8.5px;font-weight:700;margin-left:1px}
+/* ---------- Minimal symbol card (EdgeFlo) ---------- */
+.sym-min{padding:12px 14px 14px}
+.sym-min-line{display:flex;align-items:center;gap:8px;min-width:0}
+.sym-min-line .sym-name{font-size:14.5px;font-weight:800;white-space:nowrap}
+.sym-open{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);color:var(--green);font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.sym-open.closed{background:var(--red-bg);color:var(--red)}
+.sym-min .sym-full{font-size:12.5px;color:var(--muted);margin-top:9px}
+.sym-big{display:flex;align-items:baseline;gap:7px;margin-top:3px}
+.sym-big .sym-price-big{font-size:31px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1}
+.sym-big .sym-cur{font-size:12px;color:var(--muted);font-weight:700}
+/* ---------- Edge plan card grid ---------- */
+.edge-grid-wrap{height:100%;overflow-y:auto;padding:2px}
+.eg-title-row{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
+.eg-title-row h3{font-size:17px;font-weight:800}
+.edge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;align-items:start}
+.eg-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:14px 16px;cursor:pointer}
+.eg-card:hover{background:#F5F1FE;border-color:var(--line2)}
+@media (prefers-color-scheme: dark){ .eg-card:hover{background:#241645} }
+.eg-head{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.eg-name{font-weight:800;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eg-box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;height:252px;overflow:hidden;background:var(--card)}
+.eg-sec{margin-top:13px}
+.eg-lab{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--faint);margin-bottom:6px}
+.eg-steps{font-size:13px;gap:7px}
+.eg-steps li::before{width:19px;height:19px;flex-basis:19px;font-size:11px}
+.eg-row{font-size:13px;padding:2.5px 0}
+.eg-txt{font-size:13px;white-space:pre-wrap}
+/* ---------- Review Trade Plan modal ---------- */
+.modal-bk.wide .modal{max-width:920px}
+.modal-x.prv-x{background:transparent;color:var(--muted);box-shadow:none}
+.modal-x.prv-x:hover{background:var(--card2);color:var(--ink)}
+.prv-head{display:flex;align-items:center;gap:9px;padding-right:38px}
+.prv-name{font-weight:800;font-size:16.5px}
+.prv-type{color:var(--muted);font-size:13.5px;font-weight:600}
+.prv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 30px;margin-top:16px}
+@media (max-width:700px){ .prv-grid{grid-template-columns:1fr} }
+.prv-lab{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--muted);margin:18px 0 9px}
+.prv-lab:first-child{margin-top:0}
+.prv-crit{display:flex;gap:9px;align-items:center;padding:4.5px 0;font-size:14px;cursor:pointer}
+.prv-crit input{width:17px;height:17px;accent-color:var(--pine);flex:0 0 17px;cursor:pointer}
+.prv-model{border:1.5px dashed var(--line2);border-radius:10px;background:var(--card2);min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:12.5px;font-weight:600;overflow:hidden}
+.prv-model img{width:100%;display:block}
+.prv-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:22px}
+.prv-edit{border:1.5px solid var(--pine);color:var(--pine);background:transparent}
+.prv-edit:hover{background:var(--pine-soft)}
+/* ---------- Journal parity (EdgeFlo) ---------- */
+[data-view="journal"] h2,[data-view="journal"] h3{color:var(--ink)}
+table.tbl.jt th{text-transform:none;letter-spacing:0;font-size:12px;color:var(--muted)}
+.j-attn{display:flex;align-items:center;gap:11px;background:var(--pine-soft);border-radius:12px;padding:13px 16px;margin-bottom:16px;font-size:14px}
+.j-attn svg{color:var(--pine);flex:0 0 auto}
+.j-attn-btn{flex:0 0 auto;border:1.5px solid var(--pine);color:var(--pine);background:transparent;border-radius:99px;padding:6px 15px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit}
+.j-attn-btn:hover{background:var(--card)}
+.chip.pending{background:#FEF6D8;color:#A16207;border-color:transparent}
+/* ---------- Dashboard: PF badge + discipline notes ---------- */
+.pf-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-size:17px;line-height:1;flex:0 0 32px}
+.disc-note{display:flex;align-items:center;gap:8px;border-radius:10px;padding:9px 12px;margin-top:10px;font-size:12.5px;font-weight:700}
+.disc-note svg{flex:0 0 auto}
+.disc-note.yellow{background:var(--amber-bg);color:var(--amber)}
+.disc-note.lav{background:var(--pine-soft);color:var(--pine)}
+/* ---------- Post-trade reflection panel ---------- */
+#refl-panel{position:fixed;top:84px;right:20px;width:392px;max-width:calc(100vw - 24px);background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:160;padding:16px 18px 18px;animation:reflIn .28s ease-out;max-height:calc(100dvh - 108px);overflow-y:auto}
+@keyframes reflIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){ #refl-panel{animation:none} }
+.refl-head{display:flex;align-items:center;gap:9px}
+.refl-sym{font-weight:800;font-size:15.5px}
+.refl-side{font-weight:600;color:var(--muted);font-size:13.5px}
+.refl-sub{color:var(--muted);font-size:13px;margin-top:4px}
+.refl-lab{font-size:12px;font-weight:700;color:var(--muted);margin-top:15px}
+.refl-pnl{font-size:17px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.refl-breakbox{margin-top:14px;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.refl-break{width:100%;border:0;background:var(--card);display:flex;align-items:center;justify-content:space-between;padding:10px 12px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit}
+.refl-break:hover{color:var(--pine)}
+.refl-break-rows{border-top:1px solid var(--line);padding:6px 12px 9px}
+.refl-q{font-weight:800;font-size:14.5px;margin-top:16px}
+.refl-q2{font-weight:700;font-size:13.5px;margin-top:5px}
+.refl-emos{display:flex;gap:7px;margin-top:10px}
+.refl-emo{flex:1 1 0;min-width:0;border:1px solid var(--line2);background:var(--card);border-radius:10px;font-size:19px;line-height:1;padding:9px 0;cursor:pointer}
+.refl-emo:hover{border-color:var(--pine)}
+.refl-emo.on{border-color:var(--pine);background:var(--pine-soft);box-shadow:0 0 0 1px var(--pine)}
+.refl-yn{display:flex;gap:8px;margin-top:9px}
+.refl-yn button{border:1.5px solid var(--line2);background:var(--card);border-radius:8px;padding:5px 18px;font-weight:700;font-size:13px;color:var(--pine);cursor:pointer;font-family:inherit}
+.refl-yn button:hover{border-color:var(--pine)}
+.refl-yn button.on{background:var(--pine-soft);border-color:var(--pine)}
+.refl-note-wrap{position:relative;margin-top:8px}
+.refl-note-wrap textarea{width:100%;min-height:88px;resize:vertical;padding-right:44px}
+.refl-mic{position:absolute;right:8px;bottom:8px;width:32px;height:32px;border-radius:8px;border:1px solid var(--line2);background:var(--card);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.refl-mic:hover{color:var(--pine);border-color:var(--pine)}
+.refl-mic.rec{background:var(--red);border-color:var(--red);color:#fff}
+.refl-foot{display:flex;gap:10px;margin-top:16px}
+.refl-review{flex:1;border:1.5px solid var(--pine);color:var(--pine);background:transparent;border-radius:10px;font-weight:700;font-size:13.5px;padding:10px 8px;cursor:pointer;font-family:inherit}
+.refl-review:hover{background:var(--pine-soft)}
+.refl-save{flex:1;background:var(--pine);color:#fff;border:1.5px solid var(--pine);border-radius:10px;font-weight:700;font-size:13.5px;padding:10px 8px;cursor:pointer;font-family:inherit}
+.refl-save:hover{background:var(--pine-deep)}
+@media (max-width:860px){ #refl-panel{top:auto;bottom:78px;right:12px;left:12px;width:auto} }
+
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
 </style>
 </head>
@@ -1483,7 +1597,8 @@ const DEFAULTS = {
   dailyNotes: {},                               // date -> { text, voices:[{id, at, dur, src}] }
   trackFavs: [],                                // sanctuary favourite track ids
   trackPlays: [],                               // sanctuary completed listen dates
-  wlPins: ["XAUUSD","EURUSD","BTCUSD"],         // watchlist pinned symbols
+  wlPins: ["BTCUSD","XAUUSD","ETHUSD"],         // watchlist pinned symbols (EdgeFlo default block)
+  session: null,                                // active trading session {date, startMs} — started from the Trading banner / a completed routine
   alerts: [],                                   // price alerts {id, symbol, condition, price, status, created, triggeredAt}
   integrations: {},                             // broker name -> true (demo connections)
   sessions: [],                                 // sanctuary session log {date, minutes, kind, at}
@@ -1538,6 +1653,11 @@ function loadDB(){
   if(!Array.isArray(DB.trackFavs)) DB.trackFavs = [];
   if(!Array.isArray(DB.trackPlays)) DB.trackPlays = [];
   if(!Array.isArray(DB.wlPins)) DB.wlPins = DEFAULTS.wlPins.slice();
+  /* A pin list still holding the untouched old default follows the new
+     EdgeFlo default block (BTCUSD / XAUUSD / ETHUSD); a list the user
+     customized is never touched. */
+  if(JSON.stringify(DB.wlPins) === JSON.stringify(["XAUUSD","EURUSD","BTCUSD"])) DB.wlPins = DEFAULTS.wlPins.slice();
+  if(!DB.session || typeof DB.session!=="object") DB.session = null;
   if(!Array.isArray(DB.alerts)) DB.alerts = [];
   if(!Array.isArray(DB.sessions)) DB.sessions = [];
   if(!Array.isArray(DB.newsBookmarks)) DB.newsBookmarks = [];
@@ -1819,6 +1939,7 @@ setInterval(()=>{
   const ck = $("#sb-clock"); if(ck) ck.textContent = new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12: !(DB.settings && DB.settings.profile && DB.settings.profile.time24)});
   document.querySelectorAll(".tw-count").forEach(e=>{ e.textContent = fmtCountdownHM(sessionInfo().target - new Date()); });
   const hdrCk = $("#th-clock"); if(hdrCk) hdrCk.textContent = localTimeHMS(new Date());
+  const stm = $("#th-session-timer"); if(stm && typeof sessionActive==="function" && sessionActive()) stm.textContent = fmtHMS(sessionElapsedMs());
   document.querySelectorAll("[data-posdur]").forEach(e=>{ const p = DB.paper.positions.find(x=>x.id===e.getAttribute("data-posdur")); if(p) e.textContent = posDurText(p); });
   if(new Date().getSeconds()===0) renderSessionBar();
 }, 1000);
@@ -1865,7 +1986,12 @@ function toggleRoutineStep(i, val){
   if(val && ix<0) arr.push(i);
   if(!val && ix>=0) arr.splice(ix,1);
   if(!val && DB.routine.reviewed && routineStepMeta(i).view==="edge") delete DB.routine.reviewed[d]; // un-ticking the plan step clears its reviewed timestamp
-  DB.routine.done[d] = arr; saveDB(); refreshRoutineUI();
+  DB.routine.done[d] = arr;
+  /* Completing the routine starts today's trading session (EdgeFlo) —
+     the start is stamped before the UI refresh so the Trading banner
+     hides and the header session timer appears in the same paint. */
+  if(val && routineCompleteToday() && !sessionActive()) DB.session = { date: todayStr(), startMs: Date.now() };
+  saveDB(); refreshRoutineUI();
   if(wasLocked && !routineLocked()) toast("Pre-market routine complete — You're ready to trade");
 }
 /* A step's saved action (Settings → Pre-Market Routine) decides its panel
@@ -1967,21 +2093,63 @@ function routinePlanForReview(){
   return DB.plans.find(p=>p.id===DB.activePlanId) || DB.plans[0]
       || EDGE_PLAN_PRESETS.find(p=>p.id==="market-mechanics-plan") || EDGE_PLAN_PRESETS[0];
 }
+/* "Last reviewed …" for the review modal footer, from the stored
+   review stamps (DB.routine.reviewed, date -> time). */
+function planLastReviewedText(){
+  const revMap = (DB.routine||{}).reviewed || {};
+  const dates = Object.keys(revMap).sort();
+  if(!dates.length) return "Not reviewed yet";
+  const rd = dates[dates.length-1];
+  if(rd===todayStr()) return "Reviewed today at "+revMap[rd];
+  const dt = new Date(rd+"T00:00:00");
+  if(isNaN(dt)) return "Last reviewed "+rd;
+  const days = Math.round((new Date(todayStr()+"T00:00:00") - dt)/864e5);
+  if(days===1) return "Last reviewed yesterday";
+  if(days>1) return "Last reviewed "+days+" days ago";
+  return "Last reviewed on "+dt.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+}
+/* Review Trade Plan (EdgeFlo): a read-only two-column look at the plan.
+   The Entry Criteria checkboxes toggle locally in the modal only; the
+   Entry Models boxes are inert here — pictures change in plan Edit mode
+   only. "Edit Plan" lands on the Edge page with this plan in edit mode;
+   "Mark as reviewed" stamps the review and completes the routine step. */
 function openPlanReviewModal(){
   const p = routinePlanForReview(); if(!p) return;
-  const r = planRisk(p);
-  const reviewed = (DB.routine.reviewed||{})[todayStr()];
-  const list = (title, items)=> (items && items.length)? '<div style="margin-top:12px"><div class="small" style="font-weight:800;margin-bottom:5px">'+title+'</div>'+items.map(s=>'<div style="display:flex;gap:8px;padding:3px 0;font-size:13.5px"><span style="color:var(--pine);font-weight:800">&middot;</span><span>'+esc(s)+'</span></div>').join("")+'</div>' : "";
-  openModal('<div id="plan-review"><h3>Review Trade Plan</h3>'
-    + '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-top:6px"><div style="min-width:0"><div style="font-weight:800;font-size:15px">'+esc(p.name)+'</div><div class="small">'+esc(p.desc||"")+'</div></div>'+(p.type? '<span class="chip pine" style="flex:0 0 auto">'+esc(p.type)+'</span>' : "")+'</div>'
-    + list("CHARTING PROCESS", p.charting)
-    + list("ENTRY CRITERIA", p.criteria)
-    + (p.mgmt? '<div class="divider"></div><div class="small"><strong>Trade management:</strong> '+esc(p.mgmt)+'</div>' : "")
-    + ((p.exitRules||p.exit)? '<div class="small" style="margin-top:6px"><strong>Exit rules:</strong> '+esc(p.exitRules||p.exit)+'</div>' : "")
-    + (p.notes? '<div class="small" style="margin-top:6px"><strong>Notes:</strong> '+esc(p.notes)+'</div>' : "")
-    + '<div class="divider"></div><div class="small">Risk controls: max '+r.maxTrades+' trades/day &middot; '+r.risk+'% risk per trade &middot; max loss '+fmt$(r.maxLoss)+' &middot; max profit '+fmt$(r.maxProfit)+'</div>'
-    + (reviewed? '<div class="alert green" style="margin-top:12px"><div>Reviewed today at '+esc(reviewed)+' &#10003;</div></div>' : "")
-    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Close</button><button class="btn primary" onclick="markPlanReviewed()">Mark as reviewed</button></div></div>');
+  const exitTxt = (typeof planExitStored==="function")? planExitStored(p.exit || p.exitRules || "") : (p.exit || p.exitRules || "");
+  const exitRows = exitTxt? exitTxt.split("\n").map(s=>s.trim()).filter(Boolean) : [];
+  const lab = (icon, t)=> '<div class="prv-lab">'+icon+'<span>'+t+'</span></div>';
+  const modelBox = (label, src)=> '<div><div class="small" style="font-weight:700;margin-bottom:6px">'+label+'</div>'
+    + (src? '<div class="prv-model"><img src="'+src+'" alt="'+label+'"></div>'
+          : '<div class="prv-model">'+EDGE_SVG.img+'<span>Upload Image</span></div>') + '</div>';
+  openModal('<div id="plan-review">'
+    + '<button class="modal-x prv-x" type="button" aria-label="Close" title="Close" onclick="closeModal()">&times;</button>'
+    + '<div class="prv-head">'+planDotHTML(p)+'<span class="prv-name">'+esc(p.name)+'</span>'+(p.type? '<span class="prv-type">'+esc(p.type)+'</span>' : "")+'</div>'
+    + '<div class="prv-grid"><div>'
+    + lab(SEC_ICONS.chart, "CHARTING PROCESS")
+    + ((p.charting||[]).length? '<ol class="num-list">'+p.charting.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>' : '<div class="small">No charting steps recorded.</div>')
+    + lab(SEC_ICONS.criteria, "ENTRY CRITERIA")
+    + ((p.criteria||[]).length? p.criteria.map(c=>'<label class="prv-crit"><input type="checkbox"><span>'+esc(c)+'</span></label>').join("") : '<div class="small">No criteria yet.</div>')
+    + '</div><div>'
+    + lab(SEC_ICONS.models, "ENTRY MODELS")
+    + '<div class="grid g2" style="gap:12px">' + modelBox("Setup screenshot", p.modelShot || "") + modelBox("Entry examples", p.modelExamples || "") + '</div>'
+    + lab(SEC_ICONS.mgmt, "TRADE MANAGEMENT RULES")
+    + (p.mgmt? '<div style="font-size:14px">'+esc(p.mgmt)+'</div>' : '<div class="small" style="color:var(--muted)">—</div>')
+    + lab(SEC_ICONS.exit, "EXIT CRITERIA")
+    + (exitRows.length? exitRows.map(r=>'<div style="font-size:14px;padding:2px 0">'+esc(r)+'</div>').join("") : '<div class="small" style="color:var(--muted)">Add your exit rules so you don&rsquo;t freestyle</div>')
+    + lab(SEC_ICONS.notes, "TRADING NOTES")
+    + (p.notes? '<div style="font-size:14px;white-space:pre-wrap">'+esc(p.notes)+'</div>' : '<div class="small" style="color:var(--muted)">Not Set</div>')
+    + '</div></div>'
+    + '<div class="prv-foot"><button class="btn prv-edit" onclick="reviewEditPlan(\''+p.id+'\')">'+SEC_ICONS.pencil+'<span>Edit Plan</span></button>'
+    + '<span style="flex:1"></span><span class="small" style="color:var(--muted)">'+esc(planLastReviewedText())+'</span>'
+    + '<button class="btn primary" onclick="markPlanReviewed()">Mark as reviewed &#10003;</button></div></div>');
+  const bk = document.getElementById("modal-bk"); if(bk) bk.classList.add("wide");
+}
+/* "Edit Plan" from the review modal: close, land on Edge with this plan
+   open in edit mode (a preset opens its detail — presets aren't editable). */
+function reviewEditPlan(id){
+  closeModal();
+  if(DB.plans.some(x=>x.id===id)){ edgeSel = { kind:"plan", id:id }; go("edge"); edgeStartEdit(id); }
+  else { go("edge"); selectEdge("preset", id); }
 }
 function markPlanReviewed(){
   const t = new Date();
@@ -2123,6 +2291,9 @@ function openTutorial(){
     + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal()">Close</button><button class="btn primary" onclick="closeModal();go(\'trading\')">Open Trading</button></div>');
 }
 function go(view){
+  /* EdgeFlo: tapping "Edge" in the nav while a plan detail is open
+     returns to the My Plans card grid (there is no back button). */
+  if(view==="edge" && currentView==="edge" && edgeView==="detail"){ edgeView = "grid"; edgeEdit = null; edgeMenuId = null; edgeColorOpen = false; }
   currentView = view;
   /* The view switch itself must never be held hostage by a failing widget:
      toggle visibility + title first, then render inside a guard so one
@@ -2182,7 +2353,9 @@ function paintRoutinePill(p){
   p = p || document.getElementById("tb-routine-pill"); if(!p) return;
   const total = DB.routine.steps.length;
   p.textContent = "Pre-Market Routine " + routineDoneCount() + "/" + total;
-  if(currentView==="dashboard") p.style.display = (DB.routine.enabled && total>0)? "" : "none";
+  /* Once today's routine is fully complete the pill leaves the Dashboard
+     header entirely; the daily reset brings it back with the new day. */
+  if(currentView==="dashboard") p.style.display = (DB.routine.enabled && total>0 && !routineCompleteToday())? "" : "none";
 }
 function dashChrome(view){
   const sub = $("#tb-date"), right = document.querySelector(".tb-right");
@@ -2325,10 +2498,16 @@ function balanceChartSVG(){
   const line = pts.map((p,i)=> (i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
   const area = line + " L"+X(w1).toFixed(1)+" "+(padT+ih)+" L"+padL+" "+(padT+ih)+" Z";
   const redY = Y(startBalAll);
+  /* The line, its area fill and the right-axis balance tag take the
+     profit/loss color of the DISPLAYED range: green when the balance
+     ends the range at or above where it started it, red when below. */
+  const plProfit = pts[pts.length-1].v >= pts[0].v;
+  const plCol = plProfit? "#1E9E62" : "#D64545";
+  const plFill = plProfit? "rgba(30,158,98,.13)" : "rgba(214,69,69,.13)";
   let ticks = "";
   for(let v=min; v<=max; v+=400){ const y = Y(v);
-    if(v === center && Math.abs(y-redY) > 22){ /* the balance tick gets EdgeFlo's orange axis chip (unless the red tag sits there) */
-      ticks += '<rect x="'+(padL+iw+4)+'" y="'+(y-9)+'" width="58" height="18" rx="4" fill="var(--amber)"/><text x="'+(padL+iw+33)+'" y="'+(y+3.5)+'" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Inter">'+fmtK(v)+'</text>';
+    if(v === center && Math.abs(y-redY) > 22){ /* the balance tick gets the P/L-colored axis chip (unless the starting-balance tag sits there) */
+      ticks += '<rect x="'+(padL+iw+4)+'" y="'+(y-9)+'" width="58" height="18" rx="4" fill="'+plCol+'"/><text x="'+(padL+iw+33)+'" y="'+(y+3.5)+'" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Inter">'+fmtK(v)+'</text>';
     } else {
       ticks += '<text x="'+(padL+iw+9)+'" y="'+(y+3.5)+'" font-size="10.5" fill="var(--faint)" font-family="Inter">'+fmtK(v)+'</text>';
     }
@@ -2348,8 +2527,8 @@ function balanceChartSVG(){
   }
   return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" aria-label="Account balance history" style="display:block">'
     + ticks
-    + '<path d="'+area+'" fill="rgba(192,127,16,.13)"/>'
-    + '<path d="'+line+'" fill="none" stroke="var(--amber)" stroke-width="2.2" stroke-linejoin="round"/>'
+    + '<path d="'+area+'" fill="'+plFill+'"/>'
+    + '<path d="'+line+'" fill="none" stroke="'+plCol+'" stroke-width="2.2" stroke-linejoin="round"/>'
     + ref
     + xlabels + '</svg>';
 }
@@ -2381,7 +2560,11 @@ RENDER.dashboard = function(){
   const pfArc = (a0,a1)=>{ const pt = a=> [32+29*Math.cos(a*Math.PI/180), 32+29*Math.sin(a*Math.PI/180)]; const p0 = pt(a0), p1 = pt(a1);
     return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A29 29 0 "+((a1-a0)>180?1:0)+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1); };
   const pfGA0 = -90 + PF_GAP, pfGA1 = pfGA0 + pfGSpan, pfRA0 = 90 + PF_GAP, pfRA1 = pfRA0 + pfRSpan;
-  const pfFace = !s.n? "😐" : (s.pf===Infinity || s.pf>=1? "🙂" : "😐");
+  /* Mood face in a tinted circular badge: PF 0 → neutral, 0 < PF < 1 →
+     frowning on a red/pink tint, PF ≥ 1 → smiling on a green tint. */
+  const pfVal = s.n? s.pf : 0;
+  const pfFace = pfVal===0? "😐" : (pfVal<1? "😞" : "🙂");
+  const pfBadgeBg = pfVal>=1? "rgba(30,185,135,.16)" : "rgba(242,110,110,.16)";
   const rMax = Math.max(Math.abs(avgWinR), Math.abs(avgLossR));
   const winBar = wins.length && rMax? Math.round(Math.abs(avgWinR)/rMax*100) : 0;
   const lossBar = losses.length && rMax? Math.round(Math.abs(avgLossR)/rMax*100) : 0;
@@ -2396,16 +2579,16 @@ RENDER.dashboard = function(){
   const infoI = t=> ' <span class="info-i" title="'+t+'">i</span>';
   el.innerHTML =
     '<div class="grid g5">'
-    + kpi("Account Balance"+infoI(apb.connected? "Balance of the active connected account" : "Paper account cash balance (local simulator)"), '<div class="k-value mono">'+bal$(acctBal)+'</div>' + (apb.cap? '<div class="acct-cap">'+esc(apb.cap)+'</div>' : ""))
+    + kpi("Account Balance", '<div class="k-value mono">'+bal$(acctBal)+'</div>')
     + kpi("Total Closed Net PnL"+infoI("Net realised P&L from closed trades in the selected range"), '<div class="k-value mono '+(s.pnl>=0?"pos":"neg")+'">'+fmt$(s.pnl)+'</div>')
     + kpi("Win Rate", '<div class="k-value mono">'+(s.n? s.winRate.toFixed(2):"0.00")+'%'+wrArrow+'</div>')
     + kpi("Avg R Per Trade", '<div style="display:flex;align-items:center;gap:12px">'
-      + '<div class="k-value mono" style="margin-top:0">'+(s.n? s.avgR.toFixed(2):"0.00")+avgRArrow+'</div>'
+      + '<div class="k-value mono" style="margin-top:0">'+(s.n? s.avgR.toFixed(2):"0.00")+'R'+avgRArrow+'</div>'
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:row;gap:12px">'
       + '<div style="flex:1;min-width:0"><div class="mono pos" style="font-size:12px;font-weight:700">+'+Math.abs(avgWinR).toFixed(2)+'R</div><div class="progress green" style="height:4px;margin-top:3px"><i style="width:'+winBar+'%"></i></div></div>'
       + '<div style="flex:1;min-width:0"><div class="mono neg" style="font-size:12px;font-weight:700">-'+Math.abs(avgLossR).toFixed(2)+'R</div><div class="progress red" style="height:4px;margin-top:3px"><i style="width:'+lossBar+'%"></i></div></div>'
       + '</div></div>')
-    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0;font-size:29px">'+(s.n? (s.pf===Infinity? "&infin;" : s.pf.toFixed(2)) : "&mdash;")+' <span style="font-size:20px">'+pfFace+'</span></div>'
+    + kpi("Profit Factor", '<div style="display:flex;align-items:center;gap:10px"><div class="k-value mono" style="margin-top:0;font-size:29px">'+(s.n? (s.pf===Infinity? "&infin;" : s.pf.toFixed(2)) : "&mdash;")+'</div><span class="pf-badge" style="background:'+pfBadgeBg+'" role="img" aria-label="Profit factor mood">'+pfFace+'</span>'
       + '<svg width="62" height="62" viewBox="0 0 64 64" style="margin-left:auto;flex:0 0 62px" role="img" aria-label="Profit factor gauge">'
       + (pfGSpan>0.5? '<path d="'+pfArc(pfGA0,pfGA1)+'" fill="none" stroke="'+pfGreen+'" stroke-width="5.5" stroke-linecap="round"/>':"")
       + (pfRSpan>0.5? '<path d="'+pfArc(pfRA0,pfRA1)+'" fill="none" stroke="'+pfRed+'" stroke-width="5.5" stroke-linecap="round"/>':"")
@@ -2424,14 +2607,37 @@ function disciplineCardHTML(st){
   const pctPos = Math.max(0, Math.min(100, (st.pnl - lo) / (hi - lo) * 100));
   const used = Math.min(st.trades, g.maxTrades);
   const dots = Array.from({length: Math.max(1, g.maxTrades)}, (_,i)=> '<i class="tdot '+(i<used?"on":"")+'"></i>').join("");
-  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Today&rsquo;s Discipline Summary</h3></div>'
+  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Today&rsquo;s Discipline Summary</h3><button class="btn sm" onclick="acctTab=\'trading\';go(\'account\')">Modify guardrails</button></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><strong class="mono" style="font-size:19px">'+fmt$(st.pnl)+'</strong><span class="small">Today&rsquo;s Closed PnL <span class="info-i" title="Net closed P&amp;L in your journal for today, against your guardrail limits">i</span></span></div>'
     + '<div class="pnl-slider"><div class="pnl-track"><b class="pnl-fill'+(st.pnl<0?" neg":"")+'" style="width:'+pctPos+'%"></b><i style="left:'+pctPos+'%"></i></div>'
     + '<div class="pnl-scale"><span><strong class="mono" style="color:var(--ink)">'+fmt$(lo)+'</strong><br>Max Loss</span><span style="text-align:right"><strong class="mono" style="color:var(--ink)">'+(hi>=1000? "$"+(hi/1000)+"K" : fmt$(hi))+'</strong><br>Max Profit</span></div></div>'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span class="dot-track">'+dots+'</span><span class="small" style="font-weight:700">'+st.trades+' / '+g.maxTrades+' Trades Used</span></div>'
     + disciplineOpensBanner()
-    + '<div style="margin-top:12px"><button class="btn sm" onclick="acctTab=\'trading\';go(\'account\')">Modify guardrails</button></div>'
+    + disciplineNotesHTML(st)
     + '</div>';
+}
+/* Discipline notice rows (EdgeFlo): a pale-yellow row when any of
+   today's trades was placed outside the guardrail trading window, and a
+   lavender row with the trades remaining once at least one trade has
+   been used today. */
+function todayTradeOutsideWindow(){
+  const g = DB.guardrails;
+  if(g.windowOn===false) return false;
+  return todayTrades().some(t=>{
+    let hm = null;
+    if(t.openedAt){ const d = new Date(t.openedAt); if(!isNaN(d)) hm = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+    else if(t.entryTime) hm = t.entryTime;
+    return !!hm && (hm < g.winStart || hm > g.winEnd);
+  });
+}
+function disciplineNotesHTML(st){
+  const g = DB.guardrails;
+  const clock = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  const chat = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.8A2.8 2.8 0 0 1 6.8 3h10.4A2.8 2.8 0 0 1 20 5.8v7.4a2.8 2.8 0 0 1-2.8 2.8h-5l-4.6 3.9v-3.9h-.8A2.8 2.8 0 0 1 4 13.2z"/></svg>';
+  let h = "";
+  if(todayTradeOutsideWindow()) h += '<div class="disc-note yellow">'+clock+'<span>Trade placed outside your allowed hours.</span></div>';
+  if(st.trades>=1){ const n = Math.max(0, g.maxTrades - st.trades); h += '<div class="disc-note lav">'+chat+'<span>You have '+n+' trade'+(n===1?"":"s")+' remaining today.</span></div>'; }
+  return h;
 }
 function disciplineOpensBanner(){
   const g = DB.guardrails; const info = sessionInfo();
@@ -2503,7 +2709,7 @@ function tradeTable(list, withActions){
 /* ================= JOURNAL ================= */
 let calCursor = new Date(); calCursor.setDate(1);
 let journalDay = todayStr(), journalUnit = "$";
-let journalWide = false, journalShowRoutine = false, journalShowJournaled = false;
+let journalWide = false, journalShowRoutine = false, journalShowJournaled = false, journalShowViolations = false;
 let journalTradeFilter = "all", journalTradeInst = "";
 function pnlInUnit(pnl, sumR){
   if(journalUnit==="R") return fmtR(sumR);
@@ -2515,14 +2721,14 @@ RENDER.journal = function(){
   const el = document.querySelector('[data-view="journal"]');
   updateJournalBadge();
   el.innerHTML =
-    journalAttentionHTML()
-    + '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">'
+    '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">'
     + '<h2 style="font-size:20px;font-weight:800;color:var(--ink)">Journal</h2>'
     + '<span style="font-size:12.5px;color:var(--muted)">Review your trades, emotions, and patterns to build consistency and self-awareness.</span>'
     + '<span style="flex:1"></span>'
     + '<div class="seg solid" role="group" aria-label="PnL display unit">'+["$","%","R"].map(u=>'<button class="'+(journalUnit===u?"on":"")+'" onclick="journalUnit=\''+u+'\';RENDER.journal()">'+u+'</button>').join("")+'</div>'
     + '<button class="btn" style="color:var(--pine)" onclick="openTradeModal()">+ Add Manual Trade</button>'
     + '<button class="icon-btn" title="'+(journalWide? "Show the daily panel again":"Expand calendar")+'" onclick="journalWide=!journalWide;RENDER.journal()">'+(journalWide? "&laquo;" : "&raquo;")+'</button></div>'
+    + journalAttentionHTML()
     + '<div class="journal-layout"'+(journalWide? ' style="grid-template-columns:1fr"':"")+'><div style="min-width:0">' + calendarHTML() + monthlySummaryHTML() + weeklyBreakdownHTML() + dayTradesHTML() + '</div>'
     + (journalWide? "" : '<div style="min-width:0">' + journalDailyPanelHTML() + '</div>')
     + '</div>';
@@ -2533,7 +2739,7 @@ function journalDailyPanelHTML(){
   const list = tradesNewestFirst(DB.trades.filter(t=>t.date===d));
   const s = computeStats(list);
   const vDay = DB.overrides.filter(o=>o.date===d);
-  const planFollowed = list.filter(t=>t.planId).length;
+  const planFollowedYes = list.length>0 && list.every(t=> t.followed===true);
   const journaled = list.filter(t=> (t.notes && t.notes.trim()) || t.shot || t.emotion).length;
   const rDone = (DB.routine.done[d]||[]).length, rTotal = DB.routine.steps.length;
   const doneIdx = DB.routine.done[d]||[];
@@ -2542,8 +2748,10 @@ function journalDailyPanelHTML(){
   const metric = (label, val, cls)=> '<div><div class="metric-v mono '+(cls||"")+'">'+val+'</div><div class="metric-l">'+label+'</div></div>';
   const micSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
   const penSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L8 20l-5 1 1-5z"/></svg>';
-  const bigVal = list.length? pnlInUnit(s.pnl, s.sumR) : "0";
-  const bigCls = list.length? pnlUnitClass(s.pnl, s.sumR) : "pos";
+  /* The big day PnL always renders as signed currency (EdgeFlo):
+     "+$20.70" / "-$1.82" / "$0.00". */
+  const bigVal = (s.pnl>0? "+":"") + fmt$(s.pnl);
+  const bigCls = s.pnl>=0? "pos" : "neg";
   const routineState = !rTotal? "Off" : rDone===0? "Not Started" : rDone>=rTotal? "Complete" : "In Progress";
   const chev = open=> '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="'+(open? "M5 15l7-7 7 7":"M5 9l7 7 7-7")+'"/></svg>';
   return '<div class="card">'
@@ -2555,8 +2763,8 @@ function journalDailyPanelHTML(){
     + '<div class="mono '+bigCls+'" style="font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:14px;line-height:1.1">'+bigVal+'</div>'
     + '<div class="metric-l" style="margin-top:3px">NET PNL</div>'
     + '<div class="grid g2" style="gap:9px;margin-top:16px">'
-    + metric("WIN RATE", list.length? s.winRate.toFixed(0)+"%" : "-")
-    + metric("AVERAGE R", list.length? fmtR(s.avgR) : "-", s.avgR>0?"pos":s.avgR<0?"neg":"")
+    + metric("WIN RATE", (list.length? s.winRate : 0).toFixed(1)+"%")
+    + metric("AVERAGE R", fmtR(s.avgR), s.avgR>0?"pos":s.avgR<0?"neg":"")
     + '</div>'
     + '<div class="grid g3" style="gap:9px;margin-top:14px">'
     + metric("TOTAL TRADES", list.length+' <span style="color:var(--faint);font-size:12.5px">/ '+DB.guardrails.maxTrades+'</span>')
@@ -2564,8 +2772,12 @@ function journalDailyPanelHTML(){
     + metric("LOSSES", s.losses, "neg")
     + '</div>'
     + '<div class="divider" style="margin:14px 0 4px"></div>'
-    + '<div class="day-row"><span>Plan Followed</span><strong>'+(list.length? planFollowed+' / '+list.length : "-")+'</strong></div>'
-    + '<div class="day-row"><span>Guardrail Violations</span><strong'+(vDay.length? ' class="neg"':"")+'>'+vDay.length+'</strong></div>'
+    + '<div class="day-row"><span>Plan Followed</span><strong>'+(planFollowedYes? 'Yes &#10003;' : 'No &#10005;')+'</strong></div>'
+    + '<div class="day-row"><span>Guardrail Violations</span><span style="display:flex;align-items:center;gap:8px"><strong'+(vDay.length? ' class="neg"':"")+'>'+vDay.length+'</strong><button class="chev-btn" title="Violations for this day" onclick="journalShowViolations=!journalShowViolations;RENDER.journal()">'+chev(journalShowViolations)+'</button></span></div>'
+    + (journalShowViolations? '<div style="padding:2px 0 8px">'
+        + (vDay.length? vDay.map(o=>'<div class="day-row" style="padding:5px 0"><span>'+esc((o.reasons||[]).join(" · ") || "Rule break logged")+'</span><span class="small mono" style="flex:0 0 auto">'+esc(o.at||"")+'</span></div>').join("")
+          : '<div class="small">No violations recorded this day.</div>')
+        + '</div>' : "")
     + '<div class="day-row"><span>Pre-Market Routine</span><span style="display:flex;align-items:center;gap:8px"><span class="small" style="font-weight:700">'+routineState+(rTotal? ' <span class="mono">'+rDone+'/'+rTotal+'</span>':"")+'</span><button class="chev-btn" title="Routine steps for this day" onclick="journalShowRoutine=!journalShowRoutine;RENDER.journal()">'+chev(journalShowRoutine)+'</button></span></div>'
     + (journalShowRoutine? '<div style="padding:2px 0 8px">'
         + (rTotal? DB.routine.steps.map((st,i)=> isToday
@@ -2585,7 +2797,7 @@ function journalDailyPanelHTML(){
     + '</div>';
 }
 function voiceNotesHTML(rec){
-  if(!rec.voices || !rec.voices.length) return '<div class="small" style="margin-top:8px">No voice notes yet — tap the mic button and talk the day out.</div>';
+  if(!rec.voices || !rec.voices.length) return "";
   return rec.voices.map(v=>'<div class="vn-row"><span class="chip pine">'+esc(v.at)+'</span><audio controls src="'+v.src+'" preload="metadata"></audio><span class="small mono">'+Math.round(v.dur||0)+'s</span><button class="btn sm" onclick="deleteVoiceNote(\''+v.id+'\')">Delete</button></div>').join("");
 }
 function saveDailyNote(){ const rec = dailyNoteRec(journalDay); rec.text = $("#dn-text").value; saveDB(); toast("Daily note saved."); }
@@ -2677,27 +2889,30 @@ function monthlySummaryHTML(){
   const buckets = [["\u2264-2R", r=> r<=-2], ["-1R to 0", r=> r>-2 && r<0], ["0 to 1R", r=> r>=0 && r<1], ["1R to 2R", r=> r>=1 && r<2], ["\u22652R", r=> r>=2]];
   const counts = buckets.map(b=> monthTrades.filter(t=> b[1](tradeR(t))).length);
   const maxC = Math.max(1, ...counts);
-  const bars = '<div style="display:flex;align-items:flex-end;gap:10px;height:104px;margin:14px 0 4px">'
-    + buckets.map((b,i)=> '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0">'
-      + '<span class="mono" style="font-size:12px;font-weight:800">'+counts[i]+'</span>'
-      + '<div title="'+b[0]+': '+counts[i]+' trade'+(counts[i]===1?"":"s")+'" style="width:100%;max-width:52px;height:'+Math.max(4, Math.round(counts[i]/maxC*62))+'px;border-radius:6px 6px 0 0;background:'+(i<2? "var(--red)" : i===2? "var(--amber)" : "var(--green)")+';opacity:'+(counts[i]? "1":".25")+'"></div>'
-      + '<span style="font-size:10.5px;font-weight:700;color:var(--faint);white-space:nowrap">'+b[0]+'</span></div>').join("")
+  /* All bars violet, no count labels; an empty bucket draws nothing —
+     just the axis line under the labels. */
+  const bars = '<div style="display:flex;align-items:flex-end;gap:10px;height:70px;margin:14px 0 0;border-bottom:1.5px solid var(--line2)">'
+    + buckets.map((b,i)=> '<div style="flex:1;display:flex;justify-content:center;min-width:0">'
+      + '<div title="'+b[0]+': '+counts[i]+' trade'+(counts[i]===1?"":"s")+'" style="width:100%;max-width:52px;height:'+(counts[i]? Math.max(6, Math.round(counts[i]/maxC*62)) : 0)+'px;border-radius:6px 6px 0 0;background:var(--pine)"></div></div>').join("")
+    + '</div><div style="display:flex;gap:10px;margin:5px 0 4px">'
+    + buckets.map(b=> '<span style="flex:1;text-align:center;font-size:10.5px;font-weight:700;color:var(--faint);white-space:nowrap;min-width:0">'+b[0]+'</span>').join("")
     + '</div>';
   const pnls = monthTrades.map(tradePnl);
   const bestT = Math.max(...pnls), worstT = Math.min(...pnls);
   const avgWin = ms.wins? ms.grossWin/ms.wins : 0, avgLoss = ms.losses? ms.grossLoss/ms.losses : 0;
-  const row = (label, val, cls, sub)=> '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)"><span class="small" style="font-weight:700">'+label+'</span><span style="text-align:right"><span class="mono" style="font-weight:800"><span class="'+(cls||"")+'">'+val+'</span></span>'+(sub? '<div class="small mono" style="color:var(--faint)">'+sub+'</div>':"")+'</span></div>';
-  return '<div class="card mt"><h3>Monthly Summary</h3><div class="card-sub">'+monthLabel+'</div>'
+  const sgn$ = v=> (v>0? "+":"") + fmt$(v);
+  const row = (label, val, cls, sub, bold)=> '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:12.5px;'+(bold? 'font-weight:800;color:var(--ink)' : 'font-weight:600;color:var(--muted)')+'">'+label+'</span><span style="text-align:right"><span class="mono" style="font-weight:800"><span class="'+(cls||"")+'">'+val+'</span></span>'+(sub? '<div class="small mono" style="color:var(--faint)">'+sub+'</div>':"")+'</span></div>';
+  return '<div class="card mt"><h3>Monthly Summary</h3>'
     + bars
     + '<div style="margin-top:8px">'
-    + row("Monthly P&L", pnlInUnit(ms.pnl, ms.sumR), pnlUnitClass(ms.pnl, ms.sumR))
-    + row("Expectancy", fmtR(ms.avgR), ms.avgR>0?"pos":ms.avgR<0?"neg":"")
-    + row("Win rate", ms.winRate.toFixed(0)+"%")
-    + row("Avg Win", fmt$(avgWin), "pos")
-    + row("Avg Loss", fmt$(avgLoss), "neg")
-    + row("Best trade", fmt$(bestT), bestT>=0?"pos":"neg")
-    + row("Worst trade", fmt$(worstT), worstT<0?"neg":"pos")
-    + row("Total trades", ms.n, "", ms.wins+"W / "+ms.losses+"L")
+    + row("Monthly P&L", journalUnit==="$"? sgn$(ms.pnl) : pnlInUnit(ms.pnl, ms.sumR), pnlUnitClass(ms.pnl, ms.sumR), "", true)
+    + row("Expectancy", fmtR(ms.avgR), ms.avgR>0?"pos":ms.avgR<0?"neg":"", "", true)
+    + row("Win rate", ms.winRate.toFixed(1)+"%")
+    + row("Avg Win", sgn$(avgWin), "pos")
+    + row("Avg Loss", fmt$(-avgLoss), "neg")
+    + row("Best trade", sgn$(bestT), bestT>=0?"pos":"neg")
+    + row("Worst trade", sgn$(worstT), worstT<0?"neg":"pos")
+    + row("Total trades", ms.n, "", ms.wins+"W/"+ms.losses+"L")
     + '</div></div>';
 }
 /* ---- Journal attention banner (EdgeFlo): shown only while closed,
@@ -2707,39 +2922,43 @@ function journalAttentionHTML(){
   if(!u.length) return "";
   const n = u.length;
   const warnSvg = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;margin-top:1px"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
-  return '<div class="alert amber" id="journal-attention" style="margin-bottom:16px;align-items:center">'
-    + warnSvg
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800">Your journal needs your attention</div>'
-    + '<div style="font-weight:600">You have '+n+' trade'+(n===1?"":"s")+' waiting to be reviewed.</div></div>'
-    + '<button class="btn primary sm" style="flex:0 0 auto" onclick="reviewNextTrade()">Review Trades</button></div>';
+  const infoSvg = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11.2V16M12 7.8h.01"/></svg>';
+  return '<div class="j-attn" id="journal-attention">'
+    + infoSvg
+    + '<div style="flex:1;min-width:0"><strong>Your journal needs your attention</strong> <span>You have '+n+' trade'+(n===1?"":"s")+' waiting to be reviewed.</span></div>'
+    + '<button class="j-attn-btn" onclick="reviewNextTrade()">Review Trades</button></div>';
 }
-/* ---- Weekly Breakdown (EdgeFlo): net PnL per week of the displayed
-   month, from the same closed-trade records as the Monthly Summary.
-   Weeks run 1–7, 8–14, 15–21, 22–28, then 29–end when the month has
-   them; the week holding today is labelled "Current 7 days". ---- */
+/* ---- Weekly Breakdown (EdgeFlo): one simple row per week of the
+   displayed month, in order, up to the current week — "Week N" with its
+   net PnL (signed currency) or "–" when it has no trades. No date
+   ranges, no per-week cards. The CURRENT week is a violet-bordered
+   card with a violet "Current" label, a grey "7 days" pill and the
+   week's PnL. Weeks run 1–7, 8–14, 15–21, 22–28, then 29–end. ---- */
 function weeklyBreakdownHTML(){
   const y = calCursor.getFullYear(), m = calCursor.getMonth();
   const daysIn = new Date(y, m+1, 0).getDate();
   const monthTrades = DB.trades.filter(t=>{ const d=new Date(t.date+"T12:00:00"); return d.getFullYear()===y && d.getMonth()===m; });
   const now = new Date(); const isCurMonth = now.getFullYear()===y && now.getMonth()===m;
   const weeks = Math.ceil(daysIn/7);
-  let cards = "";
-  let currentCard = "";
-  for(let w=0; w<weeks; w++){
+  const lastWeek = isCurMonth? Math.floor((now.getDate()-1)/7) : weeks-1;
+  const valFor = wt=>{
+    if(!wt.length) return '<span class="mono" style="color:var(--faint);font-size:15px">&ndash;</span>';
+    const s = computeStats(wt);
+    const v = journalUnit==="$"? (s.pnl>0? "+":"") + fmt$(s.pnl) : pnlInUnit(s.pnl, s.sumR);
+    return '<span class="mono '+pnlUnitClass(s.pnl, s.sumR)+'" style="font-weight:800;font-size:15px">'+v+'</span>';
+  };
+  let cells = "";
+  for(let w=0; w<=lastWeek; w++){
     const d1 = w*7+1, d2 = Math.min(d1+6, daysIn);
     const wt = monthTrades.filter(t=>{ const dd = new Date(t.date+"T12:00:00").getDate(); return dd>=d1 && dd<=d2; });
-    const s = computeStats(wt);
-    const isCurWeek = isCurMonth && now.getDate()>=d1 && now.getDate()<=d2;
-    const val = wt.length? '<span class="mono '+pnlUnitClass(s.pnl, s.sumR)+'" style="font-weight:800;font-size:15px">'+pnlInUnit(s.pnl, s.sumR)+'</span>' : '<span class="mono" style="color:var(--faint);font-size:15px">&mdash;</span>';
-    if(isCurWeek){
-      currentCard = '<div style="flex:1 1 130px;min-width:120px;border:1.5px solid var(--pine);background:var(--pine-soft);border-radius:12px;padding:10px 12px"><div style="display:flex;align-items:center;gap:7px"><span style="font-weight:800;font-size:13px">Current</span><span class="chip pine">7 days</span></div><div style="margin-top:5px">'+val+'</div><div class="small">'+wt.length+' trade'+(wt.length===1?"":"s")+' this week</div></div>';
+    if(isCurMonth && w===lastWeek){
+      cells += '<div style="border:1.5px solid var(--pine);border-radius:12px;padding:10px 12px"><div style="display:flex;align-items:center;gap:7px"><span style="font-weight:800;font-size:12.5px;color:var(--pine)">Current</span><span class="chip">7 days</span></div><div style="margin-top:6px">'+valFor(wt)+'</div></div>';
     } else {
-      cards += '<div style="flex:1 1 100px;min-width:92px;border:1px solid var(--line);border-radius:12px;padding:10px 12px"><div style="font-weight:800;font-size:13px">Week '+(w+1)+'</div><div style="margin-top:5px">'+val+'</div><div class="small">'+new Date(y,m,d1).toLocaleDateString("en-US",{month:"short", day:"numeric"})+' \u2013 '+new Date(y,m,d2).toLocaleDateString("en-US",{month:"short", day:"numeric"})+'</div></div>';
+      cells += '<div style="padding:2px"><div style="font-weight:700;font-size:13px">Week '+(w+1)+'</div><div style="margin-top:4px">'+valFor(wt)+'</div></div>';
     }
   }
-  return '<div class="card mt"><h3>Weekly Breakdown <span class="info-i" title="Net P&amp;L for each week of the displayed month, from your closed trades \u2014 the same records as the Monthly Summary.">i</span></h3>'
-    + '<div class="card-sub">'+calCursor.toLocaleString("en-US",{month:"long", year:"numeric"})+'</div>'
-    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">'+cards+currentCard+'</div></div>';
+  return '<div class="card mt"><h3>Weekly Breakdown</h3>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin-top:12px">'+cells+'</div></div>';
 }
 /* ---- Day Trades list (EdgeFlo): the selected day's closed trades in a
    table with All / Wins / Losses and Instrument filters. The Emotions
@@ -2771,7 +2990,7 @@ function dayTradesBodyHTML(){
           + '<td><strong>'+esc(t.market)+'</strong></td>'
           + '<td class="mono">'+journalTradeTime(t)+'</td>'
           + '<td><span style="font-weight:700" class="'+(t.dir==="Long"?"pos":"neg")+'">'+(t.dir==="Long"? "&#8593; Buy" : "&#8595; Sell")+'</span></td>'
-          + '<td>'+(emo? '<span class="chip pine">'+esc(emo)+'</span>' : '<span class="chip amber">Pending</span>')+'</td>'
+          + '<td>'+(emo? '<span class="chip pine">'+esc(emo)+'</span>' : '<span class="chip pending">Pending</span>')+'</td>'
           + '<td class="mono '+(p>=0?"pos":"neg")+'" style="font-weight:800">'+fmt$(p)+'</td></tr>';
       }).join("")
     + '</tbody></table></div>';
@@ -2786,7 +3005,7 @@ function dayTradesHTML(){
       '<div class="seg" role="group" aria-label="Filter trades by result">'+[["all","All"],["win","Wins"],["loss","Losses"]].map(f=>'<button class="'+(journalTradeFilter===f[0]?"on":"")+'" onclick="journalTradeFilter=\''+f[0]+'\';RENDER.journal()">'+f[1]+'</button>').join("")+'</div>'
     + '<input class="input" type="search" placeholder="Instrument" aria-label="Search by instrument" value="'+esc(journalTradeInst)+'" oninput="journalTradeInst=this.value;refreshDayTradesBody()" style="width:150px;padding:6px 9px;font-size:12.5px">'
     : "";
-  return '<div class="card mt"><div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap"><div style="min-width:0"><h3>Trades</h3><div class="card-sub">'+dayLabel+' &middot; Tap a trade to see details</div></div><span style="flex:1"></span>'
+  return '<div class="card mt"><div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap"><div style="min-width:0"><h3>Trades</h3><div class="card-sub">Tap a trade to see details</div></div><span style="flex:1"></span>'
     + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+controls+'</div></div>'
     + '<div style="margin-top:8px" id="jt-body">'+dayTradesBodyHTML()+'</div></div>';
 }
@@ -3087,7 +3306,7 @@ function deleteTrade(id){
   DB.trades = DB.trades.filter(t=>t.id!==id); saveDB(); renderAll(); toast("Trade deleted.");
 }
 function openModal(html){ $("#modal-box").innerHTML = html; $("#modal-bk").classList.add("on"); }
-function closeModal(){ $("#modal-bk").classList.remove("on"); if(currentView==="trading"){ const tv = document.querySelector('[data-view="trading"]'); if(tv) syncPremarketBanner(tv); } }
+function closeModal(){ $("#modal-bk").classList.remove("on"); $("#modal-bk").classList.remove("wide"); if(currentView==="trading"){ const tv = document.querySelector('[data-view="trading"]'); if(tv) syncPremarketBanner(tv); } }
 $("#modal-bk").addEventListener("click", e=>{ if(e.target.id==="modal-bk") closeModal(); });
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && $("#modal-bk").classList.contains("on") && document.getElementById("entry-models-modal")) closeModal(); });
 
@@ -3211,7 +3430,7 @@ function updateTicker(){
   t.innerHTML = '<span class="t-price mono">'+p.toFixed(simCandles.dec)+'</span><span class="chip '+(chg>=0?"green":"red")+'">'+fmtPct(chg)+' today (simulated feed)</span>';
 }
 /* ---- Trading page state (EdgeFlo layout) ---- */
-let posTab = "open", posPanelHidden = true, tradeWide = false, sideWide = false, sideTab = "watchlist", twlSearch = "", sidePlanId = "", tradeBannerOff = false, unlockSeenDate = "";
+let posTab = "open", posPanelHidden = true, tradeWide = false, sideWide = false, sideTab = "watchlist", twlSearch = "", sidePlanId = "", tradeBannerOff = false;
 let tradeLockedNow = false; /* header Trade-button lock state (guardrails lockout only — routine/window locks open their Override modals instead), kept for header repaints */
 /* Bottom positions panel height (px) — user-resizable via the grabber on
    the panel's top edge; 0 = natural height. Persisted across reloads. */
@@ -3343,23 +3562,23 @@ function tradingHeaderHTML(lockedOut){
   /* EdgeFlo header: the page title + subtitle sit on the left of the top
      bar; these account stats + Trade controls fill its right side — no
      separate account card inside the page. */
+  /* EdgeFlo header: exactly four stats. The margin detail lives ONLY in
+     the Margin Health dropdown; the session cluster (green dot + elapsed
+     timer + End Session) renders only while a session is active. */
   return '<div class="acct-cell"><div class="acct-label">Balance <span class="info-i" title="'+(pb.connected? "Balance of the active connected account" : "Paper account cash balance (local simulator)")+'">i</span></div><div class="acct-val mono" id="th-balance">'+bal$(pb.amount)+'</div><div class="acct-cap" id="th-acct">'+esc(pb.cap || "")+'</div></div>'
     + '<div class="acct-cell"><div class="acct-label">Open PnL <span class="info-i" title="Unrealised P&amp;L across open paper positions">i</span></div><div class="acct-val mono"><span id="th-openpnl" class="'+(openPnl>=0?"pos":"neg")+'">'+(openPnl>=0?"+":"")+fmt$(openPnl)+'</span></div></div>'
     + '<div class="acct-cell"><div class="acct-label">Equity <span class="info-i" title="Balance plus open P&amp;L">i</span></div><div class="acct-val mono" id="th-equity">'+bal$(equity)+'</div></div>'
     + '<div class="acct-cell margin-cell"><div class="acct-label">Margin Health <span class="info-i" title="'+(DB.guardrails.marginInvert? "Margin level inverted in Guardrails: showing margin USED as a share of equity (1% margin per position)." : "Free margin as a share of equity (1% margin per position). N/A with no open positions.")+'">i</span></div><div class="acct-val mono" title="Margin breakdown" onclick="toggleMarginPop()">'+mh+chevD+'</div>'
     + (marginPopOpen? '<div class="margin-pop">'
-      + '<div class="mp-row"><span>Free Margin</span><strong>'+fmt$(Math.max(0, freeMargin))+'</strong></div>'
-      + '<div class="mp-row"><span>Margin Used</span><strong>'+fmt$(marginUsed)+'</strong></div>'
-      + '<div class="mp-row"><span>Margin Level</span><strong>'+(marginLevel===null? "N/A" : marginLevel.toLocaleString("en-US",{maximumFractionDigits:1})+"%")+'</strong></div>'
-      + '<div class="small" style="margin-top:6px">1% margin per open position on the paper feed.</div></div>' : "")
+      + '<div class="mp-row"><span>Free Margin <span class="info-i" title="Equity minus margin used — the capital free to open new positions (1% margin per position)">i</span></span><strong>'+fmt$(Math.max(0, freeMargin))+'</strong></div>'
+      + '<div class="mp-row"><span>Margin Used <span class="info-i" title="Margin locked by open positions — 1% of each position&rsquo;s notional on the paper feed">i</span></span><strong>'+fmt$(marginUsed)+'</strong></div>'
+      + '<div class="mp-row"><span>Margin Level <span class="info-i" title="Equity as a percentage of margin used. N/A when no margin is used">i</span></span><strong>'+(marginLevel===null? "N/A" : marginLevel.toLocaleString("en-US",{maximumFractionDigits:1})+"%")+'</strong></div>'
+      + '<div class="mp-row"><span>Account</span><span class="mp-pill">'+(pb.demo? "Demo" : "Live")+'</span></div>'
+      + '</div>' : "")
     + '</div>'
-    + '<div class="acct-cell"><div class="acct-label">Free Margin <span class="info-i" title="Equity minus margin used — the capital free to open new positions (1% margin per position)">i</span></div><div class="acct-val mono" id="th-freemargin">'+fmt$(freeMargin)+'</div></div>'
-    + '<div class="acct-cell"><div class="acct-label">Margin Used <span class="info-i" title="Margin locked by open positions — 1% of each position&rsquo;s notional on the paper feed">i</span></div><div class="acct-val mono" id="th-marginused">'+fmt$(marginUsed)+'</div></div>'
-    + '<div class="acct-cell"><div class="acct-label">Margin Level <span class="info-i" title="Equity as a percentage of margin used. N/A when no margin is used">i</span></div><div class="acct-val mono" id="th-marginlevel">'+(marginLevel===null? "N/A" : marginLevel.toLocaleString("en-US",{maximumFractionDigits:1})+"%")+'</div></div>'
-    + '<div class="acct-cell hide-m"><div class="acct-label">Local Time <span class="info-i" title="Current local time">i</span></div><div class="acct-val mono" id="th-clock">'+localTimeHMS(new Date())+'</div></div>'
-    + '<button class="btn sm" title="End the current trading session for today" onclick="endTradingSession()">'+powerSvg+' End Session</button>'
     + '<button class="icon-btn" title="'+((lockedOut || windowBlocked)? "One Click Trading (Blocked)":"One Click Trading — show / hide the floating panel")+'" '+(lockedOut?"disabled":"")+' onclick="'+(windowBlocked && !lockedOut? "winAfterOverride='oct';showWindowModal()":"octToggle()")+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></button>'
     + '<button class="btn '+(lockedOut?"":"primary")+'" '+(lockedOut?"disabled":"")+' onclick="openTradePanel()">'+lockSvg+' Trade</button>'
+    + (sessionActive()? '<span class="sess-cluster"><span class="sess-dot"></span><span class="sess-timer mono" id="th-session-timer">'+fmtHMS(sessionElapsedMs())+'</span><button class="btn primary sm" title="End the current trading session for today" onclick="endTradingSession()">'+powerSvg+' End Session</button></span>' : "")
     + '<button class="icon-btn" title="'+(tradeWide?"Show sidebar":"Expand chart")+'" onclick="toggleTradeWide()">'+(tradeWide?"&laquo;":"&raquo;")+'</button>';
 }
 function paintTradingHeader(lockedOut){ const t = $("#tb-trading"); if(t) t.innerHTML = tradingHeaderHTML(lockedOut); }
@@ -3433,13 +3652,7 @@ function tradingLockoutAlertHTML(){
    routine is complete. */
 function premarketBannerHTML(){
   if(DB.settings && DB.settings.routinePrefs && DB.settings.routinePrefs.banner===false) return ""; // Pre-Market Banner off (Settings → Pre-Market Routine)
-  if(routineCompleteToday()){
-    if(unlockSeenDate === todayStr()) return ""; // session already started today
-    return '<div class="premarket-banner"><span class="pm-star">&#9733;</span>'
-      + '<div style="min-width:110px"><strong>Session ready</strong></div>'
-      + '<div style="flex:1;min-width:200px;color:var(--muted)">You&rsquo;ve completed your pre-market routine. You&rsquo;re ready to execute.</div>'
-      + '<button class="btn primary sm" onclick="startTradingSession()">Start session</button></div>';
-  }
+  if(sessionActive()) return ""; // the banner is hidden while a session is active (EdgeFlo)
   if(!DB.routine.enabled || !DB.routine.steps.length) return "";
   const gate = routineGateOn();
   if(!gate){
@@ -3447,19 +3660,35 @@ function premarketBannerHTML(){
     if(DB.settings && DB.settings.routinePrefs && DB.settings.routinePrefs.startPrompt===false) return ""; // start-session prompt off
   }
   const done = routineDoneCount(), total = DB.routine.steps.length;
-  const cur = DB.routine.steps.findIndex((s,i)=> !routineToday().includes(i));
-  const pct = Math.round((cur+1)/total*100);
-  const lockSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" style="vertical-align:-1px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-  return '<div class="premarket-banner pine"><span class="pm-star">&#9733;</span>'
-    + '<div style="min-width:126px"><strong>Ready to trade today?</strong></div>'
-    + '<div style="color:var(--muted)">Complete your pre-market routine before execution</div>'
-    + '<div class="pm-prog"><div class="rp-track"><i style="width:'+pct+'%"></i></div><span class="small" style="font-weight:700;white-space:nowrap">'+done+' of '+total+' steps</span></div>'
-    + (routineLocked()? '<span class="chip">'+lockSvg+' Trading locked</span>'
-      : routineOverriddenToday()? '<span class="chip amber">Routine override logged</span>'
-      : '<button class="btn ghost sm" onclick="tradeBannerOff=true;RENDER.trading()">Start session anyway</button>')
-    + '<button class="btn pine sm" onclick="openRoutinePanel()">Continue pre-market routine</button></div>';
+  const star = '<span class="pm-star">&#9733;</span>';
+  const text = '<div style="flex:1;min-width:200px"><strong>Ready to trade today?</strong> <span style="color:var(--muted)">Complete your pre-market routine before execution</span></div>';
+  if(done===0){
+    /* State A — routine not started: mint-green bar, "Start session
+       anyway" text link + green Complete button (circled arrow). */
+    const circArrow = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l4 3.5-4 3.5"/></svg>';
+    return '<div class="premarket-banner">'+star+text
+      + '<button class="btn ghost sm" onclick="startTradingSession()">Start session anyway</button>'
+      + '<button class="btn green sm" onclick="openRoutinePanel()">Complete pre-market routine '+circArrow+'</button></div>';
+  }
+  /* State B — routine in progress: pale lavender bar, progress + count +
+     violet Continue button (circled play). A finished routine whose
+     session was ended offers Start session instead. */
+  const pct = Math.round(done/total*100);
+  const circPlay = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M10 8.8v6.4L15.5 12z" fill="currentColor" stroke="none"/></svg>';
+  return '<div class="premarket-banner pine">'+star+text
+    + '<div class="pm-prog"><div class="rp-track"><i style="width:'+pct+'%"></i></div><span class="small" style="font-weight:700;white-space:nowrap">'+done+' of '+total+'</span></div>'
+    + (done>=total
+      ? '<button class="btn pine sm" onclick="startTradingSession()">Start session</button>'
+      : '<button class="btn pine sm" onclick="openRoutinePanel()">'+circPlay+' Continue pre-market routine</button>')
+    + '</div>';
 }
-function startTradingSession(){ unlockSeenDate = todayStr(); RENDER.trading(); toast("Session started — trade your plan."); }
+/* ---- Trading session (EdgeFlo): started from the banner's "Start
+   session anyway" override or by completing the pre-market routine.
+   The start time persists in DB, so the header timer survives page
+   reloads within the same day; a new day starts with no session. ---- */
+function sessionActive(){ return !!(DB.session && DB.session.date===todayStr() && DB.session.startMs); }
+function sessionElapsedMs(){ return sessionActive()? Math.max(0, Date.now() - DB.session.startMs) : 0; }
+function startTradingSession(){ DB.session = { date: todayStr(), startMs: Date.now() }; saveDB(); RENDER.trading(); toast("Session started — trade your plan."); }
 /* Keeps the rendered pre-market banner in step with routine state on
    surgical repaints of the Trading view (the full render inlines
    premarketBannerHTML() directly): insert it at the top of the view,
@@ -4264,7 +4493,7 @@ function endTradingSession(){
     + '<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Keep trading</button><button class="btn primary" onclick="confirmEndSession()">End Session</button></div>');
 }
 function confirmEndSession(){
-  unlockSeenDate = ""; tradeBannerOff = false;
+  DB.session = null; tradeBannerOff = false; saveDB();
   closeModal(); RENDER.trading();
   toast("Session ended — trading is locked until you start a new session.");
 }
@@ -4879,28 +5108,30 @@ function dayRangeInfo(sym){
   else label = "DAY'S RANGE: " + (hi-lo).toLocaleString("en-US",{maximumFractionDigits:2}) + " POINTS";
   return { lo:lo, hi:hi, pct:pct, label:label };
 }
+let symCardOpen = true;
+/* Big-price format for the minimal symbol card: thousands separators;
+   crypto/metals at 2 decimals, forex with its extra pip digit. */
+function fmtSymBig(s){
+  if(!s) return "—";
+  if(s.cls==="Forex") return s.last.toLocaleString("en-US",{minimumFractionDigits:s.dec+1, maximumFractionDigits:s.dec+1});
+  const d = (s.cls==="Crypto" || s.cls==="Metals")? 2 : s.dec;
+  return s.last.toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
+}
+/* Minimal symbol card (EdgeFlo): symbol + class pill + Market Open pill +
+   collapse caret, the full name in grey, then the price very large with a
+   small USD suffix. No quote-fact rows. */
 function symbolDetailHTML(){
   const s = wlState[simMarket]; if(!s) return "";
   const row = WL_INSTRUMENTS.find(r=>r[0]===simMarket);
-  const chg = (s.last - s.open)/s.open*100;
-  const pd = s.cls==="Forex"? s.dec+1 : s.dec; // EdgeFlo quotes forex with the extra pip digit (1.12295)
   const mktOpen = mktHoursOpen(simMarket);
-  const spread = Math.max(s.last*0.00018, Math.pow(10,-s.dec));
-  const bid = s.last - spread/2, ask = s.last + spread/2;
-  const fact = (label, val, attr)=> '<span style="white-space:nowrap"><span class="lab">'+label+'</span><b class="mono"'+(attr? " "+attr:"")+'>'+val+'</b></span>';
-  return '<div class="card side-card sym-strip">'
-    + '<div class="sym-line1"><span class="sym-name">'+esc(simMarket)+'</span>'
-    + (row? '<span class="chip">'+esc(row[1])+'</span>' : "")
-    + '<span class="sym-full">'+esc(SYMBOL_NAMES[simMarket] || simMarket)+'</span>'
-    + '<span class="mono sym-price" data-sym-price>'+s.last.toFixed(pd)+'</span>'
-    + '<span class="mono sym-chg '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+simMarket+'">'+fmtPct(chg)+'</span></div>'
-    + '<div class="sym-facts">'
-    + '<span style="white-space:nowrap"><span class="lab">MARKET</span><b style="color:'+(mktOpen? "var(--green)":"var(--amber, #b45309)")+'">&#9679; '+(mktOpen? "Open":"Closed")+'</b></span>'
-    + fact("BID", bid.toFixed(s.dec), "data-sym-bid") + fact("ASK", ask.toFixed(s.dec), "data-sym-ask") + fact("SPREAD", spread.toFixed(s.dec), "data-sym-spread")
-    + fact("SESSION", mktSessionName(), "data-sym-session")
-    + '<span style="white-space:nowrap" data-mkt-close>'+esc(mktCloseText(simMarket))+'</span>'
-    + '</div>'
-    + dayRangeHTML(simMarket)
+  const chev = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="'+(symCardOpen? "M5 15l7-7 7 7":"M5 9l7 7 7-7")+'"/></svg>';
+  return '<div class="card side-card sym-min">'
+    + '<div class="sym-min-line"><span class="sym-name">'+esc(simMarket)+'</span>'
+    + (row? '<span class="chip pine">'+esc(row[1])+'</span>' : "")
+    + '<span class="sym-open'+(mktOpen? "" : " closed")+'">&#9679; '+(mktOpen? "Market Open":"Market Closed")+'</span>'
+    + '<button class="chev-btn" title="'+(symCardOpen? "Collapse":"Expand")+' symbol card" aria-label="'+(symCardOpen? "Collapse":"Expand")+' symbol card" onclick="symCardOpen=!symCardOpen;repaintTradingSidebar()">'+chev+'</button></div>'
+    + (symCardOpen? '<div class="sym-full">'+esc(SYMBOL_NAMES[simMarket] || simMarket)+'</div>'
+    + '<div class="sym-big"><span class="sym-price-big" data-sym-price>'+fmtSymBig(s)+'</span><span class="sym-cur">USD</span></div>' : "")
     + '</div>';
 }
 function dayRangeHTML(sym){
@@ -4910,45 +5141,89 @@ function dayRangeHTML(sym){
     + '<div class="range-track"><span class="range-fill" data-range-fill style="width:'+dr.pct+'%"></span><span class="range-dot" data-range-dot style="left:'+dr.pct+'%"></span></div>'
     + '<div style="display:flex;justify-content:space-between" class="small mono"><span data-range-lo>'+dr.lo.toFixed(s.dec)+'</span><span data-range-hi>'+dr.hi.toFixed(s.dec)+'</span></div></div>';
 }
+/* Watchlist price format (EdgeFlo): crypto/metals with thousands
+   separators at 2 decimals; forex at 5 decimals (3 for JPY pairs) with
+   the last digit as a smaller superscript. */
+function fmtWlLast(s){
+  if(!s) return "—";
+  if(s.cls==="Forex"){
+    const str = s.last.toFixed(s.dec+1);
+    return esc(str.slice(0,-1)) + '<sup class="wl-sup">' + esc(str.slice(-1)) + '</sup>';
+  }
+  const d = (s.cls==="Crypto" || s.cls==="Metals")? 2 : s.dec;
+  return s.last.toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
+}
+const WL_PIN_PATH = "M12 17.5V21M9.2 3h5.6l-.9 6.8 2.9 2.9H7.2l2.9-2.9z";
+function wlPinSVG(pinned){
+  return pinned
+    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="'+WL_PIN_PATH+'"/></svg>'
+    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="'+WL_PIN_PATH+'"/></svg>';
+}
 function sideWatchlistRowsHTML(){
   const q = twlSearch.trim().toUpperCase();
-  const CC2 = { EUR:"EU", GBP:"GB", USD:"US", JPY:"JP", AUD:"AU", NZD:"NZ", CAD:"CA", CHF:"CH", BTC:"BT", ETH:"ET", SOL:"SO", XRP:"XR", XAU:"XA", XAG:"XG", NAS:"NA", SPX:"SP" };
   const rowHTML = s=>{
     const chg = (s.last - s.open)/s.open*100; const pinned = DB.wlPins.includes(s.sym);
     return '<div class="twl-row '+(s.sym===simMarket?"sel":"")+'" onclick="setChartSymbol(\''+s.sym+'\')">'
-      + '<span class="flag-badge" style="width:20px;height:20px;flex-basis:20px;font-size:8px">'+(CC2[s.sym.slice(0,3)] || s.sym.slice(0,2))+'</span>'
       + '<span class="twl-sym mono">'+s.sym+'</span>'
-      + '<span class="mono" data-twl-last="'+s.sym+'">'+s.last.toFixed(s.dec)+'</span>'
+      + '<span class="mono twl-last" data-twl-last="'+s.sym+'">'+fmtWlLast(s)+'</span>'
       + '<span class="mono '+(chg>=0?"pos":"neg")+'" data-twl-chg="'+s.sym+'" style="min-width:56px;text-align:right">'+fmtPct(chg)+'</span>'
-      + '<button class="wl-pin '+(pinned?"on":"")+'" title="'+(pinned? "Unpin":"Pin to top")+'" onclick="event.stopPropagation();toggleWlPin(\''+s.sym+'\');refreshSideWatchlist()">'+(pinned? "&#9733;":"&#9734;")+'</button></div>';
+      + '<button class="wl-pin '+(pinned?"on":"")+'" title="'+(pinned? "Remove from watchlist":"Add to watchlist")+'" aria-label="'+(pinned? "Remove from watchlist":"Add to watchlist")+'" onclick="event.stopPropagation();toggleWlPin(\''+s.sym+'\');refreshSideWatchlist()">'+wlPinSVG(pinned)+'</button></div>';
   };
   const all = WL_INSTRUMENTS.map(r=> wlState[r[0]]).filter(s=> (!q || s.sym.includes(q)) && (!twlPinnedOnly || DB.wlPins.includes(s.sym)) && (twlClassFilter==="All" || s.cls===twlClassFilter));
-  let rows = "";
+  /* Pinned symbols render as one block above the first group label, in
+     pin order, and never repeat inside their group. */
+  const pinnedRows = DB.wlPins.map(sym=> all.find(s=> s.sym===sym)).filter(Boolean);
+  const rest = all.filter(s=> !DB.wlPins.includes(s.sym));
+  let rows = pinnedRows.map(rowHTML).join("");
   ["Forex","Indices","Crypto","Metals"].forEach(cls=>{
-    const items = all.filter(s=> s.cls===cls);
+    const items = rest.filter(s=> s.cls===cls);
     if(!items.length) return;
     rows += '<div class="wl-group-head">'+cls+'</div>' + items.map(rowHTML).join("");
   });
   return rows || '<div class="empty" style="padding:16px"><div class="e-title">No instruments match</div>Try a different search or clear the filters.</div>';
 }
+const WL_CLASSES = ["All","Forex","Indices","Crypto","Metals"];
+function toggleWlFilterMenu(ev){
+  if(ev) ev.stopPropagation();
+  const m = document.getElementById("wl-filter-menu"); if(!m) return;
+  m.style.display = m.style.display==="none"? "block" : "none";
+}
+function setWlClassFilter(c){
+  twlClassFilter = c;
+  const m = document.getElementById("wl-filter-menu"); if(m) m.style.display = "none";
+  const fb = document.getElementById("wl-filter-btn"); if(fb) fb.classList.toggle("on", c!=="All");
+  if(m) Array.from(m.querySelectorAll("button")).forEach(b=>{ const on = b.getAttribute("data-cls")===c; b.classList.toggle("on", on); const ck = b.querySelector(".ck"); if(ck) ck.style.display = on? "" : "none"; });
+  refreshSideWatchlist();
+}
+function toggleWlPinnedOnly(btn){
+  twlPinnedOnly = !twlPinnedOnly;
+  if(btn){ btn.classList.toggle("on", twlPinnedOnly); btn.setAttribute("aria-pressed", twlPinnedOnly? "true":"false"); }
+  refreshSideWatchlist();
+}
+document.addEventListener("click", e=>{
+  if(!e.target || !e.target.closest || e.target.closest(".wl-ctl")) return;
+  const m = document.getElementById("wl-filter-menu"); if(m) m.style.display = "none";
+});
 function sideWatchlistHTML(){
-  const clsOpt = c=> '<option value="'+c+'"'+(twlClassFilter===c? " selected":"")+'>'+(c==="All"? "All classes" : c)+'</option>';
+  const funnel = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 5h17l-6.4 7.4v5.4l-4.2 2.2v-7.6z"/></svg>';
   return '<div style="display:flex;gap:8px;margin-bottom:6px"><input class="input" style="flex:1;min-width:0;padding:7px 11px;font-size:13.5px" placeholder="Search all instruments…" value="'+esc(twlSearch)+'" oninput="twlSearch=this.value;refreshSideWatchlist()">'
-    + '<select class="input" style="flex:0 0 auto;width:auto;padding:7px 8px;font-size:13px" title="Filter by asset class" aria-label="Filter by asset class" onchange="twlClassFilter=this.value;refreshSideWatchlist()">'
-    + ["All","Forex","Crypto","Metals","Indices"].map(clsOpt).join("") + '</select></div>'
-    + '<div style="display:flex;align-items:center;margin-bottom:4px"><button type="button" class="wl-pin-toggle'+(twlPinnedOnly? " on":"")+'" title="Show only pinned symbols" aria-pressed="'+(twlPinnedOnly? "true":"false")+'" onclick="twlPinnedOnly=!twlPinnedOnly;this.classList.toggle(\'on\',twlPinnedOnly);this.setAttribute(\'aria-pressed\',twlPinnedOnly);refreshSideWatchlist()">&#9733; Show only pinned symbols</button></div>'
-    + '<div style="display:flex;gap:10px;padding:1px 6px 2px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800"><span style="flex:1">Instrument</span><span>Last</span><span style="min-width:56px;text-align:right">Chg</span><span id="twl-live" title="Live prices — refreshed every 60 seconds" style="display:'+(wlAnyLive? "inline-flex":"none")+';align-items:center;gap:5px;color:var(--green)"><i style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></i>Live</span><span style="width:26px"></span></div>'
+    + '<span class="wl-ctl"><button type="button" class="wl-ico-btn'+(twlClassFilter!=="All"? " on":"")+'" id="wl-filter-btn" title="Filter by asset class" aria-label="Filter by asset class" onclick="toggleWlFilterMenu(event)">'+funnel+'</button>'
+    + '<span class="pop-menu wl-filter-menu" id="wl-filter-menu" style="display:none">'
+    + WL_CLASSES.map(c=>'<button type="button" data-cls="'+c+'" class="'+(twlClassFilter===c? "on":"")+'" onclick="setWlClassFilter(\''+c+'\')">'+(c==="All"? "All classes" : c)+'<span class="ck" style="display:'+(twlClassFilter===c? "" : "none")+'">&#10003;</span></button>').join("")
+    + '</span></span>'
+    + '<button type="button" class="wl-ico-btn'+(twlPinnedOnly? " on":"")+'" title="Show only pinned symbols" aria-label="Show only pinned symbols" aria-pressed="'+(twlPinnedOnly? "true":"false")+'" onclick="toggleWlPinnedOnly(this)">'+wlPinSVG(true)+'</button></div>'
+    + '<div class="twl-head"><span style="flex:1">Instrument</span><span>Last</span><span style="min-width:56px;text-align:right">Chg</span><span style="width:27px"></span></div>'
     + '<div id="twl-list" class="twl-scroll">'+sideWatchlistRowsHTML()+'</div>';
 }
 function refreshSideWatchlist(){ const l = $("#twl-list"); if(l) l.innerHTML = sideWatchlistRowsHTML(); }
 function paintTradingWlPrices(){
   if(currentView!=="trading") return;
   WL_INSTRUMENTS.forEach(r=>{ const s = wlState[r[0]];
-    const le = document.querySelector('[data-twl-last="'+s.sym+'"]'); if(le) le.textContent = s.last.toFixed(s.dec);
+    const le = document.querySelector('[data-twl-last="'+s.sym+'"]'); if(le) le.innerHTML = fmtWlLast(s);
     const ce = document.querySelector('[data-twl-chg="'+s.sym+'"]');
     if(ce){ const chg = (s.last - s.open)/s.open*100; ce.textContent = fmtPct(chg); ce.className = "mono "+(chg>=0?"pos":"neg"); ce.style.minWidth = "56px"; ce.style.textAlign = "right"; }
   });
-  const bp = document.querySelector("[data-sym-price]"); if(bp){ const cs = wlState[simMarket]; if(cs) bp.textContent = cs.last.toFixed(cs.cls==="Forex"? cs.dec+1 : cs.dec); }
+  const bp = document.querySelector("[data-sym-price]"); if(bp){ const cs = wlState[simMarket]; if(cs) bp.textContent = fmtSymBig(cs); }
   const cs2 = wlState[simMarket];
   if(cs2){
     const dBid = document.querySelector("[data-sym-bid]"), dAsk = document.querySelector("[data-sym-ask]"), dSpr = document.querySelector("[data-sym-spread]");
@@ -5475,7 +5750,7 @@ function closePosition(id, exitPrice, why, reflection){
   const noteBits = ["Paper trade"+(why? " — "+why:"")];
   if(pos.openNote) noteBits.push("At entry: "+pos.openNote);
   if(reflection && reflection.note) noteBits.push("At close: "+reflection.note);
-  const rec = { id:uid(), date:todayStr(), closedAt:Date.now(), market:pos.market, dir:pos.dir, entry:pos.entry,
+  const rec = { id:uid(), date:todayStr(), closedAt:Date.now(), openedAt:pos.openedAt || null, market:pos.market, dir:pos.dir, entry:pos.entry,
     sl: pos.sl || (pos.dir==="Long"? pos.entry*0.995 : pos.entry*1.005), exit:+exit.toFixed(4), size:pos.size,
     session:"New York", planId:pos.planId||"", emotion:(reflection && reflection.emotion) || pos.emotion || "",
     exitEmotion:(reflection && reflection.exitEmotion) || "",
@@ -5483,10 +5758,12 @@ function closePosition(id, exitPrice, why, reflection){
   DB.paper.balance += tradePnl(rec); DB.trades.push(rec);
   saveDB(); renderAll(); toast("Closed "+pos.market+": "+fmt$(tradePnl(rec))+" ("+fmtR(tradeR(rec))+") — added to Journal.");
   notifyEvent("positionClosed", "Position closed", pos.market+" "+fmt$(tradePnl(rec))+" ("+fmtR(tradeR(rec))+")");
+  /* Every close — manual, SL or TP — queues the post-trade reflection
+     panel (EdgeFlo slide-over); closes queue up one at a time. */
+  enqueueReflection(rec);
 }
 function closePositionUI(id){
-  if(DB.guardrails.prompts===false || DB.guardrails.promptsClose===false){ closePosition(id, null, "Manual close"); return; } // Trading Prompts off in Guardrails
-  postTradeCheckin("close", id);
+  closePosition(id, null, "Manual close"); // the reflection panel follows the close (it is the post-trade prompt now)
 }
 /* ---- Floating post-trade emotion prompt (EdgeFlo-style) ----
    Floats top-right the moment a position opens. One tap on a face logs that
@@ -5563,6 +5840,116 @@ function finishCheckin(kind, posId, skip){
   } else {
     closePosition(posId, null, "Manual close", { emotion, exitEmotion, note });
   }
+}
+/* ---- Post-trade reflection panel (EdgeFlo slide-over) ----
+   Docked on the right, app-global: it survives page navigation until it
+   is saved or dismissed, and queued closes surface one at a time. Save
+   persists the emotion, the plan-follow answer, the note and any voice
+   reflection onto the trade's record (visible in its Journal review).
+   Gated by the same Trading Prompts settings as the old check-in. */
+const REFL_EMOTIONS = [["😊","Happy"],["😌","Calm"],["😫","Stressed"],["😢","Sad"],["😠","Angry"],["🏆","Proud"]];
+const reflQueue = [];
+let reflCur = null;   // { tradeId, emotion, followed, breakdown, note, voice }
+let reflRecorder = null, reflChunks = [], reflRecStarted = 0, reflStream = null, reflRecFor = null;
+function enqueueReflection(rec){
+  if(DB.guardrails.prompts===false || DB.guardrails.promptsClose===false) return; // Trading Prompts off in Guardrails
+  if(!rec || !rec.id) return;
+  reflQueue.push(rec.id);
+  if(!reflCur) reflShowNext();
+}
+function reflTrade(){ return reflCur? (DB.trades.find(t=>t.id===reflCur.tradeId) || null) : null; }
+function reflShowNext(){
+  reflStopRecording();
+  const old = document.getElementById("refl-panel"); if(old) old.remove();
+  const id = reflQueue.shift();
+  if(!id){ reflCur = null; return; }
+  if(!DB.trades.some(x=>x.id===id)){ reflShowNext(); return; }
+  reflCur = { tradeId:id, emotion:"", followed:null, breakdown:false, note:"", voice:null };
+  renderReflPanel();
+}
+function reflAdvance(){ reflCur = null; reflShowNext(); }
+function renderReflPanel(){
+  const t = reflTrade(); if(!t || !reflCur) return;
+  let el = document.getElementById("refl-panel");
+  if(!el){ el = document.createElement("div"); el.id = "refl-panel"; el.setAttribute("role","dialog"); el.setAttribute("aria-label","Post-trade reflection"); document.body.appendChild(el); }
+  const p = tradePnl(t);
+  const side = t.dir==="Short"? "Sell" : "Buy";
+  const dec = (typeof wlState!=="undefined" && wlState[t.market])? wlState[t.market].dec : 2;
+  const px = v=> Number(v).toLocaleString("en-US",{minimumFractionDigits:dec, maximumFractionDigits:dec});
+  const brow = (l,v)=> '<div style="display:flex;justify-content:space-between;gap:14px;padding:4px 0;font-size:13px"><span style="color:var(--muted)">'+l+'</span><strong class="mono" style="white-space:nowrap">'+v+'</strong></div>';
+  const chev = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="'+(reflCur.breakdown? "M5 15l7-7 7 7":"M5 9l7 7 7-7")+'"/></svg>';
+  const mic = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  el.innerHTML =
+    '<div class="refl-head"><span class="tp-flag">'+esc(String(t.market).slice(0,2).toUpperCase())+'</span>'
+    + '<span class="refl-sym">'+esc(t.market)+'</span><span class="refl-side">'+side+'</span>'
+    + '<button type="button" class="emo-f-x" title="Dismiss" aria-label="Dismiss" onclick="reflAdvance()">&times;</button></div>'
+    + '<div class="refl-sub">Trade closed</div>'
+    + '<div class="refl-lab">Net PnL</div><div class="refl-pnl mono '+(p>=0?"pos":"neg")+'">~'+(p>=0? "+":"")+fmt$(p)+'</div>'
+    + '<div class="refl-breakbox"><button type="button" class="refl-break" onclick="reflToggleBreakdown()"><span>View breakdown</span>'+chev+'</button>'
+    + (reflCur.breakdown? '<div class="refl-break-rows">'+brow("Entry price", px(t.entry))+brow("Exit price", px(t.exit))+brow("Quantity", Number(t.size).toLocaleString("en-US"))+brow("Net PnL", (p>=0? "+":"")+fmt$(p))+'</div>' : "")
+    + '</div>'
+    + '<div class="refl-q">'+esc(t.market)+' trade closed.</div>'
+    + '<div class="refl-q2">How do you feel right now?</div>'
+    + '<div class="refl-emos">'+REFL_EMOTIONS.map(e=>'<button type="button" class="refl-emo'+(reflCur.emotion===e[1]? " on":"")+'" title="'+e[1]+'" aria-label="'+e[1]+'" onclick="reflPickEmotion(\''+e[1]+'\')">'+e[0]+'</button>').join("")+'</div>'
+    + '<div class="refl-q2" style="margin-top:15px">Did you follow your plan?</div>'
+    + '<div class="refl-yn"><button type="button" class="'+(reflCur.followed===true? "on":"")+'" onclick="reflPickFollowed(true)">Yes</button><button type="button" class="'+(reflCur.followed===false? "on":"")+'" onclick="reflPickFollowed(false)">No</button></div>'
+    + '<div class="refl-lab">Add a note or voice reflection</div>'
+    + '<div class="refl-note-wrap"><textarea class="input" id="refl-note" placeholder="Optional note...">'+esc(reflCur.note)+'</textarea>'
+    + '<button type="button" class="refl-mic" id="refl-mic" title="Record a voice reflection" aria-label="Record a voice reflection" onclick="reflToggleVoice()">'+mic+'</button></div>'
+    + (reflCur.voice? '<div class="vn-row"><span class="chip pine">'+esc(reflCur.voice.at)+'</span><audio controls src="'+reflCur.voice.src+'" preload="metadata"></audio><span class="small mono">'+Math.round(reflCur.voice.dur||0)+'s</span><button class="btn sm" onclick="reflCur.voice=null;renderReflPanel()">Delete</button></div>' : "")
+    + '<div class="refl-foot"><button type="button" class="refl-review" onclick="reflReviewFull()">Review Full Trade</button><button type="button" class="refl-save" onclick="reflSave()">Save</button></div>';
+}
+function reflHarvestNote(){ const n = document.getElementById("refl-note"); if(n && reflCur) reflCur.note = n.value; }
+function reflPickEmotion(e){ reflHarvestNote(); reflCur.emotion = reflCur.emotion===e? "" : e; renderReflPanel(); }
+function reflPickFollowed(v){ reflHarvestNote(); reflCur.followed = reflCur.followed===v? null : v; renderReflPanel(); }
+function reflToggleBreakdown(){ reflHarvestNote(); reflCur.breakdown = !reflCur.breakdown; renderReflPanel(); }
+function reflSave(){
+  const t = reflTrade(); reflHarvestNote();
+  if(t && reflCur){
+    if(reflCur.emotion) t.exitEmotion = reflCur.emotion;
+    if(reflCur.followed!==null) t.followed = reflCur.followed;
+    const note = (reflCur.note||"").trim();
+    if(note) t.notes = (t.notes? t.notes+" · " : "") + "Reflection: " + note;
+    if(reflCur.voice){ (t.voices = t.voices||[]).push(reflCur.voice); }
+    t.reflection = { emotion: reflCur.emotion || "", followed: reflCur.followed, note: note, at: Date.now() };
+    saveDB();
+  }
+  reflAdvance();
+  toast("Reflection saved — it lives on this trade in your Journal.");
+  if(currentView==="journal") RENDER.journal();
+  if(currentView==="dashboard") RENDER.dashboard();
+}
+function reflReviewFull(){
+  const t = reflTrade();
+  const id = t? t.id : null, date = t? t.date : null;
+  reflAdvance();
+  if(id){ go("journal"); selectJournalDay(date || todayStr()); openTradeModal(id); }
+}
+function reflToggleVoice(){
+  if(reflRecorder && reflRecorder.state==="recording"){ reflRecorder.stop(); return; }
+  if(!navigator.mediaDevices || !window.MediaRecorder){ toast("Voice recording isn't available in this browser — type your note instead."); return; }
+  const forId = reflCur? reflCur.tradeId : null;
+  navigator.mediaDevices.getUserMedia({ audio:true }).then(stream=>{
+    reflStream = stream; reflChunks = []; reflRecFor = forId; reflRecStarted = Date.now();
+    reflRecorder = new MediaRecorder(stream);
+    reflRecorder.ondataavailable = e=>{ if(e.data && e.data.size) reflChunks.push(e.data); };
+    reflRecorder.onstop = ()=>{
+      if(reflStream){ reflStream.getTracks().forEach(tr=>tr.stop()); reflStream = null; }
+      const rec = reflRecorder; reflRecorder = null;
+      const blob = new Blob(reflChunks, { type: (rec && rec.mimeType) || "audio/webm" });
+      const rd = new FileReader();
+      rd.onload = ()=>{ if(reflCur && reflCur.tradeId===reflRecFor){ reflCur.voice = { id:uid(), at:new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}), dur:(Date.now()-reflRecStarted)/1000, src: rd.result }; renderReflPanel(); } };
+      rd.readAsDataURL(blob);
+    };
+    reflRecorder.start();
+    const b = document.getElementById("refl-mic"); if(b) b.classList.add("rec");
+    toast("Recording… tap the mic again to stop.");
+  }).catch(()=> toast("Microphone access was blocked — type your note instead."));
+}
+function reflStopRecording(){
+  if(reflRecorder && reflRecorder.state==="recording"){ try{ reflRecorder.stop(); }catch(e){} }
+  if(reflStream){ reflStream.getTracks().forEach(tr=>tr.stop()); reflStream = null; }
+  reflRecorder = null;
 }
 function calcSize(){
   const bal=parseFloat($("#calc-bal").value), risk=parseFloat($("#calc-risk").value), stop=parseFloat($("#calc-stop").value);
@@ -5924,12 +6311,13 @@ function useEdgePreset(id){
     mgmt:p.mgmt||"", exit:planExitStored(p.exit), exitRules:planExitStored(p.exit), notes:p.notes||"",
     risk: p.risk? Object.assign({}, p.risk) : null, modelShot:"", modelExamples:"" };
   if(DB.planColors && DB.planColors[p.id]) DB.planColors[np.id] = DB.planColors[p.id];
-  DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id }; edgeColToDetail();
+  DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id }; edgeView = "detail"; edgeColToDetail();
   saveDB(); RENDER.edge(); toast("“"+p.name+"” copied to your plans — edit it freely.");
 }
 
 /* ---- Edge page state: viewing is free; creating new plans is a Basic feature ---- */
 let edgeSel = null;              // {kind:"plan"|"preset", id}
+let edgeView = "grid";           // Edge landing: the "My Plans" card grid; a card/list click opens the detail
 let edgeMenuId = null;           // plan id whose "..." menu is open
 let edgeNewOpen = false;         // "+ New Plan" dropdown open
 function paintEdgeTopNew(){
@@ -6053,7 +6441,7 @@ function edgeSelection(){
   }
   return { kind:"preset", id: EDGE_PLAN_PRESETS[0].id };
 }
-function selectEdge(kind, id){ edgeSel = { kind:kind, id:id }; edgeEdit = null; edgeColorOpen = false; edgeColToDetail(); RENDER.edge(); paintEdgeTopNew(); }
+function selectEdge(kind, id){ edgeSel = { kind:kind, id:id }; edgeEdit = null; edgeColorOpen = false; edgeView = "detail"; edgeColToDetail(); RENDER.edge(); paintEdgeTopNew(); }
 function setActivePlan(id){ DB.activePlanId = id; saveDB(); RENDER.edge(); toast("Active plan set — it loads first in the Trading plan tab."); }
 function viewModelShots(kind, id, slot){
   const p = kind==="plan"? DB.plans.find(x=>x.id===id) : EDGE_PLAN_PRESETS.find(x=>x.id===id);
@@ -6227,6 +6615,7 @@ let edgeEdit = null;   // { id, draft:{type,charting,criteria,mgmt,exit,notes,ac
 let edgeDragCtx = null;
 function edgeStartEdit(id, isNew){
   const p = DB.plans.find(x=>x.id===id); if(!p) return;
+  edgeView = "detail";
   edgeEdit = { id:id, isNew:!!isNew, dirty:false, savedAt:"",
     draft:{ name:p.name||"", type:p.type||"", charting:(p.charting||[]).slice(), criteria:(p.criteria||[]).slice(),
             mgmt:p.mgmt||p.exitRules||"", exit:p.exit||p.exitRules||"", exitRows:(p.exit||p.exitRules||"").split("\n"), notes:p.notes||"",
@@ -6345,7 +6734,7 @@ function edgeDetailHTML(sel){
   let h = '<div class="card edge-detail"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:0;display:flex;align-items:center">'+(edgeColOpen? "" : '<button class="icon-btn collapse-btn" style="margin-right:4px;flex:0 0 auto" title="Show plans list" aria-label="Show plans list" onclick="toggleEdgeCol()">&raquo;</button>')+planDotPickerHTML(p)+'<input class="input plan-name-edit" value="'+esc(editing? dr.name : (p.name||""))+'" placeholder="Enter trade plan name" aria-label="Trade plan name" '+(editing? 'oninput="edgeDraftField(\'name\',this.value)"' : 'readonly tabindex="-1"')+'></div>'
     + (isPlan
       ? '<div class="hdr-icons">'
-        + '<button class="icon-btn dim" title="Delete plan" aria-label="Delete plan" '+(editing? 'disabled' : 'onclick="deletePlan(\''+p.id+'\')"')+'>'+EDGE_SVG.trash+'</button>'
+        + '<button class="icon-btn dim" title="'+(DB.activePlanId===p.id? "The active plan cannot be deleted" : "Delete plan")+'" aria-label="Delete plan" '+((editing || DB.activePlanId===p.id)? 'disabled' : 'onclick="deletePlan(\''+p.id+'\')"')+'>'+EDGE_SVG.trash+'</button>'
         + '<button class="icon-btn" title="Duplicate plan" aria-label="Duplicate plan" onclick="duplicatePlan(\''+p.id+'\')">'+EDGE_SVG.copy+'</button>'
         + (editing? "" : '<button class="btn sm" onclick="edgeStartEdit(\''+p.id+'\')">'+SEC_ICONS.pencil+'<span>Edit</span></button>')
         + '</div>'
@@ -6551,8 +6940,31 @@ RENDER.edge = function(){
     + '<div class="divider" style="margin:12px 0"></div><div class="side-head">PRESETS</div>'
     + EDGE_PLAN_PRESETS.map(presetItem).join("")
     + '</div>' : "")
-    + '<div style="min-width:0;min-height:0">' + edgeDetailHTML(sel) + '</div></div>';
+    + '<div style="min-width:0;min-height:0">' + ((edgeView==="grid" && !edgeEdit)? edgeGridHTML() : edgeDetailHTML(sel)) + '</div></div>';
 };
+/* Edge landing (EdgeFlo): the "My Plans" card grid. Each card previews
+   its plan inside a fixed-height box — Plan Type, the Charting Process
+   steps, then the remaining sections in order, clipped by the box. No
+   buttons or menus on a card; clicking one opens its detail. */
+function edgeGridHTML(){
+  const sec = (label, inner)=> '<div class="eg-sec"><div class="eg-lab">'+label+'</div>'+inner+'</div>';
+  const cards = DB.plans.map(p=>{
+    const exitTxt = planExitStored(p.exit || p.exitRules || "");
+    let box = '<div class="plan-type-lab">Plan Type</div><div style="font-weight:600;font-size:14px">'+esc(p.type || "Custom plan")+'</div>';
+    box += sec("CHARTING PROCESS", (p.charting||[]).length? '<ol class="num-list eg-steps">'+p.charting.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ol>' : '<div class="small">No charting steps recorded.</div>');
+    box += sec("ENTRY CRITERIA", (p.criteria||[]).length? p.criteria.map(c=>'<div class="eg-row">'+esc(c)+'</div>').join("") : '<div class="small">No criteria yet.</div>');
+    box += sec("ENTRY MODELS", '<div class="small">Setup screenshot &middot; Entry examples</div>');
+    box += sec("TRADE MANAGEMENT RULES", '<div class="eg-txt">'+esc(p.mgmt || "—")+'</div>');
+    box += sec("EXIT CRITERIA", '<div class="eg-txt">'+esc(exitTxt || PLAN_EXIT_HINT)+'</div>');
+    box += sec("TRADING NOTES", '<div class="eg-txt">'+esc(p.notes || "Not Set")+'</div>');
+    return '<div class="eg-card" role="button" tabindex="0" title="Open '+esc(p.name)+'" onclick="selectEdge(\'plan\',\''+p.id+'\')"><div class="eg-head">'+planDotHTML(p)+'<span class="eg-name">'+esc(p.name)+'</span></div><div class="eg-box">'+box+'</div></div>';
+  }).join("");
+  return '<div class="edge-grid-wrap"><div class="eg-title-row">'
+    + (edgeColOpen? "" : '<button class="icon-btn collapse-btn" title="Show plans list" aria-label="Show plans list" onclick="toggleEdgeCol()">&raquo;</button>')
+    + '<h3>My Plans</h3></div>'
+    + (DB.plans.length? '<div class="edge-grid">'+cards+'</div>' : '<div class="empty"><div class="e-title">No plans yet</div>Create one with + New Plan, or copy a preset from the list.</div>')
+    + '</div>';
+}
 function checklistStatus(p){
   const done = p.criteria.filter((c,i)=>activePlanRun.checks[i]).length;
   return done===p.criteria.length? '<span class="pos" style="font-weight:800">All boxes ticked — plan is armed.</span>' : done+" of "+p.criteria.length+" checks done.";
@@ -6570,7 +6982,7 @@ function seedPlaybookPlan(){
     exit:"SL beyond the sweep extreme. TP at the opposing HTF pool.",
     exitRules:"SL beyond the sweep extreme. TP at the opposing HTF pool. Set & forget — no mid-trade management.",
     notes:"From the Market Mechanics mentorship playbook.", modelShot:"", modelExamples:"" };
-  DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id };
+  DB.plans.push(np); DB.activePlanId = np.id; edgeSel = { kind:"plan", id: np.id }; edgeView = "detail";
   saveDB(); RENDER.edge(); toast("Template plan added.");
 }
 function openPlanModal(id){
