@@ -779,7 +779,8 @@ body.on-trading #lockout-slot{padding:0 14px !important}
    Desktop only: the dashboard fills exactly the viewport height under the
    top bar. The KPI row and Recent Trades keep their natural height; the
    Account Balance chart card flexes into the height that is left and the
-   balance SVG scales to its box (aspect preserved, centred). Shorter
+   balance SVG is redrawn at the box's real size (fitBalanceChart) so the
+   plot fills the whole card. Shorter
    viewports additionally compact the two right-rail cards. */
 @media (min-width:1081px){
   body.on-dashboard #main{height:100vh;height:100dvh}
@@ -2277,6 +2278,9 @@ function toggleRail(){
   const collapsed = rail.classList.toggle("rail-collapsed");
   try{ localStorage.setItem(railPrefKey(), collapsed? "1" : "0"); }catch(e){}
   syncCollapseBtn();
+  /* The rail change resizes the dashboard's chart card without a window
+     resize event — refit the balance chart to its new width. */
+  requestAnimationFrame(()=>{ try{ fitBalanceChart(); }catch(e){} });
 }
 function openTutorial(){
   const steps = [
@@ -2452,7 +2456,11 @@ function fmtK(v){
   if(s.endsWith(".00")) s = s.slice(0,-3);
   return "$"+s+"K";
 }
-function balanceChartSVG(){
+function balanceChartSVG(cw, ch){
+  /* The viewBox is built at the chart box's real pixel size (fitBalanceChart
+     re-renders after layout and on resize / rail collapse), so the plot,
+     its fill and the axis labels span the FULL card instead of letterboxing
+     into the middle of it. Falls back to 680x360 before first layout. */
   const bal = activePaperBalance().amount;
   const all = computeStats(DB.trades);
   const startBalAll = bal - all.pnl; // the account's starting balance
@@ -2482,17 +2490,23 @@ function balanceChartSVG(){
   let cum = v0;
   sorted.forEach(t=>{ const ct = closeMs(t); if(ct>=w0 && ct<=w1){ cum += tradePnl(t); pts.push({ t:ct, v:cum }); } });
   pts.push({ t:w1, v:cum });
-  const w = 680, h = 360, padR = 66, padB = 24, padT = 10, padL = 2;
+  const w = (cw && cw >= 240)? Math.round(cw) : 680;
+  const h = (ch && ch >= 140)? Math.round(ch) : 360;
+  const padR = 66, padB = 24, padT = 10, padL = 2;
   const iw = w - padR - padL, ih = h - padT - padB;
   const X = t=> padL + Math.max(0, Math.min(1, (t-w0)/((w1-w0)||1))) * iw;
   /* Y domain SYMMETRIC around the current balance on $400 steps
      (EdgeFlo's .40K grid), widened to always include the equity curve
      AND the starting-balance reference line. */
+  /* Tick step scales with the box height so the axis labels always fit
+     the card: $400 steps on tall boxes, wider steps as it gets shorter.
+     The dollar half-range keeps its $2,800 floor either way. */
+  const step = ih >= 300? 400 : (ih >= 190? 800 : 1200);
   let lo = Math.min(...pts.map(p=>p.v), startBalAll), hi = Math.max(...pts.map(p=>p.v), startBalAll);
-  const center = Math.round(bal/400)*400;
+  const center = Math.round(bal/step)*step;
   const dev = Math.max(Math.abs(hi - center), Math.abs(lo - center));
-  let half = Math.max(2800, Math.ceil(dev/400)*400);
-  if(half <= dev) half += 400;
+  let half = Math.max(2800, Math.ceil(dev/step)*step);
+  if(half <= dev) half += step;
   const min = center - half, max = center + half;
   const Y = v=> padT + (1 - (v-min)/((max-min)||1))*ih;
   const line = pts.map((p,i)=> (i?"L":"M")+X(p.t).toFixed(1)+" "+Y(p.v).toFixed(1)).join(" ");
@@ -2505,10 +2519,15 @@ function balanceChartSVG(){
   const plCol = plProfit? "#1E9E62" : "#D64545";
   const plFill = plProfit? "rgba(30,158,98,.13)" : "rgba(214,69,69,.13)";
   let ticks = "";
-  for(let v=min; v<=max; v+=400){ const y = Y(v);
+  /* On a short box, label only every other gridline so the axis labels
+     never stack on top of each other; the balance chip always labels. */
+  const tickPx = ih / ((max-min)/step);
+  const labelEvery = tickPx >= 17? 1 : 2;
+  let tickIdx = 0;
+  for(let v=min; v<=max; v+=step, tickIdx++){ const y = Y(v);
     if(v === center && Math.abs(y-redY) > 22){ /* the balance tick gets the P/L-colored axis chip (unless the starting-balance tag sits there) */
       ticks += '<rect x="'+(padL+iw+4)+'" y="'+(y-9)+'" width="58" height="18" rx="4" fill="'+plCol+'"/><text x="'+(padL+iw+33)+'" y="'+(y+3.5)+'" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Inter">'+fmtK(v)+'</text>';
-    } else {
+    } else if(tickIdx % labelEvery === 0) {
       ticks += '<text x="'+(padL+iw+9)+'" y="'+(y+3.5)+'" font-size="10.5" fill="var(--faint)" font-family="Inter">'+fmtK(v)+'</text>';
     }
     ticks += '<line x1="'+padL+'" y1="'+y+'" x2="'+(padL+iw)+'" y2="'+y+'" stroke="var(--line)" stroke-dasharray="3 4" opacity=".55"/>'; }
@@ -2517,20 +2536,46 @@ function balanceChartSVG(){
   const ref = '<line x1="'+padL+'" y1="'+redY+'" x2="'+(padL+iw)+'" y2="'+redY+'" stroke="#D64545" stroke-width="1.6"/>'
     + '<rect x="'+(padL+iw+4)+'" y="'+(redY-9)+'" width="58" height="18" rx="4" fill="#D64545"/><text x="'+(padL+iw+33)+'" y="'+(redY+3.5)+'" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Inter">'+fmtK(startBalAll)+'</text>';
   let xlabels = "";
+  /* Edge labels anchor inward (first label start-anchored at the plot's
+     left edge, the last one end-anchored at its right edge) so neither
+     is clipped by the card — the chart reads in full, ends included. */
+  const xl = (x, txt, edge)=>{
+    const ax = edge<0? padL : (edge>0? padL+iw : x);
+    const anchor = edge<0? "start" : (edge>0? "end" : "middle");
+    return '<text x="'+ax+'" y="'+(h-6)+'" font-size="10.5" fill="var(--faint)" text-anchor="'+anchor+'">'+txt+'</text>';
+  };
   if(dashRange==="today"){
-    for(let i=0;i<=4;i++){ const t = new Date(w0 + (w1-w0)*i/4); xlabels += '<text x="'+X(t.getTime())+'" y="'+(h-6)+'" font-size="10.5" fill="var(--faint)" text-anchor="middle">'+t.toLocaleTimeString("en-GB",{hour:"2-digit", minute:"2-digit"})+'</text>'; }
+    for(let i=0;i<=4;i++){ const t = new Date(w0 + (w1-w0)*i/4); xlabels += xl(X(t.getTime()), t.toLocaleTimeString("en-GB",{hour:"2-digit", minute:"2-digit"}), i===0? -1 : (i===4? 1 : 0)); }
   } else {
     const dLbl = d=> d.toLocaleDateString("en-US",{month:"short", day:"numeric"});
     const spanDays = Math.round((w1-w0)/DAY);
-    if(spanDays <= 14){ for(let i=0;i<=spanDays;i++){ const d = new Date(w0+i*DAY); xlabels += '<text x="'+X(d.getTime())+'" y="'+(h-6)+'" font-size="10.5" fill="var(--faint)" text-anchor="middle">'+dLbl(d)+'</text>'; } }
-    else { for(let i=0;i<8;i++){ const d = new Date(w0+Math.round(spanDays*i/7)*DAY); xlabels += '<text x="'+X(d.getTime())+'" y="'+(h-6)+'" font-size="10.5" fill="var(--faint)" text-anchor="middle">'+dLbl(d)+'</text>'; } }
+    if(spanDays <= 14){ /* daily labels, thinned on narrow plots so they never run into each other; first and last always shown */
+      const dayEvery = Math.max(1, Math.ceil(46 / Math.max(24, iw/Math.max(1,spanDays))));
+      for(let i=0;i<=spanDays;i++){ if(i % dayEvery && i !== spanDays) continue; const d = new Date(w0+i*DAY); xlabels += xl(X(d.getTime()), dLbl(d), i===0? -1 : (i===spanDays? 1 : 0)); } }
+    else { for(let i=0;i<8;i++){ const d = new Date(w0+Math.round(spanDays*i/7)*DAY); xlabels += xl(X(d.getTime()), dLbl(d), i===0? -1 : (i===7? 1 : 0)); } }
   }
-  return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" role="img" aria-label="Account balance history" style="display:block">'
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" preserveAspectRatio="none" role="img" aria-label="Account balance history" style="display:block">'
     + ticks
     + '<path d="'+area+'" fill="'+plFill+'"/>'
     + '<path d="'+line+'" fill="none" stroke="'+plCol+'" stroke-width="2.2" stroke-linejoin="round"/>'
     + ref
     + xlabels + '</svg>';
+}
+/* Re-draw the balance chart at the exact size of its card so the plot
+   fills the card edge to edge (matching the viewBox to the box removes
+   the letterboxing a fixed-aspect SVG leaves on a wide, short card).
+   Called after every dashboard render, on window resize and when the
+   nav rail collapses/expands; a no-op off the dashboard or pre-layout. */
+function fitBalanceChart(){
+  if(currentView !== "dashboard") return;
+  const box = document.querySelector('[data-view="dashboard"] .dash-chart');
+  if(!box) return;
+  const r = box.getBoundingClientRect();
+  if(r.width < 240 || r.height < 100) return;
+  const svg = box.querySelector("svg");
+  const vb = svg? svg.getAttribute("viewBox") : "";
+  if(vb === "0 0 "+Math.round(r.width)+" "+Math.round(r.height)) return;
+  box.innerHTML = balanceChartSVG(r.width, r.height);
 }
 RENDER.dashboard = function(){
   if(Date.now() - brokerStatusAt > 15000){ try{ loadBrokerStatus(); }catch(e){} }
@@ -2600,6 +2645,9 @@ RENDER.dashboard = function(){
     + (recent.length? tradeTable(recent, false) : '<div class="empty">No data</div>')
     + '</div></div>'
     + '<div class="side-col" style="min-width:0">' + edgeScoreCardHTML() + disciplineCardHTML(st) + '</div></div>';
+  /* Once laid out, redraw the balance chart at its card's real size so
+     it fills the whole card (see fitBalanceChart). */
+  requestAnimationFrame(()=>{ try{ fitBalanceChart(); }catch(e){} });
 };
 function disciplineCardHTML(st){
   const g = DB.guardrails;
@@ -4406,7 +4454,7 @@ document.addEventListener("pointerup", e=>{
   }
 });
 document.addEventListener("pointercancel", ()=>{ lwEntryPress = null; if(lwDrag) lwDragEnd(); });
-window.addEventListener("resize", ()=>{ if(currentView === "trading") lwPaintChips(); });
+window.addEventListener("resize", ()=>{ if(currentView === "trading") lwPaintChips(); if(currentView === "dashboard"){ try{ fitBalanceChart(); }catch(e){} } });
 function positionGate(){
   if(routineLocked()){ showRoutineModal(); return false; }
   const st = guardrailStatus();
