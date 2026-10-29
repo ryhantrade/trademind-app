@@ -9772,6 +9772,75 @@ function authLogin(p){
       authErr(p, res.status === 400 || res.status === 401? (sbErrText(res, "") || "Wrong email or password.") : sbErrText(res, "Login failed — please try again."));
     });
 }
+function authForgotShow(show){
+  const lb = document.getElementById("li-login-box"), fb = document.getElementById("li-forgot-box");
+  if(lb) lb.style.display = show? "none" : "";
+  if(fb) fb.style.display = show? "" : "none";
+  if(show){
+    const le = document.getElementById("li-email"), fe = document.getElementById("li-fg-email");
+    if(fe && le && le.value) fe.value = le.value;
+    authErr("li-fg", "");
+    const ok = document.getElementById("li-fg-ok"); if(ok){ ok.style.display = "none"; ok.textContent = ""; }
+  }
+}
+function authForgotSend(){
+  const email = ((document.getElementById("li-fg-email") || {}).value || "").trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ authErr("li-fg", "Enter a valid email address."); return; }
+  authErr("li-fg", ""); authBusy("li-fg", true);
+  /* supabase.auth.resetPasswordForEmail equivalent */
+  sbFetch("/recover", { method: "POST", body: JSON.stringify({ email: email }) })
+    .then(res=>{
+      authBusy("li-fg", false);
+      if(!res || !res.d){ authErr("li-fg", AUTH_UNREACHABLE); return; }
+      if(res.status === 200 || res.status === 201){
+        const ok = document.getElementById("li-fg-ok");
+        if(ok){ ok.textContent = "If this email has an account, a reset link is on its way — check your inbox (and Spam), then open it to set a new password."; ok.style.display = "block"; }
+        return;
+      }
+      authErr("li-fg", sbErrText(res, "Could not send the reset link — please try again."));
+    });
+}
+function authRecoveryFromHash(){
+  try{
+    const h = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+    if(h.get("type") === "recovery" && h.get("access_token")) return h.get("access_token");
+  }catch(e){}
+  return null;
+}
+function showPasswordReset(token){
+  const g = document.getElementById("auth-gate"); if(!g) return;
+  g.innerHTML = '<div class="card auth-card">'
+    + '<h3 style="font-size:19px">Set a new password</h3><div class="card-sub">Choose a new password for your TradeMind account.</div>'
+    + '<div class="field"><label class="f">New password</label><input class="input" id="rp-pass" type="password" autocomplete="new-password" placeholder="8+ characters"></div>'
+    + '<div class="field"><label class="f">Confirm new password</label><input class="input" id="rp-pass2" type="password" autocomplete="new-password" placeholder="Repeat your new password"></div>'
+    + '<div class="alert red auth-err" id="rp-err"></div>'
+    + '<button class="btn primary block" id="rp-btn" onclick="authResetPassword()">Update password</button>'
+    + '</div>';
+  g.hidden = false; document.body.style.overflow = "hidden";
+  window.__tmRecoveryToken = token;
+  try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+}
+function authResetPassword(){
+  const p1 = (document.getElementById("rp-pass") || {}).value || "", p2 = (document.getElementById("rp-pass2") || {}).value || "";
+  if(p1.length < 8){ authErr("rp", "Password needs at least 8 characters."); return; }
+  if(p1 !== p2){ authErr("rp", "Passwords do not match."); return; }
+  const tok = window.__tmRecoveryToken;
+  if(!tok){ authErr("rp", "This reset link is no longer valid — request a new one from the log in screen."); return; }
+  authErr("rp", ""); authBusy("rp", true);
+  /* supabase.auth.updateUser equivalent, authorized by the recovery token */
+  sbFetch("/user", { method: "PUT", headers: { Authorization: "Bearer " + tok }, body: JSON.stringify({ password: p1 }) })
+    .then(res=>{
+      authBusy("rp", false);
+      if(!res || !res.d){ authErr("rp", AUTH_UNREACHABLE); return; }
+      if(res.d && (res.d.id || res.d.email)){
+        window.__tmRecoveryToken = null;
+        tmClearSession();
+        showAuthGate("Password updated — log in with your new password.");
+        return;
+      }
+      authErr("rp", sbErrText(res, "Could not update the password — the link may have expired. Request a new reset link."));
+    });
+}
 function authExpire(){
   tmClearSession();
   switchAccountStore(null);
@@ -9808,11 +9877,20 @@ function authGateHTML(msg){
     + '<h3 style="font-size:19px">Welcome to TradeMind</h3><div class="card-sub">Log in to your account, or create one — your journal, plans and paper trading are saved per account.</div>'
     + (msg? '<div class="alert red" style="margin-top:12px">' + esc(msg) + '</div>' : "")
     + '<div class="seg auth-tabs" role="tablist"><button type="button" id="auth-tab-login" class="on" onclick="authTab(\'login\')">Log in</button><button type="button" id="auth-tab-signup" onclick="authTab(\'signup\')">Create account</button></div>'
-    + '<div id="auth-form-login">'
+    + '<div id="auth-form-login"><div id="li-login-box">'
     + '<div class="field"><label class="f">Email</label><input class="input" id="li-email" type="email" autocomplete="email" placeholder="you@example.com"></div>'
     + '<div class="field"><label class="f">Password</label><input class="input" id="li-pass" type="password" autocomplete="current-password" placeholder="Your password" onkeydown="if(event.key===\'Enter\')authLogin(\'li\')"></div>'
     + '<div class="alert red auth-err" id="li-err"></div>'
     + '<button class="btn primary block" id="li-btn" onclick="authLogin(\'li\')">Log in</button>'
+    + '<div style="text-align:center;margin-top:10px"><button type="button" class="btn ghost sm" onclick="authForgotShow(true)">Forgot password?</button></div>'
+    + '</div>'
+    + '<div id="li-forgot-box" style="display:none">'
+    + '<div class="field"><label class="f">Email</label><input class="input" id="li-fg-email" type="email" autocomplete="email" placeholder="you@example.com"></div>'
+    + '<div class="alert red auth-err" id="li-fg-err"></div>'
+    + '<div class="alert green" id="li-fg-ok" style="display:none"></div>'
+    + '<button class="btn primary block" id="li-fg-btn" onclick="authForgotSend()">Send reset link</button>'
+    + '<div style="text-align:center;margin-top:10px"><button type="button" class="btn ghost sm" onclick="authForgotShow(false)">Back to log in</button></div>'
+    + '</div>'
     + '</div>'
     + '<div id="auth-form-signup" style="display:none">'
     + '<div class="field"><label class="f">Full name</label><input class="input" id="au-name" autocomplete="name" placeholder="Your name"></div>'
@@ -9846,6 +9924,8 @@ function hideAuthGate(){
   document.body.style.overflow = "";
 }
 function initAuth(){
+  const recTok = authRecoveryFromHash();
+  if(recTok){ showPasswordReset(recTok); return; }
   const tok = tmToken(), au = tmUser();
   if(tok && au && au.email){
     if(!DB.user || String(DB.user.email || "").toLowerCase() !== String(au.email).toLowerCase()){
