@@ -9787,8 +9787,13 @@ function authForgotSend(){
   const email = ((document.getElementById("li-fg-email") || {}).value || "").trim();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ authErr("li-fg", "Enter a valid email address."); return; }
   authErr("li-fg", ""); authBusy("li-fg", true);
-  /* supabase.auth.resetPasswordForEmail equivalent */
-  sbFetch("/recover", { method: "POST", body: JSON.stringify({ email: email }) })
+  /* supabase.auth.resetPasswordForEmail equivalent.
+     redirect_to tells Supabase where to land AFTER the email link is verified,
+     instead of the project's default Site URL (which was localhost). The mail
+     link itself still opens on the Supabase domain first — that is required
+     for verification, then it lands back on this site. */
+  const redirectTo = encodeURIComponent(location.origin);
+  sbFetch("/recover?redirect_to=" + redirectTo, { method: "POST", body: JSON.stringify({ email: email }) })
     .then(res=>{
       authBusy("li-fg", false);
       if(!res || !res.d){ authErr("li-fg", AUTH_UNREACHABLE); return; }
