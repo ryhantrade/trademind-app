@@ -3893,12 +3893,16 @@ function tvDatafeedInstance(){
 function initTvChart(){
   const mount = document.getElementById("tv-chart-container"); if(!mount) return;
   if(typeof TradingView === "undefined" || !TradingView.widget){
-    mount.innerHTML = '<div class="empty"><div class="e-title">Chart unavailable</div>The TradingView chart library failed to load. Your positions panel and paper feed below keep working.</div>';
+    mount.innerHTML = '<div class="empty"><div class="e-title">Chart loading…</div><div style="margin-top:8px;font-size:12px;opacity:.7">Library: '+(typeof TradingView==="undefined"?"not loaded":"loading")+'</div><button onclick="location.reload()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid #7C3AED;background:#7C3AED;color:#fff">Retry</button></div>';
+    /* Retry once after 3s in case the library script was still loading */
+    setTimeout(function(){ if(typeof TradingView!=="undefined"&&TradingView.widget&&!tvWidget){ initTvChart(); } }, 3000);
     return;
   }
   if(tvWidget){ try{ tvWidget.chart().setSymbol(simMarket); }catch(e){} syncTvPosLines(); return; }
   try{ if(tvDatafeedInstance){} }catch(e){}
+  try{
   tvWidget = new TradingView.widget({
+    debug: true,
     container: "tv-chart-container",
     library_path: TV_LIB_BASE,
     datafeed: tvDatafeedInstance(),
@@ -3934,6 +3938,10 @@ function initTvChart(){
     tvStartCountdown();
     const q = tvReadyQueue.splice(0); q.forEach(fn=>{ try{ fn(); }catch(e){} });
   });
+  }catch(werr){
+    tvWidget = null;
+    mount.innerHTML = '<div class="empty"><div class="e-title">Chart error</div><div style="margin-top:8px;font-size:12px;opacity:.7">'+String((werr&&werr.message)||werr).replace(/</g,'&lt;')+'</div><button onclick="location.reload()" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid #7C3AED;background:#7C3AED;color:#fff">Retry</button></div>';
+  }
 }
 function tvWhenReady(fn){
   if(tvReady && tvChart){ try{ fn(); }catch(e){} return; }
