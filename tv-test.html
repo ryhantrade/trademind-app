@@ -23,7 +23,7 @@ getBars:function(si,res,from,to,ok,err,countBack){log('getBars '+si.ticker+' '+r
 subscribeBars:function(){log('subscribeBars')},
 unsubscribeBars:function(){log('unsubscribeBars')}
 },
-symbol:'EURUSD',interval:'60',theme:'dark',autosize:true,locale:'en',timezone:'Etc/UTC'
+symbol:'EURUSD',interval:'60',theme:'dark',autosize:true,locale:'en',timezone:'Etc/UTC',disabled_features:['iframe_loading_same_origin']
 });
 w.onChartReady(function(){log('CHART READY!');});
 log('widget constructor returned');
