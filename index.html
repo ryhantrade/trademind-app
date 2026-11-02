@@ -5151,6 +5151,7 @@ function tvTfPillLabel(iv){ const map = {"1":"1","5":"5","15":"15","30":"30","60
    menu, alert bell, chart settings menu, fullscreen and screenshot on the
    right. Everything drives the built-in Lightweight Charts engine. */
 function chartToolbarHTML(){
+  return "";
   const ico = (p, s)=> '<svg width="'+(s||16)+'" height="'+(s||16)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';
   const chev = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg>';
   const pill = (lbl, iv)=> '<button type="button" class="tf-btn'+(tvInterval===iv?" on":"")+'" data-tf="'+iv+'" onclick="setTvInterval(\''+iv+'\')">'+lbl+'</button>';
