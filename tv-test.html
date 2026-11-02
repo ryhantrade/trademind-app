@@ -27,6 +27,11 @@ symbol:'EURUSD',interval:'60',theme:'dark',autosize:true,locale:'en',timezone:'E
 });
 w.onChartReady(function(){log('CHART READY!');});
 log('widget constructor returned');
+setTimeout(function(){
+var f=document.querySelector('#c iframe');
+if(f){log('IFRAME SRC: '+f.src);log('IFRAME HTML: '+f.outerHTML.substr(0,300));}
+else{log('NO IFRAME FOUND');}
+},3000);
 }catch(e){log('CONSTRUCTOR ERROR: '+e.message);}
 }
 </script></body></html>
