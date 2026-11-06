@@ -3890,7 +3890,7 @@ function tvWidgetOverrides(){
 }
 function tvDatafeedInstance(){
   if(tvDatafeed) return tvDatafeed;
-  tvDatafeed = new Datafeeds.UDFCompatibleDatafeed(TV_UDF_BASE, 10000);
+  tvDatafeed = new Datafeeds.UDFCompatibleDatafeed(TV_UDF_BASE, 5000);
   return tvDatafeed;
 }
 function initTvChart(){
