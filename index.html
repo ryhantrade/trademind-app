@@ -5236,10 +5236,7 @@ function chartFullscreen(btn){
 let symBarTrack = { sym:"", o:0, h:0, l:0 };
 function symBarHTML(){
   return '<div class="sym-bar"><span class="sym-name" data-sym-name>'+esc(simMarket)+' &middot; '+tvTfPillLabel(tvInterval)+' &middot; '+esc(symClassOf(simMarket))+'</span>'
-    + '<span class="sym-dot" data-sym-dot></span><span class="ohlc up" data-ohlc></span><span class="bar-count" data-bar-count></span>'
-    + '<span class="sym-layout"><button type="button" class="sl-btn" onclick="tvSaveLayout()" title="Save chart layout">Save</button>'
-    + '<button type="button" class="sl-btn" onclick="tvLoadLayout()" title="Load saved layout">Load</button>'
-    + '<button type="button" class="sl-btn" onclick="tvResetLayout()" title="Reset layout">Reset</button></span></div>';
+    + '<span class="sym-dot" data-sym-dot></span><span class="ohlc up" data-ohlc></span><span class="bar-count" data-bar-count></span></div>';
 }
 function symClassOf(sym){ const row = WL_INSTRUMENTS.find(r=>r[0]===sym); return row? row[1] : ""; }
 function symDispDec(s){ return s.cls==="Forex"? s.dec+1 : Math.max(s.dec, 2); }
