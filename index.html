@@ -5536,11 +5536,13 @@ function wlTick(){
 }
 setInterval(wlTick, 900);
 /* ================= LIVE WATCHLIST PRICES =================
-   Forex from open.er-api.com (USD-base rates, no key), crypto + gold
-   (PAX Gold tracks spot gold) from CoinGecko (no key). A symbol a feed
-   covers stops random-walking and shows the live price so the watchlist
-   matches the chart; if a fetch fails, that feed's symbols fall back to
-   the simulated tick above so the watchlist never breaks. Polls 30s. */
+   Primary: the backend /api/quotes (same candle pipeline as the chart,
+   so watchlist and chart agree and move together), polled every 5s.
+   Fallback: forex from open.er-api.com (USD-base rates, no key), crypto
+   + gold from CoinGecko (no key) every 30s — used only if the backend
+   is unreachable. A symbol a feed covers stops random-walking and shows
+   the live price; if all feeds fail, that symbol falls back to the
+   simulated tick above so the watchlist never breaks. */
 const wlPrevFx = {};   // previous poll's forex price per symbol — er-api's free tier has no intraday change, so % change is measured poll to poll
 let wlAnyLive = false; // true while at least one live feed is feeding prices
 const WL_CG_IDS = { BTCUSD:"bitcoin", ETHUSD:"ethereum", SOLUSD:"solana", XRPUSD:"ripple", XAUUSD:"pax-gold" };
@@ -5560,7 +5562,22 @@ function wlLivePaint(){
   if(d) d.style.display = wlAnyLive? "inline-flex" : "none";
   paintTradingWlPrices();
 }
+async function wlBackendPoll(){
+  try{
+    const res = await fetch("https://playbook-signal-dashboard.onrender.com/api/quotes");
+    const j = await res.json();
+    const q = j && j.quotes;
+    if(!q) throw new Error("quotes: no data");
+    Object.keys(q).forEach(sym=>{
+      const d = q[sym];
+      if(d && d.price>0) wlSetLive(sym, d.price, d.chg||0, "backend");
+    });
+    wlLivePaint();
+    return true;
+  }catch(e){ return false; }
+}
 async function wlLivePoll(){
+  if(await wlBackendPoll()) return; // backend is live — skip the slow public feeds
   try{
     const res = await fetch("https://open.er-api.com/v6/latest/USD");
     const j = await res.json();
@@ -5590,7 +5607,7 @@ async function wlLivePoll(){
   wlLivePaint();
 }
 wlLivePoll();
-setInterval(wlLivePoll, 30000);
+setInterval(wlLivePoll, 5000);
 function toggleWlPin(sym){
   const i = DB.wlPins.indexOf(sym);
   if(i>=0) DB.wlPins.splice(i,1); else DB.wlPins.push(sym);
