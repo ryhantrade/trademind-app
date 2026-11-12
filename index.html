@@ -1676,6 +1676,11 @@ function loadDB(){
   DB.sanctuary = Object.assign({}, DEFAULTS.sanctuary, DB.sanctuary||{});
   DB.settings = Object.assign({}, JSON.parse(JSON.stringify(DEFAULTS.settings)), DB.settings||{});
   ["profile","routinePrefs","journaling","privacy","security"].forEach(k=>{ DB.settings[k] = Object.assign({}, DEFAULTS.settings[k], DB.settings[k]||{}); });
+  /* One-time migration: News times now follow Settings -> Account
+     (timezone + 12/24h). The untouched 24h default is flipped to 12h
+     once, honouring the explicit 12h request; after this the Settings
+     toggle is in charge. */
+  if(!DB.settings._newsTzV1){ DB.settings._newsTzV1 = true; if(DB.settings.profile) DB.settings.profile.time24 = false; saveDB(); }
   DB.settings.notif = Object.assign({}, DEFAULTS.settings.notif, DB.settings.notif||{});
   DB.settings.notif.channels = Object.assign({}, DEFAULTS.settings.notif.channels, DB.settings.notif.channels||{});
   DB.settings.notif.events = Object.assign({}, DEFAULTS.settings.notif.events, DB.settings.notif.events||{});
@@ -5077,7 +5082,7 @@ function sideAlertsHTML(){
   items.push({ t: info.open? "Trading window open — closes "+DB.guardrails.winEnd : "Trading window closed — opens "+DB.guardrails.winStart, c: info.open? "green":"amber" });
   if(DB.guardrails.enabled && st.breached) items.push({ t: "Guardrail breach: "+st.reasons.join(" · "), c:"red" });
   else if(DB.guardrails.enabled) items.push({ t: "Guardrails clear — "+st.trades+"/"+DB.guardrails.maxTrades+" trades used, "+fmt$(st.pnl)+" today", c:"green" });
-  high.forEach(e=>{ const lt = newsWallToLocal(e.date, e.time, "UTC"); items.push({ t: "High-impact "+e.cur+" news today: "+e.event+" ("+lt.time+" "+newsGmtLabel()+")", c:"amber" }); });
+  high.forEach(e=>{ const lt = newsWallToLocal(e.date, e.time, "UTC"); items.push({ t: "High-impact "+e.cur+" news today: "+e.event+" ("+newsFmtTime(lt.time)+" "+newsGmtLabel()+")", c:"amber" }); });
   if(DB.routine.enabled && routineDoneCount() < DB.routine.steps.length) items.push({ t: "Pre-market routine incomplete ("+routineDoneCount()+"/"+DB.routine.steps.length+")", c:"amber" });
   DB.paper.positions.forEach(p=> items.push({ t: p.market+" "+p.dir+" open @ "+p.entry+(p.sl? " · SL "+p.sl:"")+(p.tp? " · TP "+p.tp:""), c:"pine" }));
   return form + items.map(i=>'<div class="alert-row"><span class="chip '+i.c+'">&#9679;</span><span>'+esc(i.t)+'</span></div>').join("");
@@ -8271,6 +8276,9 @@ function setProfile(key, val){
   if(key==="email" && DB.user) DB.user.email = val;
   saveDB();
   if(key==="name" || key==="email") buildNav();
+  /* News times follow these two settings: re-map the live rows into the
+     new timezone/format and re-render so the change shows at once. */
+  if(key==="timezone" || key==="time24"){ try{ newsRemapLive(); }catch(e){} renderAll(); }
 }
 function setTheme(v){
   DB.settings.profile.theme = v; saveDB(); applyTheme(); renderAll();
