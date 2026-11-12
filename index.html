@@ -6582,7 +6582,9 @@ function deletePlan(id){ if(edgeEdit && edgeEdit.id===id) edgeEdit = null; DB.pl
 "use strict";
 /* ================= NEWS — ECONOMIC CALENDAR ================= */
 /* Recurring scheduled releases, generated for the current week so the
-   calendar is always populated. Times are indicative release times (GMT). */
+   calendar is always populated. Times are indicative release times (GMT);
+   every time shown in the News list is converted to the viewer's local
+   timezone before display (newsDbEvents / newsMapLive). */
 const NEWS_TEMPLATES = [
   { d:1, time:"14:30", cur:"USD", event:"ISM Manufacturing PMI", impact:"Medium" },
   { d:1, time:"09:00", cur:"EUR", event:"Eurozone Manufacturing PMI", impact:"Low" },
@@ -6699,6 +6701,17 @@ const NEWS_REAL_DAYS = {
     { time:"21:30", cur:"USD", cc:"US", impact:"Low",    cat:"Government & Bonds", event:"6-Month Bill Auction", actual:"", fc:"", prev:"" }
   ]
 };
+/* Built-in templates store GMT/UTC release times (see NEWS_DB_TEMPLATES).
+   Convert them to the viewer's local time on display, so the list, the
+   now-line and the sort all run on one clock. A conversion can roll the
+   date forward (e.g. 21:45 UTC -> 03:45 next day in Dhaka) — that is the
+   correct local day. NEWS_REAL_DAYS rows are already in local (Dhaka)
+   time, so they are left alone. */
+function newsUtcToLocal(dateStr, hhmm){
+  const dp = dateStr.split("-"), tp = hhmm.split(":");
+  const d = new Date(Date.UTC(+dp[0], +dp[1]-1, +dp[2], +tp[0], +tp[1]));
+  return { date: todayStr(d), time: String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0") };
+}
 function newsDbEvents(){
   const out = []; const today = new Date();
   for(let off=-35; off<=95; off++){
@@ -6712,7 +6725,8 @@ function newsDbEvents(){
     const dow = (d.getDay()+6)%7 + 1;
     NEWS_DB_TEMPLATES.forEach((t,i)=>{
       if(t.dow!==dow) return;
-      out.push({ id:"db"+off+"_"+i, date: ds, time:t.time, cur:t.cur, cc:t.cc,
+      const lt = newsUtcToLocal(ds, t.time);
+      out.push({ id:"db"+off+"_"+i, date: lt.date, time:lt.time, cur:t.cur, cc:t.cc,
         impact:t.impact, cat:t.cat, event:t.event,
         actual: off<0? (t.act || t.fc || "") : "", fc:t.fc||"", prev:t.prev||"" });
     });
@@ -6871,7 +6885,16 @@ function newsMapLive(x, i){
   if(!fdate) return null;
   const cur = String(x.currency||"").toUpperCase();
   const ftime = newsParseFeedTime(x.time);
-  const conv = /^\d{2}:\d{2}$/.test(ftime)? newsWallToLocal(fdate, ftime, "America/New_York") : { date:fdate, time:ftime };
+  let conv;
+  if(typeof x.utc === "number" && x.utc > 0){
+    /* Exact UTC instant from the feed: convert straight to the viewer's
+       local time. No ET assumption, DST-safe, and it also fixes feed rows
+       whose HTML time cell came back empty (e.g. Unemployment Claims). */
+    const d = new Date(x.utc*1000);
+    conv = { date: todayStr(d), time: String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0") };
+  } else {
+    conv = /^\d{2}:\d{2}$/.test(ftime)? newsWallToLocal(fdate, ftime, "America/New_York") : { date:fdate, time:ftime };
+  }
   return { id:"lv"+i, date: conv.date,
     time: conv.time,
     cur: cur, cc: cur==="ALL"? "ALL" : (NEWS_CC[cur] || cur.slice(0,2)),
@@ -7110,8 +7133,8 @@ function newsListHTML(){
     + '<div class="small" style="margin-top:10px;flex:none">'+(newsSourceStatus()==="live"
       ? 'Live economic calendar — Forex Factory weekly feed via the Render API, fetched '+newsLiveUpdated.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'. Times are shown in your local timezone.'
       : newsSourceStatus()==="mixed"
-        ? 'Mixed sources — live Forex Factory feed for the dates it covers; the remaining dates come from the built-in recurring calendar. The live feed covers the current week only.'
-        : 'Built-in economic calendar — the full recurring release schedule for every major currency. The live Forex Factory feed covers the current week only and refreshes this page automatically whenever it can be reached.')+'</div>'
+        ? 'Mixed sources — live Forex Factory feed for the dates it covers; the remaining dates come from the built-in recurring calendar. The live feed covers the current week only. All times are shown in your local timezone.'
+        : 'Built-in economic calendar — the full recurring release schedule for every major currency. The live Forex Factory feed covers the current week only and refreshes this page automatically whenever it can be reached. All times are shown in your local timezone.')+'</div>'
     + '</div>';
 }
 function newsCalendarHTML(){
