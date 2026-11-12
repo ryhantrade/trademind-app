@@ -3913,6 +3913,7 @@ function initTvChart(){
     interval: tvInterval,
     theme: tvIsDark()? "dark" : "light",
     autosize: true,
+    auto_save_delay: 5,
     locale: "en",
     timezone: "Etc/UTC",
     disabled_features: ["header_symbol_search", "symbol_search_hot_key", "iframe_loading_same_origin"],
@@ -3930,6 +3931,11 @@ function initTvChart(){
   tvWidget.onChartReady(function(){
     tvReady = true;
     try{ tvChart = tvWidget.chart(); }catch(e){ tvChart = null; }
+    /* Auto-load the saved layout (drawings included) so markings made
+       before a refresh come back. Only when it belongs to the chart on
+       screen (same symbol + interval) — a layout saved for another
+       symbol/interval is left alone; Load restores it manually. */
+    tvAutoLoadLayout();
     /* Re-apply the saved studies and chart type now that the chart exists. */
     try{
       if(tvChartType === "0") tvChart.setChartType(1);
@@ -3937,6 +3943,15 @@ function initTvChart(){
       else if(tvChartType === "3") tvChart.setChartType(2);
     }catch(e){}
     Object.keys(tvStudies).forEach(n=>{ if(tvStudies[n] === "on") tvAddStudy(n); });
+    /* Auto-save: with auto_save_delay set, the library fires
+       onAutoSaveNeeded a few seconds after any edit (drawing, study,
+       interval). Persist the layout silently so a refresh keeps it. */
+    try{
+      tvWidget.subscribe("onAutoSaveNeeded", function(){
+        try{ tvWidget.save(function(ch){ try{ localStorage.setItem("tm-tv-layout", JSON.stringify(ch)); }catch(e){} }); }catch(e){}
+      });
+    }catch(e){}
+    tvHookUnloadSave();
     syncTvPosLines();
     tvStartCountdown();
     const q = tvReadyQueue.splice(0); q.forEach(fn=>{ try{ fn(); }catch(e){} });
@@ -4057,6 +4072,32 @@ function tvRemoveStudy(name){
 /* ---- Save / load layout: localStorage chart-storage adapter ----
    The library's widget.save()/load() persist the full chart layout
    (drawings, studies, symbol, interval) as JSON under tm-tv-layout. */
+function tvAutoLoadLayout(){
+  if(!tvReady || !tvWidget) return;
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem("tm-tv-layout") || "null"); }catch(e){}
+  if(!saved || !Array.isArray(saved.charts) || !saved.charts.length) return;
+  const ch0 = saved.charts[0] || {};
+  const sym = String(ch0.symbol || "");
+  const res = String(ch0.resolution || ch0.interval || "");
+  /* Only restore a layout that belongs to the chart on screen: the
+     saved symbol must match the selected market and the saved
+     resolution must match the TF pill, so the chart never silently
+     jumps to another symbol/interval on refresh. */
+  const symOk = !sym || sym === simMarket || sym.split(":").pop() === simMarket;
+  const resOk = !res || res === String(tvInterval);
+  if(!symOk || !resOk) return;
+  try{ tvWidget.load(saved); }catch(e){}
+}
+let tvUnloadHooked = false;
+function tvHookUnloadSave(){
+  if(tvUnloadHooked) return; tvUnloadHooked = true;
+  /* Safety net for a refresh within the auto-save delay: persist the
+     layout on unload too, so the very last drawing is not lost. */
+  window.addEventListener("beforeunload", function(){
+    try{ if(tvReady && tvWidget){ tvWidget.save(function(ch){ try{ localStorage.setItem("tm-tv-layout", JSON.stringify(ch)); }catch(e){} }); } }catch(e){}
+  });
+}
 function tvSaveLayout(){
   closeCtbMenus();
   if(!tvReady || !tvWidget){ toast("Chart is not ready yet."); return; }
