@@ -4214,6 +4214,19 @@ function paintBarCountdown(){
 /* Edit state shared with the (kept) edit-bar flow below. */
 let lwEdit = null;   /* { id, origSl, origTp, sl, tp } — sl/tp hold the latest dragged draft price, null while untouched */
 function syncLwEditGlobal(){ try{ window.lwEdit = lwEdit; }catch(e){} }
+/* Position management (Edit / breakeven) runs through the same
+   routine / guardrail / trading-window gates as opening a trade.
+   NOTE: this function was missing entirely — openEditPosition and
+   breakevenPosition both called it, so clicking Edit threw a
+   ReferenceError and silently did nothing. Mirrors openTradePanel. */
+function positionGate(){
+  if(accountGateBlocked()) return false;
+  if(routineLocked()){ showRoutineModal(); return false; }
+  const st = guardrailStatus();
+  if(DB.guardrails.enabled && st.breached && !st.overridden){ toast(DB.guardrails.hardLock? "Hard Lock is ON — trading is locked until tomorrow." : "Guardrails lockout — trading blocked."); return false; }
+  if(DB.guardrails.enabled && !sessionInfo().open && !windowOverriddenToday()){ showWindowModal(); return false; }
+  return true;
+}
 function openEditPosition(id){
   if(!positionGate()) return;
   const pos = DB.paper.positions.find(p=>p.id===id); if(!pos) return;
