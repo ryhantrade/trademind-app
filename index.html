@@ -4046,16 +4046,41 @@ function tvWhenReady(fn){
      shape's price back into lwEdit so Save stores it.
    Shapes are created with disableSave so they never persist into the
    saved chart layout (which would duplicate them on reload). */
-function tvMkShape(price, txt, color, locked){
-  if(!tvReady || !tvChart || !(price > 0)) return null;
+/* createShape is ASYNC (the library's _createMultipointShape is an async
+   function): it returns a Promise of the shape id, NOT the id itself.
+   Treating that promise as the id was the bug behind the duplicate lines:
+   every shape was created on the chart but never tracked, so the sync kept
+   re-creating them, the drag poll could never read a price, and the
+   close-cleanup had no ids to remove. onId receives the id string, or
+   null when creation failed/timed out. */
+function tvMkShape(price, txt, color, locked, onId){
+  if(!tvReady || !tvChart || !(price > 0)) { try{ if(onId) onId(null); }catch(e){} return; }
+  let settled = false;
+  const settle = function(id){
+    if(settled){
+      /* Late arrival after the timeout already gave up on this creation:
+         the shape exists but nobody tracks it — remove it so it never
+         becomes a stray duplicate. */
+      if(typeof id === "string" && id) tvRmShape(id);
+      return;
+    }
+    settled = true;
+    try{ if(onId) onId(id); }catch(e){}
+  };
   try{
-    const id = tvChart.createShape(
+    const pr = tvChart.createShape(
       { time: Math.floor(Date.now()/1000), price: price },
       { shape: "horizontal_line", text: txt, lock: !!locked, disableSave: true,
         overrides: { linecolor: color, linewidth: 1, linestyle: 0, textcolor: color, showPriceLabel: true } }
     );
-    return (typeof id === "string" && id) ? id : null;
-  }catch(e){ return null; }
+    if(pr && typeof pr.then === "function"){
+      pr.then(function(id){ settle((typeof id === "string" && id) ? id : null); })
+        .catch(function(){ settle(null); });
+      setTimeout(function(){ settle(null); }, 10000);
+    } else {
+      settle((typeof pr === "string" && pr) ? pr : null);
+    }
+  }catch(e){ settle(null); }
 }
 function tvRmShape(id){
   if(!id || !tvChart) return;
@@ -4144,15 +4169,28 @@ function syncTvPosLines(){
            shape is recreated whenever its real price or label drifts from
            the position (e.g. Cancel snapping it back to the saved SL/TP). */
         const dragGuard = editing && (key === "sl" || key === "tp");
+        /* A creation already in flight for this key: wait for it. Starting
+           another one on top was the duplicate-lines bug. */
+        if(r[key+"_pending"]) return;
         let need = false;
-        if(!curOk || actualPx == null) need = true;
+        if(!curOk) need = true;
         else if(r[key+"_lock"] !== sp.lock) need = true;
-        else if(!dragGuard && (Math.abs(actualPx - sp.px) > 1e-9 || r[key+"_txt"] !== sp.txt)) need = true;
+        else if(dragGuard) need = false; /* never touch a shape being dragged */
+        else if(actualPx == null || Math.abs(actualPx - sp.px) > 1e-9 || r[key+"_txt"] !== sp.txt) need = true;
         if(!need) return;
         if(curOk) tvRmShape(cur);
-        const id = tvMkShape(sp.px, sp.txt, sp.color, sp.lock);
-        r[key] = id;
-        r[key+"_px"] = sp.px; r[key+"_txt"] = sp.txt; r[key+"_lock"] = sp.lock;
+        r[key] = null; r[key+"_pending"] = true;
+        const wantPx = sp.px, wantTxt = sp.txt, wantLock = sp.lock, wantColor = sp.color;
+        tvMkShape(wantPx, wantTxt, wantColor, wantLock, function(id){
+          r[key+"_pending"] = false;
+          if(!id) return; /* creation failed or timed out: next sync retries */
+          /* Adopt the id only if this position is still open on this symbol;
+             otherwise the shape is an orphan from a race — remove it. */
+          const still = DB.paper.positions.some(function(pp){ return pp.id === pos.id && pp.market === simMarket; });
+          if(!still){ tvRmShape(id); return; }
+          r[key] = id;
+          r[key+"_px"] = wantPx; r[key+"_txt"] = wantTxt; r[key+"_lock"] = wantLock;
+        });
       });
     }catch(e){}
   });
