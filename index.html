@@ -3860,11 +3860,13 @@ function posOpenedLabel(pos){
    (licensed), loaded from the private static site. Candles come from the
    app's UDF feed (GET /udf/* on BROKER_API) via the bundled
    UDFCompatibleDatafeed adapter (inlined above). Position and order lines
-   are NATIVE trading primitives (createPositionLine / createOrderLine):
-   entry lines show the position with a native close affordance; SL/TP
-   are order lines, draggable ONLY while their position is in edit mode —
-   the edit-only drag lock is enforced by creating/destroying draggable
-   lines on edit start/end instead of hit-testing. The library renders in
+   are horizontal_line SHAPES (createShape): the library here is the
+   Charting Library, not the Trading Platform, so createPositionLine /
+   createOrderLine only throw — see syncTvPosLines. Entry lines show the
+   position (locked); SL/TP are shapes, draggable ONLY while their position
+   is in edit mode — the edit-only drag lock is enforced by the shape's
+   lock flag, flipped on edit start/end, with a poll reading a dragged
+   shape's price back into the edit. The library renders in
    an iframe: nothing paints HTML over chart coordinates anymore. */
 const TV_TF_SEC = { "1":60, "5":300, "15":900, "30":1800, "60":3600, "240":14400, "D":86400 };
 const TV_UP = "#1E9E62", TV_DN = "#D64545";
@@ -4024,7 +4026,47 @@ function tvWhenReady(fn){
   if(tvReady && tvChart){ try{ fn(); }catch(e){} return; }
   tvReadyQueue.push(fn);
 }
-/* ---- Position / order lines (native trading primitives) ---- */
+/* ---- Position / order lines (chart shapes) ----
+   ROOT CAUSE (verified in the hosted library bundle, 2026-11-25):
+   this is the Charting Library, NOT the Trading Platform — the chart's
+   createPositionLine/createOrderLine are stubs that THROW "only available
+   on Trading Platform". So no native position/order line can ever appear
+   here. The lines are instead native horizontal_line SHAPES (createShape),
+   which the Charting Library does support:
+   - entry: locked shape, direction colour, "Buy 0.01 @ 59,188".
+   - SL/TP: shapes at the SL/TP price, or a ghost "+ Set SL/TP" level when
+     a position has none. Draggable ONLY while editing that position
+     (the lock flips on edit enter/exit); a 250ms poll reads a dragged
+     shape's price back into lwEdit so Save stores it.
+   Shapes are created with disableSave so they never persist into the
+   saved chart layout (which would duplicate them on reload). */
+function tvMkShape(price, txt, color, locked){
+  if(!tvReady || !tvChart || !(price > 0)) return null;
+  try{
+    const id = tvChart.createShape(
+      { time: Math.floor(Date.now()/1000), price: price },
+      { shape: "horizontal_line", text: txt, lock: !!locked, disableSave: true,
+        overrides: { linecolor: color, linewidth: 1, linestyle: 0, textcolor: color, showPriceLabel: true } }
+    );
+    return (typeof id === "string" && id) ? id : null;
+  }catch(e){ return null; }
+}
+function tvRmShape(id){
+  if(!id || !tvChart) return;
+  try{ tvChart.removeEntity(id); }catch(e){}
+}
+function tvShapeExists(id){
+  if(!id || !tvChart) return false;
+  try{ tvChart.getShapeById(id); return true; }catch(e){ return false; }
+}
+function tvShapePrice(id){
+  if(!id || !tvChart) return null;
+  try{
+    const pts = tvChart.getShapeById(id).getPoints();
+    if(pts && pts.length && typeof pts[0].price === "number") return pts[0].price;
+  }catch(e){}
+  return null;
+}
 function tvGhostPrice(pos, key){
   /* Ghost "set SL/TP" level: a few ATR-ish steps from entry toward the
      protective side, purely a draggable starting point. */
@@ -4037,62 +4079,78 @@ function tvGhostPrice(pos, key){
 }
 function tvRemovePosLines(id){
   const r = tvPosLines[id]; if(!r) return;
-  ["entry","sl","tp"].forEach(k=>{ if(r[k]){ try{ r[k].remove(); }catch(e){} } });
+  ["entry","sl","tp"].forEach(k=>{ tvRmShape(r[k]); });
   delete tvPosLines[id];
+}
+/* Drag read-back: while an edit is open, poll the SL/TP shapes' prices
+   (there is no reliable "shape moved" event to subscribe to here) and
+   feed any change into lwEdit so the edit bar + Save see it. */
+let tvEditPoll = null;
+function tvPollEditShapes(){
+  if(typeof lwEdit === "undefined" || !lwEdit || !tvChart) return;
+  const r = tvPosLines[lwEdit.id]; if(!r) return;
+  ["sl","tp"].forEach(function(key){
+    const id = r[key]; if(!id) return;
+    const px = tvShapePrice(id);
+    if(px == null) return;
+    if(lwEdit[key] == null || Math.abs(px - lwEdit[key]) > 1e-9){
+      lwEdit[key] = px; syncLwEditGlobal(); paintEditBar();
+    }
+  });
+}
+function tvEditPollStart(){
+  tvEditPollStop();
+  try{ tvEditPoll = setInterval(tvPollEditShapes, 250); }catch(e){}
+}
+function tvEditPollStop(){
+  if(tvEditPoll){ try{ clearInterval(tvEditPoll); }catch(e){} tvEditPoll = null; }
 }
 function syncTvPosLines(){
   try{ if(typeof paintEditBar === "function") paintEditBar(); }catch(e){}
   if(!tvReady || !tvChart) return;
   const poss = DB.paper.positions.filter(p=> p.market === simMarket);
   const seen = {};
-  const doSync = ()=>{
-    poss.forEach(pos=>{ try{
+  poss.forEach(pos=>{
+    try{
       seen[pos.id] = true;
       let r = tvPosLines[pos.id];
       if(!r) r = tvPosLines[pos.id] = { entry: null, sl: null, tp: null };
       const editing = !!(typeof lwEdit !== "undefined" && lwEdit && lwEdit.id === pos.id);
       const dirN = pos.dir === "Long"? 1 : -1;
-      /* Entry: native position line with close affordance. */
       const entryTxt = (pos.dir === "Long"? "Buy " : "Sell ") + fmtLots(posLots(pos)) + " @ " + fmtPx(pos.market, pos.entry);
-      if(!r.entry){
-        tvChart.createPositionLine().then(line=>{
-          r.entry = line;
-          line.setText(entryTxt).setPrice(pos.entry).setQuantity(fmtLots(posLots(pos)))
-            .setLineColor(dirN > 0? TV_UP : TV_DN)
-            .onClose(()=>{ try{ closePositionUI(pos.id); }catch(e){} });
-        }).catch(function(e){ try{ console.warn('TV position line failed', e && e.message || e); }catch(_){} });
-      } else {
-        try{ r.entry.setText(entryTxt).setPrice(pos.entry).setQuantity(fmtLots(posLots(pos))); }catch(e){}
-      }
-      /* SL/TP: native order lines. Draggable ONLY in edit mode for the
-         edited position (edit-only drag lock). */
-      const mkLine = (key, price, txt, color)=>{
-        const setLine = (line)=>{
-          line.setText(txt).setPrice(price).setEditable(editing)
-            .setLineColor(color).setBodyTextColor(color);
-          if(editing){
-            line.onMove(()=>{ try{
-              const px = line.getPrice();
-              if(typeof lwEdit !== "undefined" && lwEdit && lwEdit.id === pos.id){
-                lwEdit[key] = px; syncLwEditGlobal(); paintEditBar();
-              }
-            }catch(e){} });
-          }
-        };
-        if(!r[key]){
-          tvChart.createOrderLine().then(line=>{ r[key] = line; setLine(line); }).catch(function(e){ try{ console.warn('TV order line failed', e && e.message || e); }catch(_){} });
-        } else { try{ setLine(r[key]); }catch(e){} }
-      };
+      const specs = {};
+      specs.entry = { px: pos.entry, txt: entryTxt, color: dirN > 0? TV_UP : TV_DN, lock: true };
       const hasSl = pos.sl != null && pos.sl !== "" && +pos.sl > 0;
       const slPx = (editing && typeof lwEdit !== "undefined" && lwEdit.sl != null)? lwEdit.sl : (hasSl? +pos.sl : tvGhostPrice(pos, "sl"));
-      mkLine("sl", slPx, hasSl? "SL " + fmtPx(pos.market, slPx) : "＋ Set SL", "#F07676");
+      specs.sl = { px: slPx, txt: hasSl? "SL " + fmtPx(pos.market, slPx) : "＋ Set SL", color: "#F07676", lock: !editing };
       const hasTp = pos.tp != null && pos.tp !== "" && +pos.tp > 0;
       const tpPx = (editing && typeof lwEdit !== "undefined" && lwEdit.tp != null)? lwEdit.tp : (hasTp? +pos.tp : tvGhostPrice(pos, "tp"));
-      mkLine("tp", tpPx, hasTp? "TP " + fmtPx(pos.market, tpPx) : "＋ Set TP", "#3ECF8E");
-    }catch(e){} });
-    Object.keys(tvPosLines).forEach(id=>{ if(!seen[id]) tvRemovePosLines(id); });
-  };
-  try{ doSync(); }catch(e){}
+      specs.tp = { px: tpPx, txt: hasTp? "TP " + fmtPx(pos.market, tpPx) : "＋ Set TP", color: "#3ECF8E", lock: !editing };
+      ["entry","sl","tp"].forEach(function(key){
+        const sp = specs[key];
+        const cur = r[key];
+        const curOk = cur && tvShapeExists(cur);
+        const actualPx = curOk ? tvShapePrice(cur) : null;
+        /* During an edit of this position, a price/text change on sl/tp
+           is the user's drag in progress (the poll reads it back) — never
+           recreate the shape under the cursor. Only a missing shape or a
+           lock flip (edit enter/exit) recreates it. Outside edit mode the
+           shape is recreated whenever its real price or label drifts from
+           the position (e.g. Cancel snapping it back to the saved SL/TP). */
+        const dragGuard = editing && (key === "sl" || key === "tp");
+        let need = false;
+        if(!curOk || actualPx == null) need = true;
+        else if(r[key+"_lock"] !== sp.lock) need = true;
+        else if(!dragGuard && (Math.abs(actualPx - sp.px) > 1e-9 || r[key+"_txt"] !== sp.txt)) need = true;
+        if(!need) return;
+        if(curOk) tvRmShape(cur);
+        const id = tvMkShape(sp.px, sp.txt, sp.color, sp.lock);
+        r[key] = id;
+        r[key+"_px"] = sp.px; r[key+"_txt"] = sp.txt; r[key+"_lock"] = sp.lock;
+      });
+    }catch(e){}
+  });
+  Object.keys(tvPosLines).forEach(id=>{ if(!seen[id]) tvRemovePosLines(id); });
 }
 /* ---- Symbol / interval / type (thin wrappers) ---- */
 function setTvChartSymbol(sym){
@@ -4285,14 +4343,14 @@ function openEditPosition(id){
   if(!positionGate()) return;
   const pos = DB.paper.positions.find(p=>p.id===id); if(!pos) return;
   if(lwEdit && lwEdit.id !== id) cancelPosEdit();   /* starting another edit cancels the current one cleanly */
-  if(lwEdit && lwEdit.id === id){ syncTvPosLines(); paintEditBar(); return; }
+  if(lwEdit && lwEdit.id === id){ syncTvPosLines(); paintEditBar(); tvEditPollStart(); return; }
   if(pos.market !== simMarket) setChartSymbol(pos.market);
   lwEdit = { id: id,
     origSl: (pos.sl == null || pos.sl === ""? null : +pos.sl),
     origTp: (pos.tp == null || pos.tp === ""? null : +pos.tp),
     sl: null, tp: null };
   syncLwEditGlobal();
-  syncTvPosLines(); paintEditBar();
+  syncTvPosLines(); paintEditBar(); tvEditPollStart();
 }
 function paintEditBar(){
   const bar = document.getElementById("lw-editbar"); if(!bar) return;
@@ -4315,6 +4373,7 @@ function paintEditBar(){
 }
 function savePosEdit(){
   if(!lwEdit) return;
+  tvEditPollStop();
   const ed = lwEdit;
   const pos = DB.paper.positions.find(p=> p.id === ed.id);
   lwEdit = null; syncLwEditGlobal();
@@ -4330,6 +4389,7 @@ function savePosEdit(){
 }
 function cancelPosEdit(){
   if(!lwEdit) return;
+  tvEditPollStop();
   lwEdit = null; syncLwEditGlobal();
   /* The position record was never touched, so repainting the lines from
      it restores the original SL/TP (and ghost) positions. */
