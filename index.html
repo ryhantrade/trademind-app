@@ -4000,6 +4000,12 @@ function initTvChart(){
           if(s && s !== simMarket && MARKETS.indexOf(s) >= 0){
             simMarket = s; seedCandles(simMarket);
             paintSymBar(true); syncTvPosLines();
+            /* The sidebar symbol card (name + big price) is rendered from
+               simMarket at build time, while its price is repainted live
+               every tick — without a sidebar re-render here, a widget-side
+               symbol change leaves the OLD name (e.g. EURUSD) above the
+               NEW symbol's price. */
+            try{ if(typeof currentView !== "undefined" && currentView === "trading" && typeof repaintTradingSidebar === "function") repaintTradingSidebar(); }catch(e){}
             try{ if(typeof wlBackendPoll === "function") wlBackendPoll().then(function(){ try{ paintSymBar(false); }catch(e){} }); }catch(e){}
             const os = document.querySelector(".oct-symsel"); if(os) os.value = s;
           }
