@@ -3405,7 +3405,7 @@ function loadSampleData(){
 <script>
 "use strict";
 /* ================= PAPER TRADING ================= */
-const BASE_PRICE = { BTCUSD:101250, ETHUSD:3380, XAUUSD:2688.5, EURUSD:1.0882, GBPUSD:1.2698, GBPJPY:192.65, SOLUSD:218.4, USDJPY:154.32 };
+const BASE_PRICE = { BTCUSD:59300, ETHUSD:3380, XAUUSD:3617.85, EURUSD:1.0962, GBPUSD:1.2698, GBPJPY:192.65, SOLUSD:218.4, USDJPY:154.32 };
 let simMarket = "EURUSD", simCandles = [], simTimer = null;
 function seedCandles(market){
   let p = (typeof wlState!=="undefined" && wlState[market] && wlState[market].last>0)? wlState[market].last : BASE_PRICE[market]; const dec = p<10?4:(p<300?2:2); simCandles = [];
@@ -3950,6 +3950,23 @@ function initTvChart(){
       const _now = Math.floor(Date.now()/1000);
       tvChart.setVisibleRange({ from: _now - 500*_rs, to: _now });
     }catch(e){}
+    /* Re-assert the wide range on first data load per symbol+interval:
+       the saved layout (and the library's own initial range) can restore
+       a narrow ~190-bar view after onChartReady; the first data load
+       happens after that restore, so this wins. Flagged per pair so
+       later backfill loads never yank the view back. */
+    try{
+      const _wideKey = {};
+      tvChart.onDataLoaded().subscribe(null, function(){
+        try{
+          const _k = simMarket + "|" + tvInterval;
+          if(_wideKey[_k]) return; _wideKey[_k] = true;
+          const _rs2 = { "1":60, "5":300, "15":900, "30":1800, "60":3600, "240":14400, "D":86400 }[String(tvInterval)] || 900;
+          const _now2 = Math.floor(Date.now()/1000);
+          tvChart.setVisibleRange({ from: _now2 - 500*_rs2, to: _now2 });
+        }catch(e){}
+      });
+    }catch(e){}
     /* Re-apply the saved studies and chart type now that the chart exists. */
     try{
       if(tvChartType === "0") tvChart.setChartType(1);
@@ -3981,6 +3998,7 @@ function initTvChart(){
           if(s && s !== simMarket && MARKETS.indexOf(s) >= 0){
             simMarket = s; seedCandles(simMarket);
             paintSymBar(true); syncTvPosLines();
+            try{ if(typeof wlBackendPoll === "function") wlBackendPoll().then(function(){ try{ paintSymBar(false); }catch(e){} }); }catch(e){}
             const os = document.querySelector(".oct-symsel"); if(os) os.value = s;
           }
         }catch(e){}
@@ -4042,7 +4060,7 @@ function syncTvPosLines(){
           line.setText(entryTxt).setPrice(pos.entry).setQuantity(fmtLots(posLots(pos)))
             .setLineColor(dirN > 0? TV_UP : TV_DN)
             .onClose(()=>{ try{ closePositionUI(pos.id); }catch(e){} });
-        }).catch(()=>{});
+        }).catch(function(e){ try{ console.warn('TV position line failed', e && e.message || e); }catch(_){} });
       } else {
         try{ r.entry.setText(entryTxt).setPrice(pos.entry).setQuantity(fmtLots(posLots(pos))); }catch(e){}
       }
@@ -4062,7 +4080,7 @@ function syncTvPosLines(){
           }
         };
         if(!r[key]){
-          tvChart.createOrderLine().then(line=>{ r[key] = line; setLine(line); }).catch(()=>{});
+          tvChart.createOrderLine().then(line=>{ r[key] = line; setLine(line); }).catch(function(e){ try{ console.warn('TV order line failed', e && e.message || e); }catch(_){} });
         } else { try{ setLine(r[key]); }catch(e){} }
       };
       const hasSl = pos.sl != null && pos.sl !== "" && +pos.sl > 0;
@@ -5352,7 +5370,15 @@ function paintSymBar(reset){
   const bar = null; /* Charting Library owns the bars now; the sym bar tracks the live watchlist feed. */
   if(bar){ o = bar.open; h = bar.high; l = bar.low; c = bar.close; }
   else {
-    if(reset || symBarTrack.sym!==simMarket){ symBarTrack = { sym: simMarket, o: s.last, h: s.last, l: s.last }; }
+    if(reset || symBarTrack.sym!==simMarket){ symBarTrack = { sym: simMarket, o: (s.live? s.open : s.last), h: s.last, l: s.last }; }
+    /* Stale-seed guard: the track can be seeded from a weeks-old hardcoded
+       open (or the watchlist price before the first live quote). Once the
+       live feed is on, its day-open is the truth — re-seed when the tracked
+       open is far from it, so the header never shows O101,232 while the
+       market trades at 59,000. */
+    if(s.live && symBarTrack.o>0 && s.open>0 && Math.abs(symBarTrack.o - s.open)/s.open > 0.005){
+      symBarTrack = { sym: simMarket, o: s.open, h: s.last, l: s.last };
+    }
     symBarTrack.h = Math.max(symBarTrack.h, s.last);
     symBarTrack.l = Math.min(symBarTrack.l, s.last);
     o = symBarTrack.o; h = symBarTrack.h; l = symBarTrack.l; c = s.last;
@@ -5608,13 +5634,13 @@ function resetPaper(){ const start = (DB.demoStart && DB.demoStart.paper) || 100
 /* Practice feed: prices random-walk from reference levels while you watch,
    the same simulated-feed convention as the Trading tab. */
 const WL_INSTRUMENTS = [
-  ["EURUSD","Forex",1.0882,4],["GBPUSD","Forex",1.2698,4],["USDJPY","Forex",154.32,2],["AUDUSD","Forex",0.6591,4],
+  ["EURUSD","Forex",1.0962,4],["GBPUSD","Forex",1.2698,4],["USDJPY","Forex",154.32,2],["AUDUSD","Forex",0.6591,4],
   ["NZDUSD","Forex",0.6124,4],["USDCAD","Forex",1.3682,4],["USDCHF","Forex",0.8841,4],["EURJPY","Forex",167.94,2],
   ["GBPJPY","Forex",195.88,2],["EURGBP","Forex",0.8566,4],["EURAUD","Forex",1.6512,4],["AUDJPY","Forex",101.73,2],
   ["GBPAUD","Forex",1.9262,4],["AUDCAD","Forex",0.9018,4],["EURCAD","Forex",1.4889,4],["GBPCAD","Forex",1.7372,4],
   ["US30","Indices",44152,0],["NAS100","Indices",21348,0],["SPX500","Indices",6058,0],
-  ["BTCUSD","Crypto",101250,0],["ETHUSD","Crypto",3382,1],["SOLUSD","Crypto",218.40,2],["XRPUSD","Crypto",2.354,3],
-  ["XAUUSD","Metals",2688.50,2],["XAGUSD","Metals",31.84,2]
+  ["BTCUSD","Crypto",59300,0],["ETHUSD","Crypto",3382,1],["SOLUSD","Crypto",218.40,2],["XRPUSD","Crypto",2.354,3],
+  ["XAUUSD","Metals",3617.85,2],["XAGUSD","Metals",31.84,2]
 ];
 const wlState = {};
 WL_INSTRUMENTS.forEach(row=>{ wlState[row[0]] = { sym:row[0], cls:row[1], open:row[2], last:row[2], dec:row[3], dir:0 }; });
