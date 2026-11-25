@@ -3942,13 +3942,13 @@ function initTvChart(){
        symbol/interval is left alone; Load restores it manually. */
     tvAutoLoadLayout();
     /* Default view showed only ~80 bars (the library's initial range,
-       ~1 day of 15m). Widen it to ~300 bars of the current resolution
+       ~1 day of 15m). Widen it to ~500 bars of the current resolution
        so several days of history show on load. Runs after the layout
        auto-load so it also overrides a narrow saved range. */
     try{
       const _rs = { "1":60, "5":300, "15":900, "30":1800, "60":3600, "240":14400, "D":86400 }[String(tvInterval)] || 900;
       const _now = Math.floor(Date.now()/1000);
-      tvChart.setVisibleRange({ from: _now - 300*_rs, to: _now });
+      tvChart.setVisibleRange({ from: _now - 500*_rs, to: _now });
     }catch(e){}
     /* Re-apply the saved studies and chart type now that the chart exists. */
     try{
