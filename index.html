@@ -3941,6 +3941,15 @@ function initTvChart(){
        screen (same symbol + interval) — a layout saved for another
        symbol/interval is left alone; Load restores it manually. */
     tvAutoLoadLayout();
+    /* Default view showed only ~80 bars (the library's initial range,
+       ~1 day of 15m). Widen it to ~300 bars of the current resolution
+       so several days of history show on load. Runs after the layout
+       auto-load so it also overrides a narrow saved range. */
+    try{
+      const _rs = { "1":60, "5":300, "15":900, "30":1800, "60":3600, "240":14400, "D":86400 }[String(tvInterval)] || 900;
+      const _now = Math.floor(Date.now()/1000);
+      tvChart.setVisibleRange({ from: _now - 300*_rs, to: _now });
+    }catch(e){}
     /* Re-apply the saved studies and chart type now that the chart exists. */
     try{
       if(tvChartType === "0") tvChart.setChartType(1);
@@ -3954,6 +3963,33 @@ function initTvChart(){
     try{
       tvWidget.subscribe("onAutoSaveNeeded", function(){
         try{ tvWidget.save(function(ch){ try{ localStorage.setItem("tm-tv-layout", JSON.stringify(ch)); }catch(e){} }); }catch(e){}
+      });
+    }catch(e){}
+    /* Keep the app header (sym-bar: SYMBOL · TF) in sync when the
+       symbol or timeframe is changed INSIDE the TradingView widget
+       itself (its own symbol search / interval menu). The app's own
+       controls already update simMarket/tvInterval, but the widget's
+       own changes never reached the app, so the header kept showing
+       the old pair (e.g. EURUSD 4h while the chart was on BTCUSD
+       15m). Guarded: only syncs when the widget value actually
+       differs from the app state, and never calls setSymbol back,
+       so the app's own setChartSymbol/setTvInterval can't loop. */
+    try{
+      tvChart.onSymbolChanged().subscribe(null, function(){
+        try{
+          const s = String(tvChart.symbol() || "").split(":").pop().toUpperCase();
+          if(s && s !== simMarket && MARKETS.indexOf(s) >= 0){
+            simMarket = s; seedCandles(simMarket);
+            paintSymBar(true); syncTvPosLines();
+            const os = document.querySelector(".oct-symsel"); if(os) os.value = s;
+          }
+        }catch(e){}
+      });
+      tvChart.onIntervalChanged().subscribe(null, function(){
+        try{
+          const iv = String(tvChart.resolution() || "");
+          if(iv && iv !== tvInterval){ tvInterval = iv; paintTfPills(); paintSymBar(true); }
+        }catch(e){}
       });
     }catch(e){}
     tvHookUnloadSave();
@@ -3992,23 +4028,23 @@ function syncTvPosLines(){
   const poss = DB.paper.positions.filter(p=> p.market === simMarket);
   const seen = {};
   const doSync = ()=>{
-    poss.forEach(pos=>{
+    poss.forEach(pos=>{ try{
       seen[pos.id] = true;
       let r = tvPosLines[pos.id];
       if(!r) r = tvPosLines[pos.id] = { entry: null, sl: null, tp: null };
       const editing = !!(typeof lwEdit !== "undefined" && lwEdit && lwEdit.id === pos.id);
       const dirN = pos.dir === "Long"? 1 : -1;
       /* Entry: native position line with close affordance. */
-      const entryTxt = (pos.dir === "Long"? "Buy " : "Sell ") + fmtLots(pos.lots) + " @ " + fmtPx(pos.market, pos.entry);
+      const entryTxt = (pos.dir === "Long"? "Buy " : "Sell ") + fmtLots(posLots(pos)) + " @ " + fmtPx(pos.market, pos.entry);
       if(!r.entry){
         tvChart.createPositionLine().then(line=>{
           r.entry = line;
-          line.setText(entryTxt).setPrice(pos.entry).setQuantity(fmtLots(pos.lots))
+          line.setText(entryTxt).setPrice(pos.entry).setQuantity(fmtLots(posLots(pos)))
             .setLineColor(dirN > 0? TV_UP : TV_DN)
             .onClose(()=>{ try{ closePositionUI(pos.id); }catch(e){} });
         }).catch(()=>{});
       } else {
-        try{ r.entry.setText(entryTxt).setPrice(pos.entry).setQuantity(fmtLots(pos.lots)); }catch(e){}
+        try{ r.entry.setText(entryTxt).setPrice(pos.entry).setQuantity(fmtLots(posLots(pos))); }catch(e){}
       }
       /* SL/TP: native order lines. Draggable ONLY in edit mode for the
          edited position (edit-only drag lock). */
@@ -4035,7 +4071,7 @@ function syncTvPosLines(){
       const hasTp = pos.tp != null && pos.tp !== "" && +pos.tp > 0;
       const tpPx = (editing && typeof lwEdit !== "undefined" && lwEdit.tp != null)? lwEdit.tp : (hasTp? +pos.tp : tvGhostPrice(pos, "tp"));
       mkLine("tp", tpPx, hasTp? "TP " + fmtPx(pos.market, tpPx) : "＋ Set TP", "#3ECF8E");
-    });
+    }catch(e){} });
     Object.keys(tvPosLines).forEach(id=>{ if(!seen[id]) tvRemovePosLines(id); });
   };
   try{ doSync(); }catch(e){}
@@ -4499,7 +4535,7 @@ function opCalc(){
     rewardPct: reward$!=null && bal>0? reward$/bal*100 : null,
     rr: (risk$>0 && reward$!=null)? reward$/risk$ : null };
 }
-function fmtLots(l){ return String(+l.toFixed(2)); }
+function fmtLots(l){ const n = +l; return String(isNaN(n)? 0 : +n.toFixed(2)); }
 function fmtRR(r){ const w = Math.round(r); return Math.abs(r-w)<0.05? String(w) : r.toFixed(1); }
 function opEstText(c){
   if(c.entry==null) return "";
