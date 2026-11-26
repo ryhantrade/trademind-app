@@ -505,8 +505,9 @@
     /* ============================================================
        Charting Terminal — a self-contained charting library + app
        Canvas renderer · indicators · drawings · bar replay · alerts
-       Data: deterministic simulated feed (seeded per symbol), so the
-       same symbol always shows the same history in this browser.
+       Data: live market data from the TradeMind backend
+       (/api/candles + /api/quotes) where supported, with the
+       deterministic simulated feed (seeded per symbol) as fallback.
        ============================================================ */
 
     /* ---------------- Symbol & timeframe config ---------------- */
@@ -580,6 +581,133 @@
       }
       dataCache[key] = bars;
       return bars;
+    }
+
+    /* ---------------- Live market data (TradeMind backend) ----------------
+       History + quotes come from the TradeMind backend
+       (https://playbook-signal-dashboard.onrender.com). Symbols the
+       backend does not cover (USOIL, AAPL, TSLA) and any fetch failure
+       keep the simulated feed, so the page never goes blank. The
+       backend returns no volume, so live bars show an empty volume
+       pane. Forex updates about every 5s; gold/crypto move near 1s.
+       ------------------------------------------------------------------ */
+    var LIVE_API = "https://playbook-signal-dashboard.onrender.com";
+    var LIVE_TF = { "1m": "1m", "5m": "5m", "15m": "15m", "1H": "1h", "4H": "4h", "1D": "1d", "1W": "1w" };
+    var liveCache = {};      // key sym|tf -> live bars[]
+    var liveActive = {};     // key -> true while live bars are showing
+    var liveDead = {};       // key -> true when the backend says unsupported (stay sim)
+    var liveFetchedAt = {};  // key -> ms of last successful live fetch
+    var livePollBusy = false;
+
+    function liveKey(sym, tfk) { return sym + "|" + tfk; }
+
+    function fetchJSON(url, ms) {
+      return new Promise(function (resolve) {
+        var done = false, timer = null;
+        function finish(v) { if (!done) { done = true; if (timer) clearTimeout(timer); resolve(v); } }
+        try {
+          var ctrl = new AbortController();
+          timer = setTimeout(function () { try { ctrl.abort(); } catch (e) {} finish(null); }, ms);
+          fetch(url, { signal: ctrl.signal }).then(function (r) { return r.json(); }).then(function (j) { finish(j); }).catch(function () { finish(null); });
+        } catch (e) { finish(null); }
+      });
+    }
+
+    function liveBarsFrom(j) {
+      if (!j || !j.ok || !j.bars || j.bars.length < 5) return null;
+      return j.bars.map(function (b) { return { t: b.time, o: b.open, h: b.high, l: b.low, c: b.close, v: 0 }; });
+    }
+
+    function setFeedStatus() {
+      var el = document.getElementById("feedStatus");
+      if (!el) return;
+      if (S.replay.on) { el.textContent = "Replay mode · live feed paused"; return; }
+      el.textContent = liveActive[liveKey(S.sym, S.tf)] ? "Live · market data" : "Live · simulated feed";
+    }
+
+    function applyQuotes(q) {
+      if (!q) return;
+      var key = liveKey(S.sym, S.tf), changed = false;
+      SYMBOLS.forEach(function (s2) {
+        var qq = q[s2.sym];
+        if (!qq || typeof qq.price !== "number" || qq.price <= 0) return;
+        // in sim mode the shown symbol keeps its simulated price so the
+        // chart and the watchlist do not disagree
+        if (s2.sym === S.sym && !liveActive[key]) return;
+        wlState[s2.sym].price = qq.price;
+        if (typeof qq.chg === "number") wlState[s2.sym].dayOpen = qq.price / (1 + qq.chg / 100);
+        changed = true;
+      });
+      if (changed) renderWatchlist(true);
+    }
+
+    function fetchLiveQuotes() {
+      return fetchJSON(LIVE_API + "/api/quotes", 9000).then(function (j) {
+        return (j && j.quotes) ? j.quotes : null;
+      });
+    }
+
+    function refreshLive() {
+      var so = curSO(), tf = curTF(), key = liveKey(S.sym, S.tf);
+      if (liveDead[key]) return;
+      var now = Date.now();
+      if (liveActive[key] && liveFetchedAt[key] && now - liveFetchedAt[key] < 10000) return;
+      fetchJSON(LIVE_API + "/api/candles?market=" + encodeURIComponent(so.sym) + "&tf=" + encodeURIComponent(LIVE_TF[tf.k]), 12000).then(function (j) {
+        if (!j) return; // network/timeout — tick() retries later
+        var lb = liveBarsFrom(j);
+        if (!lb) { liveDead[key] = true; return; } // backend: unsupported symbol
+        liveCache[key] = lb; liveActive[key] = true; liveFetchedAt[key] = Date.now();
+        if (S.sym === so.sym && S.tf === tf.k && !S.replay.on) {
+          bars = lb.slice();
+          dispBars = (S.type === "ha") ? heikinAshi(bars) : bars;
+          indCache = {};
+          setFeedStatus();
+          requestDraw();
+        }
+      });
+      fetchLiveQuotes().then(function (q) { if (q) applyQuotes(q); });
+    }
+
+    function mergeLiveBars(fresh) {
+      if (!fresh || !fresh.length || !bars.length) return false;
+      var lastT = bars[bars.length - 1].t, changed = false;
+      for (var i = 0; i < fresh.length; i++) {
+        var b = fresh[i];
+        if (b.t > lastT) { bars.push(b); lastT = b.t; changed = true; }
+        else if (b.t === lastT) {
+          var l = bars[bars.length - 1];
+          if (l.o !== b.o || l.h !== b.h || l.l !== b.l || l.c !== b.c) {
+            l.o = b.o; l.h = b.h; l.l = b.l; l.c = b.c; changed = true;
+          }
+        }
+      }
+      if (bars.length > 900) bars.splice(0, bars.length - 900);
+      return changed;
+    }
+
+    function pollLive() {
+      if (S.replay.on || livePollBusy) return;
+      var so = curSO(), tf = curTF(), key = liveKey(S.sym, S.tf);
+      if (!liveActive[key]) return;
+      livePollBusy = true;
+      fetchJSON(LIVE_API + "/api/candles?market=" + encodeURIComponent(so.sym) + "&tf=" + encodeURIComponent(LIVE_TF[tf.k]), 12000).then(function (j) {
+        livePollBusy = false;
+        var lb = liveBarsFrom(j);
+        if (!lb) return;
+        if (S.sym !== so.sym || S.tf !== tf.k || S.replay.on) return;
+        if (mergeLiveBars(lb)) {
+          liveCache[key] = bars.slice(); liveFetchedAt[key] = Date.now();
+          dispBars = (S.type === "ha") ? heikinAshi(bars) : bars;
+          indCache = {};
+          requestDraw();
+        }
+      });
+      fetchLiveQuotes().then(function (q) {
+        if (!q) return;
+        var prev = wlState[S.sym] ? wlState[S.sym].price : null;
+        applyQuotes(q);
+        if (prev !== null && q[S.sym] && typeof q[S.sym].price === "number") checkAlerts(S.sym, prev, q[S.sym].price);
+      });
     }
 
     // initialise watchlist state (deterministic per symbol)
@@ -675,10 +803,13 @@
     function curSO() { return symObj(S.sym); }
     function curTF() { return tfObj(S.tf); }
     function loadSeries() {
-      bars = genSeries(curSO(), curTF());
+      var key = liveKey(S.sym, S.tf);
+      var live = liveCache[key];
+      bars = live ? live.slice() : genSeries(curSO(), curTF());
       dispBars = (S.type === "ha") ? heikinAshi(bars) : bars;
       indCache = {};
       if (S.replay.on) S.replay.idx = Math.min(S.replay.idx, bars.length - 1);
+      refreshLive();
     }
     function getInd(name) {
       if (indCache[name]) return indCache[name];
@@ -1349,7 +1480,7 @@
       S.offset = 0;
       replayBar.classList.add("on");
       replayBtn.classList.add("active");
-      document.getElementById("feedStatus").textContent = "Replay mode · live feed paused";
+      setFeedStatus();
       updatePlayIcon();
       requestDraw();
       toast("Bar Replay", "Future candles are hidden. Press play or step forward bar by bar to practice. Click a point on the chart while in replay to jump there.");
@@ -1360,7 +1491,7 @@
       S.replay.on = false; S.replay.playing = false;
       replayBar.classList.remove("on");
       replayBtn.classList.remove("active");
-      document.getElementById("feedStatus").textContent = "Live · simulated feed";
+      setFeedStatus();
       startLive();
       requestDraw();
     }
@@ -1424,6 +1555,12 @@
     function tick() {
       tickCount++;
       var so = curSO(), tf = curTF();
+      var key = liveKey(S.sym, S.tf);
+      if (liveActive[key] && !S.replay.on) {
+        if (tickCount % 3 === 0) pollLive(); // ~2.7s cadence on the 900ms tick
+        return;
+      }
+      if (!liveDead[key] && tickCount % 33 === 0) refreshLive(); // retry while the backend wakes up
       var last = bars[bars.length - 1];
       if (last) {
         var prevWl = wlState[S.sym].price;
