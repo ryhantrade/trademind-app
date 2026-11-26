@@ -1,0 +1,1751 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Charting Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root, [data-theme="dark"] {
+        --bg: #0e1118;
+        --panel: #161a24;
+        --panel-2: #1c2130;
+        --panel-3: #232839;
+        --border: #272e42;
+        --border-soft: #20263a;
+        --text: #e8ebf2;
+        --muted: #8b94a9;
+        --faint: #5d6578;
+        --accent: #2962ff;
+        --accent-soft: rgba(41, 98, 255, .16);
+        --up: #26a69a;
+        --down: #ef5350;
+        --up-soft: rgba(38, 166, 154, .14);
+        --down-soft: rgba(239, 83, 80, .14);
+        --warn: #f0b90b;
+        --chart-bg: #12151f;
+        --shadow: 0 12px 32px rgba(0,0,0,.45);
+      }
+      [data-theme="light"] {
+        --bg: #eef1f6;
+        --panel: #ffffff;
+        --panel-2: #f4f6fa;
+        --panel-3: #e8ecf3;
+        --border: #d7dde9;
+        --border-soft: #e2e7f0;
+        --text: #161a26;
+        --muted: #5d6779;
+        --accent: #2962ff;
+        --accent-soft: rgba(41, 98, 255, .12);
+        --up: #089981;
+        --down: #f23645;
+        --up-soft: rgba(8, 153, 129, .12);
+        --down-soft: rgba(242, 54, 69, .1);
+        --warn: #b8860b;
+        --chart-bg: #ffffff;
+        --shadow: 0 12px 32px rgba(30,40,70,.18);
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        height: 100dvh;
+        overflow: hidden;
+      }
+      button, [role="button"], select, input { font: inherit; color: inherit; }
+      button { background: none; border: 0; cursor: pointer; }
+      .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+      /* ---------- Top bar ---------- */
+      .topbar {
+        display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+        background: var(--panel); border-bottom: 1px solid var(--border);
+        padding: 4px 8px; z-index: 40; position: relative;
+      }
+      .tb-group { display: flex; align-items: center; gap: 2px; }
+      .tb-sep { width: 1px; align-self: stretch; background: var(--border); margin: 4px 4px; }
+      .tb-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        min-height: 36px; padding: 0 10px; border-radius: 6px;
+        color: var(--text); font-weight: 500; white-space: nowrap;
+      }
+      .tb-btn:hover { background: var(--panel-3); }
+      .tb-btn.active { background: var(--accent-soft); color: var(--accent); }
+      .tb-btn svg { width: 18px; height: 18px; flex: none; }
+      .tb-btn.icon-only { padding: 0 8px; }
+      .sym-btn { font-weight: 700; font-size: 15px; letter-spacing: .01em; }
+      .sym-btn .sym-name { font-weight: 400; color: var(--muted); font-size: 12px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+      .tf-btn { min-height: 36px; padding: 0 9px; border-radius: 6px; font-weight: 600; font-size: 13px; color: var(--muted); }
+      .tf-btn:hover { color: var(--text); background: var(--panel-3); }
+      .tf-btn.active { color: var(--accent); background: var(--accent-soft); }
+      .topbar .spacer { flex: 1; }
+
+      /* dropdown menus */
+      .menu-wrap { position: relative; }
+      .menu {
+        position: absolute; top: calc(100% + 6px); left: 0; min-width: 220px;
+        background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+        box-shadow: var(--shadow); padding: 6px; display: none; z-index: 80;
+      }
+      .menu.open { display: block; }
+      .menu.right { left: auto; right: 0; }
+      .menu-item {
+        display: flex; align-items: center; gap: 10px; width: 100%;
+        min-height: 38px; padding: 0 10px; border-radius: 6px; text-align: left; font-weight: 500;
+      }
+      .menu-item:hover { background: var(--panel-3); }
+      .menu-item .check { margin-left: auto; color: var(--accent); font-weight: 700; }
+      .menu h4 { margin: 6px 10px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+      .toggle-row {
+        display: flex; align-items: center; gap: 10px; width: 100%;
+        min-height: 40px; padding: 0 10px; border-radius: 6px; text-align: left;
+      }
+      .toggle-row:hover { background: var(--panel-3); }
+      .toggle-row .sw {
+        margin-left: auto; width: 36px; height: 20px; border-radius: 999px; flex: none;
+        background: var(--panel-3); border: 1px solid var(--border); position: relative; transition: background .15s;
+      }
+      .toggle-row .sw::after {
+        content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+        border-radius: 50%; background: var(--muted); transition: all .15s;
+      }
+      .toggle-row[aria-pressed="true"] .sw { background: var(--accent); border-color: var(--accent); }
+      .toggle-row[aria-pressed="true"] .sw::after { left: 18px; background: #fff; }
+      .toggle-row .period { color: var(--muted); font-size: 12px; }
+      .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+      /* ---------- Workspace ---------- */
+      .workspace { display: grid; grid-template-columns: 50px 1fr 302px; min-height: 0; }
+
+      /* left tool rail */
+      .rail {
+        background: var(--panel); border-right: 1px solid var(--border);
+        display: flex; flex-direction: column; align-items: center; padding: 6px 0; gap: 2px; z-index: 30;
+      }
+      .rail-btn {
+        width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; color: var(--muted);
+      }
+      .rail-btn:hover { background: var(--panel-3); color: var(--text); }
+      .rail-btn.active { background: var(--accent-soft); color: var(--accent); }
+      .rail-btn svg { width: 20px; height: 20px; }
+      .rail-sep { width: 26px; height: 1px; background: var(--border); margin: 5px 0; }
+      .rail .spacer { flex: 1; }
+
+      /* chart column */
+      .chart-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--chart-bg); }
+      .chart-wrap { position: relative; flex: 1; min-height: 180px; }
+      .chart-wrap canvas, .pane canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+      .legend {
+        position: absolute; top: 8px; left: 10px; z-index: 5; pointer-events: none;
+        font-size: 12.5px; line-height: 1.5; max-width: calc(100% - 90px);
+      }
+      .legend .l-title { font-weight: 600; color: var(--text); }
+      .legend .l-title span { color: var(--muted); font-weight: 400; }
+      .legend .l-ohlc { font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+      .legend .l-ind { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; }
+      .up { color: var(--up); } .down { color: var(--down); }
+
+      .chart-tools {
+        position: absolute; right: 74px; bottom: 30px; z-index: 6; display: flex; gap: 4px;
+      }
+      .chart-tools button {
+        width: 34px; height: 34px; border-radius: 7px; background: var(--panel); border: 1px solid var(--border);
+        color: var(--muted); display: grid; place-items: center; font-size: 16px; font-weight: 600;
+      }
+      .chart-tools button:hover { color: var(--text); background: var(--panel-3); }
+
+      .pane { position: relative; height: 108px; border-top: 1px solid var(--border-soft); flex: none; display: none; }
+      .pane.on { display: block; }
+      .pane-head {
+        position: absolute; top: 4px; left: 10px; z-index: 5; display: flex; align-items: center; gap: 8px;
+        font-size: 11.5px; pointer-events: none;
+      }
+      .pane-head .p-name { font-weight: 600; }
+      .pane-head .p-val { font-family: "IBM Plex Mono", monospace; color: var(--muted); }
+      .pane-close {
+        position: absolute; top: 2px; right: 70px; z-index: 6; width: 30px; height: 30px;
+        color: var(--muted); border-radius: 6px; font-size: 15px; pointer-events: auto;
+      }
+      .pane-close:hover { background: var(--panel-3); color: var(--text); }
+
+      /* replay bar */
+      .replay-bar {
+        position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); z-index: 7;
+        display: none; align-items: center; gap: 4px; background: var(--panel);
+        border: 1px solid var(--border); border-radius: 10px; padding: 4px; box-shadow: var(--shadow);
+      }
+      .replay-bar.on { display: flex; }
+      .replay-bar button { width: 38px; height: 38px; border-radius: 7px; display: grid; place-items: center; color: var(--text); }
+      .replay-bar button:hover { background: var(--panel-3); }
+      .replay-bar .rb-label { font-size: 12px; color: var(--warn); font-weight: 600; padding: 0 6px; white-space: nowrap; }
+
+      /* text drawing input */
+      .text-input {
+        position: absolute; z-index: 9; display: none; min-width: 150px;
+        background: var(--panel); border: 1px solid var(--accent); border-radius: 6px;
+        padding: 6px 8px; font-size: 13px; outline: none; color: var(--text);
+      }
+
+      /* ---------- Right sidebar ---------- */
+      .side {
+        background: var(--panel); border-left: 1px solid var(--border);
+        display: flex; flex-direction: column; min-height: 0; z-index: 35;
+      }
+      .side-tabs { display: flex; border-bottom: 1px solid var(--border); }
+      .side-tab {
+        flex: 1; min-height: 40px; font-weight: 600; font-size: 13px; color: var(--muted);
+        border-bottom: 2px solid transparent;
+      }
+      .side-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+      .side-body { overflow-y: auto; flex: 1; min-height: 0; }
+      .wl-head, .wl-row {
+        display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center;
+        padding: 8px 12px; width: 100%; text-align: left;
+      }
+      .wl-head { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding-top: 10px; padding-bottom: 4px; }
+      .wl-row { border-bottom: 1px solid var(--border-soft); min-height: 52px; border-radius: 0; }
+      .wl-row:hover { background: var(--panel-2); }
+      .wl-row.active { background: var(--accent-soft); }
+      .wl-sym { font-weight: 700; font-size: 13.5px; }
+      .wl-name { color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+      .wl-price { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13.5px; text-align: right; }
+      .wl-chg { font-family: "IBM Plex Mono", monospace; font-size: 12px; text-align: right; }
+      .flash-up { animation: flUp .5s; } .flash-down { animation: flDown .5s; }
+      @keyframes flUp { 0% { color: var(--up); } 100% { } }
+      @keyframes flDown { 0% { color: var(--down); } 100% { } }
+
+      .alert-form { padding: 12px; border-bottom: 1px solid var(--border); display: grid; gap: 8px; }
+      .alert-form label { font-size: 12px; color: var(--muted); font-weight: 600; }
+      .alert-form .row { display: flex; gap: 6px; }
+      .alert-form input {
+        flex: 1; min-width: 0; background: var(--panel-2); border: 1px solid var(--border);
+        border-radius: 7px; padding: 0 10px; min-height: 38px; font-family: "IBM Plex Mono", monospace;
+      }
+      .btn-primary {
+        background: var(--accent); color: #fff; font-weight: 600; border-radius: 7px;
+        padding: 0 16px; min-height: 38px;
+      }
+      .btn-primary:hover { filter: brightness(1.12); }
+      .alert-item {
+        display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border-soft);
+      }
+      .alert-item .a-price { font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+      .alert-item .a-state { font-size: 11.5px; color: var(--muted); }
+      .alert-item.triggered .a-state { color: var(--warn); font-weight: 700; }
+      .alert-item .a-del { margin-left: auto; width: 34px; height: 34px; color: var(--muted); border-radius: 6px; font-size: 16px; }
+      .alert-item .a-del:hover { background: var(--panel-3); color: var(--down); }
+      .empty-note { padding: 18px 14px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+      /* status bar */
+      .statusbar {
+        display: flex; align-items: center; gap: 14px; padding: 0 12px; min-height: 28px;
+        background: var(--panel); border-top: 1px solid var(--border);
+        font-size: 12px; color: var(--muted); overflow: hidden; white-space: nowrap;
+      }
+      .statusbar .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--up); display: inline-block; margin-right: 5px; }
+      .statusbar .right { margin-left: auto; display: flex; gap: 14px; }
+
+      /* symbol search modal */
+      .modal-back {
+        position: fixed; inset: 0; background: rgba(5,8,14,.55); z-index: 100;
+        display: none; align-items: flex-start; justify-content: center; padding: 8vh 14px 14px;
+      }
+      .modal-back.open { display: flex; }
+      .modal {
+        width: 520px; max-width: 100%; max-height: 74vh; display: flex; flex-direction: column;
+        background: var(--panel); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
+      }
+      .modal input {
+        width: 100%; border: 0; border-bottom: 1px solid var(--border); background: var(--panel-2);
+        padding: 0 16px; min-height: 52px; font-size: 16px; outline: none; color: var(--text);
+      }
+      .modal-list { overflow-y: auto; }
+      .modal-row {
+        display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; width: 100%; text-align: left;
+        padding: 10px 16px; min-height: 54px; align-items: center;
+      }
+      .modal-row:hover { background: var(--panel-2); }
+      .modal-row .m-sym { font-weight: 700; }
+      .modal-row .m-name { color: var(--muted); font-size: 12px; }
+      .modal-row .m-price { font-family: "IBM Plex Mono", monospace; font-weight: 600; text-align: right; }
+      .modal-row .m-chg { font-family: "IBM Plex Mono", monospace; font-size: 12px; text-align: right; }
+
+      /* toasts */
+      .toasts { position: fixed; right: 14px; bottom: 42px; z-index: 120; display: grid; gap: 8px; max-width: min(340px, calc(100vw - 28px)); }
+      .toast {
+        background: var(--panel); border: 1px solid var(--warn); border-left-width: 4px; border-radius: 10px;
+        padding: 10px 14px; box-shadow: var(--shadow); font-size: 13px; line-height: 1.45;
+      }
+      .toast b { display: block; margin-bottom: 2px; }
+
+      @media (max-width: 900px) {
+        .workspace { grid-template-columns: 46px 1fr; }
+        .side { display: none; }
+        .side.open {
+          display: flex;
+          position: fixed; top: 0; right: 0; bottom: 0; width: min(320px, 88vw);
+          box-shadow: var(--shadow);
+        }
+        .sym-btn .sym-name { display: none; }
+        .topbar { gap: 2px; padding: 3px 6px; }
+        .tb-btn { padding: 0 7px; min-height: 34px; }
+        .tf-btn { padding: 0 7px; min-height: 34px; }
+        .chart-tools { right: 70px; bottom: 28px; }
+        .legend { font-size: 11.5px; }
+        #clockUTC { display: none; }
+        #barInfo { overflow: hidden; text-overflow: ellipsis; }
+        .replay-bar { gap: 2px; padding: 3px; max-width: calc(100% - 6px); }
+        .replay-bar .rb-label { display: none; }
+        .replay-bar button { width: 34px; height: 34px; }
+        .replay-bar select { font-size: 12px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * { animation: none !important; transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- ======================= TOP BAR ======================= -->
+    <header class="topbar">
+      <div class="tb-group">
+        <button class="tb-btn sym-btn" id="symBtn" title="Change symbol">
+          <span id="symLabel">XAUUSD</span>
+          <span class="sym-name" id="symNameLabel">Gold · Spot</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group" id="tfGroup" role="group" aria-label="Timeframe"></div>
+      <div class="tb-sep"></div>
+      <div class="tb-group menu-wrap">
+        <button class="tb-btn" id="typeBtn" title="Chart type">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4v3M7 17v3M5 7h4v10H5zM17 2v4M17 14v8M15 6h4v8h-4z"/></svg>
+          <span id="typeLabel">Candles</span>
+        </button>
+        <div class="menu" id="typeMenu"></div>
+      </div>
+      <div class="tb-group menu-wrap">
+        <button class="tb-btn" id="indBtn" title="Indicators">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-6 4 3 6-8 3 4"/><path d="M3 21h18" stroke-dasharray="2 3"/></svg>
+          Indicators
+        </button>
+        <div class="menu" id="indMenu" style="min-width:250px">
+          <h4>Overlays</h4>
+          <div id="indOverlays"></div>
+          <h4>Oscillators &amp; panels</h4>
+          <div id="indPanels"></div>
+        </div>
+      </div>
+      <div class="tb-group">
+        <button class="tb-btn" id="replayBtn" title="Bar Replay — practice on historical candles">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 5L5 12l6 7"/><path d="M20 5l-6 7 6 7"/></svg>
+          Replay
+        </button>
+      </div>
+      <div class="spacer"></div>
+      <div class="tb-group">
+        <button class="tb-btn icon-only" id="wlToggle" title="Watchlist" aria-label="Toggle watchlist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </button>
+        <button class="tb-btn icon-only" id="shotBtn" title="Download chart snapshot (PNG)" aria-label="Download chart snapshot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg>
+        </button>
+        <button class="tb-btn icon-only" id="csvBtn" title="Export visible data as CSV" aria-label="Export data as CSV">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v11m0 0l-4-4m4 4l4-4"/><path d="M4 17v3h16v-3"/></svg>
+        </button>
+        <button class="tb-btn icon-only" id="themeBtn" title="Toggle light / dark theme" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================= WORKSPACE ======================= -->
+    <div class="workspace">
+      <!-- left drawing-tool rail -->
+      <nav class="rail" id="rail" aria-label="Drawing tools">
+        <button class="rail-btn active" data-tool="cursor" title="Cursor">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3l14 7-6.5 1.5L10 18z"/></svg>
+        </button>
+        <button class="rail-btn" data-tool="trend" title="Trend line">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20L20 5"/><circle cx="4" cy="20" r="2" fill="currentColor" stroke="none"/><circle cx="20" cy="5" r="2" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button class="rail-btn" data-tool="hline" title="Horizontal line">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h18" stroke-dasharray="5 3"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button class="rail-btn" data-tool="rect" title="Rectangle / zone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="7" width="16" height="10"/></svg>
+        </button>
+        <button class="rail-btn" data-tool="fib" title="Fibonacci retracement">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16M4 9h16M4 13h16M4 17h16M4 20h16"/></svg>
+        </button>
+        <button class="rail-btn" data-tool="text" title="Text note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5h14M12 5v14"/></svg>
+        </button>
+        <div class="rail-sep"></div>
+        <button class="rail-btn" id="magnetBtn" title="Magnet — snap drawings to OHLC">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M6 4h4v5H6zM14 4h4v5h-4z" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button class="rail-btn" id="clearDrawBtn" title="Remove all drawings on this symbol">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3m-8 0l1 13h8l1-13"/></svg>
+        </button>
+        <div class="spacer"></div>
+        <button class="rail-btn" id="undoDrawBtn" title="Undo last drawing">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 5L3 10l5 5"/><path d="M3 10h11a6 6 0 0 1 0 12h-3"/></svg>
+        </button>
+      </nav>
+
+      <!-- chart column -->
+      <section class="chart-col">
+        <div class="chart-wrap" id="mainWrap">
+          <canvas id="mainCanvas"></canvas>
+          <div class="legend" id="legend"></div>
+          <div class="chart-tools">
+            <button id="zoomOutBtn" title="Zoom out" aria-label="Zoom out">−</button>
+            <button id="zoomInBtn" title="Zoom in" aria-label="Zoom in">+</button>
+            <button id="resetViewBtn" title="Reset view (or double-click chart)" aria-label="Reset view">⟲</button>
+          </div>
+          <div class="replay-bar" id="replayBar">
+            <span class="rb-label">REPLAY</span>
+            <button id="rpStart" title="Jump to replay start" aria-label="Jump to replay start">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+            </button>
+            <button id="rpBack" title="Step back one bar" aria-label="Step back one bar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18 5v14L7 12z"/></svg>
+            </button>
+            <button id="rpPlay" title="Play / pause replay" aria-label="Play or pause replay">
+              <svg id="rpPlayIcon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>
+            </button>
+            <button id="rpFwd" title="Step forward one bar" aria-label="Step forward one bar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 5v14l11-7z"/></svg>
+            </button>
+            <button id="rpEnd" title="Jump to latest bar" aria-label="Jump to latest bar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+            </button>
+            <select id="rpSpeed" title="Replay speed" aria-label="Replay speed"
+              style="background:var(--panel-2);border:1px solid var(--border);border-radius:6px;min-height:36px;padding:0 6px;font-family:var(--mono, monospace)">
+              <option value="1400">0.5×</option>
+              <option value="800" selected>1×</option>
+              <option value="400">2×</option>
+              <option value="180">4×</option>
+              <option value="70">8×</option>
+            </select>
+            <button id="rpExit" title="Exit replay" aria-label="Exit replay" style="color:var(--down);font-weight:700;font-size:15px">✕</button>
+          </div>
+          <input class="text-input" id="textInput" placeholder="Note… then Enter" />
+        </div>
+        <div class="pane" id="pane-rsi">
+          <canvas id="canvas-rsi"></canvas>
+          <div class="pane-head"><span class="p-name">RSI 14</span><span class="p-val" id="val-rsi"></span></div>
+          <button class="pane-close" data-close="rsi" title="Remove RSI panel">✕</button>
+        </div>
+        <div class="pane" id="pane-macd">
+          <canvas id="canvas-macd"></canvas>
+          <div class="pane-head"><span class="p-name">MACD 12 · 26 · 9</span><span class="p-val" id="val-macd"></span></div>
+          <button class="pane-close" data-close="macd" title="Remove MACD panel">✕</button>
+        </div>
+      </section>
+
+      <!-- right sidebar -->
+      <aside class="side" id="sidePanel">
+        <div class="side-tabs">
+          <button class="side-tab active" data-tab="watchlist">Watchlist</button>
+          <button class="side-tab" data-tab="alerts">Alerts</button>
+        </div>
+        <div class="side-body" id="tab-watchlist">
+          <div class="wl-head"><span>Symbol</span><span style="text-align:right">Last · Chg%</span></div>
+          <div id="wlList"></div>
+          <p class="empty-note">Simulated practice feed — prices are generated locally in your browser for charting practice, not live market quotes.</p>
+        </div>
+        <div class="side-body" id="tab-alerts" style="display:none">
+          <form class="alert-form" id="alertForm">
+            <label for="alertPrice">Price alert · <span id="alertSymLabel">XAUUSD</span></label>
+            <div class="row">
+              <input id="alertPrice" type="number" step="any" inputmode="decimal" placeholder="Alert price" required />
+              <button class="btn-primary" type="submit">Add</button>
+            </div>
+          </form>
+          <div id="alertList"></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ======================= STATUS BAR ======================= -->
+    <footer class="statusbar">
+      <span><span class="dot"></span><span id="feedStatus">Live · simulated feed</span></span>
+      <span id="barInfo" class="mono"></span>
+      <span class="right">
+        <span id="clockLocal" class="mono"></span>
+        <span id="clockUTC" class="mono"></span>
+      </span>
+    </footer>
+
+    <!-- symbol search modal -->
+    <div class="modal-back" id="symModal">
+      <div class="modal">
+        <input id="symSearch" type="text" placeholder="Search symbols — e.g. gold, btc, eur…" autocomplete="off" />
+        <div class="modal-list" id="symList"></div>
+      </div>
+    </div>
+
+    <div class="toasts" id="toasts"></div>
+
+    <script>
+    "use strict";
+    /* ============================================================
+       Charting Terminal — a self-contained charting library + app
+       Canvas renderer · indicators · drawings · bar replay · alerts
+       Data: deterministic simulated feed (seeded per symbol), so the
+       same symbol always shows the same history in this browser.
+       ============================================================ */
+
+    /* ---------------- Symbol & timeframe config ---------------- */
+    var SYMBOLS = [
+      { sym: "XAUUSD", name: "Gold · Spot",        base: 2385.40, vol: 0.0016, dec: 2, volBase: 14200 },
+      { sym: "BTCUSD", name: "Bitcoin · USD",      base: 97420,   vol: 0.0032, dec: 0, volBase: 860 },
+      { sym: "ETHUSD", name: "Ethereum · USD",     base: 3412.5,  vol: 0.0038, dec: 1, volBase: 12400 },
+      { sym: "EURUSD", name: "Euro · US Dollar",   base: 1.0842,  vol: 0.0007, dec: 4, volBase: 98200 },
+      { sym: "GBPUSD", name: "Pound · US Dollar",  base: 1.2671,  vol: 0.0008, dec: 4, volBase: 76400 },
+      { sym: "USDJPY", name: "US Dollar · Yen",    base: 154.32,  vol: 0.0007, dec: 2, volBase: 88100 },
+      { sym: "USOIL",  name: "Crude Oil · WTI",    base: 71.45,   vol: 0.0024, dec: 2, volBase: 45200 },
+      { sym: "NAS100", name: "Nasdaq 100 Index",   base: 21340,   vol: 0.0018, dec: 0, volBase: 31500 },
+      { sym: "AAPL",   name: "Apple Inc.",         base: 232.60,  vol: 0.0019, dec: 2, volBase: 512000 },
+      { sym: "TSLA",   name: "Tesla Inc.",         base: 342.80,  vol: 0.0035, dec: 2, volBase: 884000 }
+    ];
+    var TFS = [
+      { k: "1m",  sec: 60 }, { k: "5m", sec: 300 }, { k: "15m", sec: 900 },
+      { k: "1H",  sec: 3600 }, { k: "4H", sec: 14400 },
+      { k: "1D",  sec: 86400 }, { k: "1W", sec: 604800 }
+    ];
+    var CHART_TYPES = [
+      { k: "candles", label: "Candles" }, { k: "bars", label: "Bars" },
+      { k: "line", label: "Line" }, { k: "area", label: "Area" },
+      { k: "ha", label: "Heikin Ashi" }
+    ];
+    var BARS_TOTAL = 620;
+
+    function symObj(sym) { for (var i = 0; i < SYMBOLS.length; i++) if (SYMBOLS[i].sym === sym) return SYMBOLS[i]; return SYMBOLS[0]; }
+    function tfObj(k) { for (var i = 0; i < TFS.length; i++) if (TFS[i].k === k) return TFS[i]; return TFS[3]; }
+
+    /* ---------------- Seeded RNG + series generation ---------------- */
+    function hashStr(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        var t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    var dataCache = {};   // key sym|tf -> bars[]
+    var wlState = {};     // sym -> {price, dayOpen}
+
+    function genSeries(so, tf) {
+      var key = so.sym + "|" + tf.k;
+      if (dataCache[key]) return dataCache[key];
+      var rnd = mulberry32(hashStr(key + "::seed"));
+      var n = BARS_TOTAL, sec = tf.sec;
+      var end = Math.floor(Date.now() / 1000 / sec) * sec;
+      var start = end - (n - 1) * sec;
+      var wl = wlState[so.sym];
+      var price = wl ? wl.price * (0.9 + rnd() * 0.06) : so.base * (0.9 + rnd() * 0.08);
+      var bars = [];
+      for (var i = 0; i < n; i++) {
+        var wave = Math.sin(i / 41) * so.vol * 0.55 + Math.sin(i / 13.7) * so.vol * 0.3;
+        var shock = (rnd() + rnd() + rnd() - 1.5) / 1.5; // bell-ish
+        var chg = wave + shock * so.vol * 1.9;
+        var o = price;
+        var c = o * (1 + chg);
+        var h = Math.max(o, c) * (1 + rnd() * so.vol * 0.9);
+        var l = Math.min(o, c) * (1 - rnd() * so.vol * 0.9);
+        var v = so.volBase * (0.45 + rnd() * 1.1) * (1 + Math.abs(chg) / so.vol * 0.55);
+        bars.push({ t: start + i * sec, o: o, h: h, l: l, c: c, v: Math.round(v) });
+        price = c;
+      }
+      // anchor the last close to the watchlist price so chart & list agree
+      if (wl) {
+        var f = wl.price / bars[n - 1].c;
+        for (var j = 0; j < n; j++) { bars[j].o *= f; bars[j].h *= f; bars[j].l *= f; bars[j].c *= f; }
+      }
+      dataCache[key] = bars;
+      return bars;
+    }
+
+    // initialise watchlist state (deterministic per symbol)
+    SYMBOLS.forEach(function (so) {
+      var rnd = mulberry32(hashStr(so.sym + "::wl"));
+      var drift = (rnd() - 0.44) * 0.03;
+      wlState[so.sym] = { price: so.base * (1 + drift), dayOpen: so.base * (1 + drift * 0.25) };
+    });
+
+    /* ---------------- Indicators (pure math) ---------------- */
+    function smaArr(bars, p) {
+      var out = new Array(bars.length).fill(null), s = 0;
+      for (var i = 0; i < bars.length; i++) {
+        s += bars[i].c; if (i >= p) s -= bars[i - p].c;
+        if (i >= p - 1) out[i] = s / p;
+      }
+      return out;
+    }
+    function emaArr(vals, p) {
+      var out = new Array(vals.length).fill(null), k = 2 / (p + 1), e = null;
+      for (var i = 0; i < vals.length; i++) {
+        var v = (typeof vals[i] === "number") ? vals[i] : (vals[i] ? vals[i].c : null);
+        if (v === null) continue;
+        e = (e === null) ? v : v * k + e * (1 - k);
+        if (i >= p - 1) out[i] = e;
+      }
+      return out;
+    }
+    function bollinger(bars, p, mult) {
+      var mid = smaArr(bars, p), up = new Array(bars.length).fill(null), dn = new Array(bars.length).fill(null);
+      for (var i = p - 1; i < bars.length; i++) {
+        var s = 0; for (var j = i - p + 1; j <= i; j++) s += Math.pow(bars[j].c - mid[i], 2);
+        var sd = Math.sqrt(s / p);
+        up[i] = mid[i] + mult * sd; dn[i] = mid[i] - mult * sd;
+      }
+      return { mid: mid, up: up, dn: dn };
+    }
+    function rsiArr(bars, p) {
+      var out = new Array(bars.length).fill(null);
+      if (bars.length <= p) return out;
+      var g = 0, l = 0, i, d;
+      for (i = 1; i <= p; i++) { d = bars[i].c - bars[i - 1].c; if (d > 0) g += d; else l -= d; }
+      var ag = g / p, al = l / p;
+      out[p] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+      for (i = p + 1; i < bars.length; i++) {
+        d = bars[i].c - bars[i - 1].c;
+        ag = (ag * (p - 1) + Math.max(d, 0)) / p;
+        al = (al * (p - 1) + Math.max(-d, 0)) / p;
+        out[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+      }
+      return out;
+    }
+    function macdArr(bars) {
+      var e12 = emaArr(bars, 12), e26 = emaArr(bars, 26);
+      var line = bars.map(function (_, i) { return (e12[i] !== null && e26[i] !== null) ? e12[i] - e26[i] : null; });
+      var sigIn = line.map(function (v) { return v === null ? 0 : v; });
+      var sigRaw = emaArr(sigIn, 9);
+      var signal = line.map(function (v, i) { return v === null ? null : sigRaw[i]; });
+      var hist = line.map(function (v, i) { return (v === null || signal[i] === null) ? null : v - signal[i]; });
+      return { line: line, signal: signal, hist: hist };
+    }
+    function heikinAshi(bars) {
+      var out = [];
+      for (var i = 0; i < bars.length; i++) {
+        var b = bars[i];
+        var c = (b.o + b.h + b.l + b.c) / 4;
+        var o = i === 0 ? (b.o + b.c) / 2 : (out[i - 1].o + out[i - 1].c) / 2;
+        out.push({ t: b.t, o: o, c: c, h: Math.max(b.h, o, c), l: Math.min(b.l, o, c), v: b.v });
+      }
+      return out;
+    }
+
+    /* ---------------- App state ---------------- */
+    var S = {
+      sym: "XAUUSD", tf: "1H", type: "candles",
+      ind: { sma: true, ema: false, bb: false, volume: true, rsi: false, macd: false },
+      tool: "cursor", magnet: false,
+      offset: 0,            // bars hidden from the right (pan)
+      spacing: 9,           // px per bar
+      pFactor: 1, pCenter: null, // manual price zoom
+      cross: null,          // {x,y} css px in main wrap
+      hoverBar: -1,
+      drawings: {},         // sym -> [drawing]
+      selected: -1,
+      alerts: [],           // {sym, price, dir, triggered}
+      replay: { on: false, idx: 0, playing: false, timer: null, speed: 800 },
+      tab: "watchlist"
+    };
+    var bars = [], dispBars = [];  // raw + display (HA-transformed when needed)
+    var indCache = {};
+    var V = null;             // current view geometry, rebuilt each draw
+
+    function curSO() { return symObj(S.sym); }
+    function curTF() { return tfObj(S.tf); }
+    function loadSeries() {
+      bars = genSeries(curSO(), curTF());
+      dispBars = (S.type === "ha") ? heikinAshi(bars) : bars;
+      indCache = {};
+      if (S.replay.on) S.replay.idx = Math.min(S.replay.idx, bars.length - 1);
+    }
+    function getInd(name) {
+      if (indCache[name]) return indCache[name];
+      var v = null;
+      if (name === "sma") v = smaArr(bars, 20);
+      else if (name === "ema") v = emaArr(bars, 50);
+      else if (name === "bb") v = bollinger(bars, 20, 2);
+      else if (name === "rsi") v = rsiArr(bars, 14);
+      else if (name === "macd") v = macdArr(bars);
+      indCache[name] = v;
+      return v;
+    }
+    function endIndex() { return S.replay.on ? S.replay.idx : bars.length - 1; }
+
+    /* ---------------- Theme / canvas colours ---------------- */
+    function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+    var C = {};
+    function refreshColors() {
+      C = {
+        bg: cssVar("--chart-bg"), grid: cssVar("--border-soft"), text: cssVar("--text"),
+        muted: cssVar("--muted"), up: cssVar("--up"), down: cssVar("--down"),
+        accent: cssVar("--accent"), warn: cssVar("--warn"), panel: cssVar("--panel"),
+        border: cssVar("--border")
+      };
+    }
+
+    /* ---------------- Formatting ---------------- */
+    function fmt(p, dec) {
+      if (p === null || p === undefined || isNaN(p)) return "—";
+      return p.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    }
+    function fmtSigned(p, dec) { return (p >= 0 ? "+" : "−") + fmt(Math.abs(p), dec); }
+    function fmtTime(t, tfk) {
+      var d = new Date(t * 1000);
+      var hh = String(d.getHours()).padStart(2, "0"), mm = String(d.getMinutes()).padStart(2, "0");
+      if (tfk === "1D" || tfk === "1W") return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+      return hh + ":" + mm;
+    }
+    function fmtTimeFull(t, tfk) {
+      var d = new Date(t * 1000);
+      var date = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+      if (tfk === "1D" || tfk === "1W") return date;
+      return date + "  " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    }
+    function niceStep(range, target) {
+      var raw = range / target, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+      var norm = raw / mag;
+      var step = norm >= 5 ? 10 : norm >= 2 ? 5 : norm >= 1 ? 2 : 1;
+      return step * mag * 0.5;
+    }
+
+    /* ============================================================
+       RENDERING
+       ============================================================ */
+    var mainWrap = document.getElementById("mainWrap");
+    var mainCv = document.getElementById("mainCanvas");
+    var AXIS_W = 66, TIME_H = 24;
+    var needDraw = true;
+    function requestDraw() { needDraw = true; }
+
+    function fitCanvas(cv) {
+      var r = cv.parentElement.getBoundingClientRect();
+      var dpr = window.devicePixelRatio || 1;
+      var w = Math.max(50, Math.round(r.width)), h = Math.max(40, Math.round(r.height));
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+        cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+      }
+      var ctx = cv.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx: ctx, w: w, h: h };
+    }
+
+    function computeView(w, h) {
+      var plotW = w - AXIS_W, plotH = h - TIME_H;
+      var endI = endIndex() - S.offset;
+      var visCount = Math.ceil(plotW / S.spacing) + 2;
+      var startI = endI - visCount + 1;
+      var i0 = Math.max(0, Math.floor(startI)), i1 = Math.min(dispBars.length - 1, endI);
+      var min = Infinity, max = -Infinity, vmax = 0;
+      for (var i = i0; i <= i1; i++) {
+        var b = dispBars[i]; if (!b) continue;
+        if (b.l < min) min = b.l; if (b.h > max) max = b.h;
+        if (b.v > vmax) vmax = b.v;
+      }
+      if (S.ind.bb) { var bb = getInd("bb"); for (var j = i0; j <= i1; j++) { if (bb.up[j] !== null) { if (bb.up[j] > max) max = bb.up[j]; if (bb.dn[j] < min) min = bb.dn[j]; } } }
+      if (!isFinite(min)) { min = 0; max = 1; }
+      var pad = (max - min) * 0.09 || 1;
+      min -= pad; max += pad;
+      if (S.pFactor !== 1 && S.pCenter !== null) {
+        var mid = S.pCenter, half = (max - min) / 2 * S.pFactor;
+        min = mid - half; max = mid + half;
+      }
+      V = {
+        w: w, h: h, plotW: plotW, plotH: plotH, startI: startI, endI: endI,
+        i0: i0, i1: i1, min: min, max: max, vmax: vmax || 1
+      };
+      return V;
+    }
+    function xFor(i) { return (i - V.startI + 0.5) * S.spacing; }
+    function yFor(p) { return (V.max - p) / (V.max - V.min) * V.plotH; }
+    function priceAt(y) { return V.max - (y / V.plotH) * (V.max - V.min); }
+    function idxAt(x) { return Math.round(x / S.spacing + V.startI - 0.5); }
+
+    function drawGridAndAxes(ctx) {
+      var dec = curSO().dec;
+      ctx.fillStyle = C.bg; ctx.fillRect(0, 0, V.w, V.h);
+      // horizontal grid + price labels
+      var step = niceStep(V.max - V.min, 6);
+      var first = Math.ceil(V.min / step) * step;
+      ctx.font = "11px 'IBM Plex Mono', monospace";
+      ctx.textBaseline = "middle";
+      for (var p = first; p <= V.max; p += step) {
+        var y = Math.round(yFor(p)) + 0.5;
+        ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(V.plotW, y); ctx.stroke();
+        ctx.fillStyle = C.muted; ctx.textAlign = "left";
+        ctx.fillText(fmt(p, dec), V.plotW + 7, y);
+      }
+      // vertical grid + time labels
+      var pxPerLabel = 92;
+      var barStep = Math.max(1, Math.round(pxPerLabel / S.spacing));
+      ctx.textAlign = "center";
+      for (var i = V.i0; i <= V.i1; i++) {
+        if (i % barStep !== 0) continue;
+        var x = Math.round(xFor(i)) + 0.5;
+        ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, V.plotH); ctx.stroke();
+        ctx.fillStyle = C.muted;
+        ctx.fillText(fmtTime(dispBars[i].t, S.tf), x, V.plotH + TIME_H / 2);
+      }
+      ctx.strokeStyle = C.border;
+      ctx.beginPath(); ctx.moveTo(V.plotW + 0.5, 0); ctx.lineTo(V.plotW + 0.5, V.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, V.plotH + 0.5); ctx.lineTo(V.w, V.plotH + 0.5); ctx.stroke();
+    }
+
+    function drawVolume(ctx) {
+      if (!S.ind.volume) return;
+      var vh = V.plotH * 0.16, base = V.plotH;
+      var bw = Math.max(1, S.spacing * 0.72);
+      for (var i = V.i0; i <= V.i1; i++) {
+        var b = dispBars[i];
+        var h = (b.v / V.vmax) * vh;
+        ctx.fillStyle = b.c >= b.o ? hexA(C.up, 0.42) : hexA(C.down, 0.42);
+        ctx.fillRect(xFor(i) - bw / 2, base - h, bw, h);
+      }
+    }
+    function hexA(hex, a) {
+      if (hex[0] !== "#" || hex.length < 7) return hex;
+      var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+      return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+    }
+
+    function drawSeries(ctx) {
+      var bw = Math.max(1, S.spacing * 0.7);
+      var i, b, x;
+      if (S.type === "line" || S.type === "area") {
+        ctx.beginPath();
+        var started = false, lastX = 0, lastY = 0;
+        for (i = V.i0; i <= V.i1; i++) {
+          x = xFor(i); var y = yFor(dispBars[i].c);
+          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+          lastX = x; lastY = y;
+        }
+        var last = dispBars[V.i1], prev = dispBars[Math.max(0, V.i1 - 1)];
+        var col = last.c >= prev.c ? C.up : C.down;
+        if (S.type === "area") {
+          ctx.save();
+          ctx.lineTo(lastX, V.plotH); ctx.lineTo(xFor(V.i0), V.plotH); ctx.closePath();
+          ctx.fillStyle = hexA(col, 0.14); ctx.fill(); ctx.restore();
+          ctx.beginPath(); started = false;
+          for (i = V.i0; i <= V.i1; i++) { x = xFor(i); var y2 = yFor(dispBars[i].c); if (!started) { ctx.moveTo(x, y2); started = true; } else ctx.lineTo(x, y2); }
+        }
+        ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.stroke(); ctx.lineWidth = 1;
+        return;
+      }
+      for (i = V.i0; i <= V.i1; i++) {
+        b = dispBars[i]; x = xFor(i);
+        var up = b.c >= b.o;
+        ctx.strokeStyle = up ? C.up : C.down;
+        ctx.fillStyle = up ? C.up : C.down;
+        if (S.type === "bars") {
+          var yo = yFor(b.o), yc = yFor(b.c);
+          ctx.beginPath();
+          ctx.moveTo(x, yFor(b.h)); ctx.lineTo(x, yFor(b.l));
+          ctx.moveTo(x - bw / 2, yo); ctx.lineTo(x, yo);
+          ctx.moveTo(x, yc); ctx.lineTo(x + bw / 2, yc);
+          ctx.stroke();
+        } else { // candles / ha
+          ctx.beginPath(); ctx.moveTo(x, yFor(b.h)); ctx.lineTo(x, yFor(b.l)); ctx.stroke();
+          var t = Math.min(yFor(b.o), yFor(b.c)), hgt = Math.max(1, Math.abs(yFor(b.o) - yFor(b.c)));
+          if (S.type === "ha" || up) ctx.fillRect(x - bw / 2, t, bw, hgt);
+          else { ctx.fillStyle = C.down; ctx.fillRect(x - bw / 2, t, bw, hgt); }
+          if (!up && S.type !== "ha") { /* filled by down colour above */ }
+          if (up === false && S.type === "candles") { /* body already down-filled */ }
+        }
+      }
+    }
+
+    function drawLine(ctx, arr, color, width) {
+      ctx.beginPath(); var started = false;
+      for (var i = V.i0; i <= V.i1; i++) {
+        if (arr[i] === null || arr[i] === undefined) { started = false; continue; }
+        var x = xFor(i), y = yFor(arr[i]);
+        if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = color; ctx.lineWidth = width || 1.4; ctx.stroke(); ctx.lineWidth = 1;
+    }
+    function drawOverlays(ctx) {
+      if (S.ind.sma) drawLine(ctx, getInd("sma"), "#f0b90b");
+      if (S.ind.ema) drawLine(ctx, getInd("ema"), "#e91e63");
+      if (S.ind.bb) {
+        var bb = getInd("bb");
+        // band fill
+        ctx.beginPath(); var started = false, i, x;
+        for (i = V.i0; i <= V.i1; i++) { if (bb.up[i] === null) continue; x = xFor(i); if (!started) { ctx.moveTo(x, yFor(bb.up[i])); started = true; } else ctx.lineTo(x, yFor(bb.up[i])); }
+        for (i = V.i1; i >= V.i0; i--) { if (bb.dn[i] === null) continue; ctx.lineTo(xFor(i), yFor(bb.dn[i])); }
+        ctx.closePath(); ctx.fillStyle = hexA(C.accent, 0.07); ctx.fill();
+        drawLine(ctx, bb.up, hexA(C.accent, 0.75), 1);
+        drawLine(ctx, bb.mid, hexA(C.accent, 0.9), 1);
+        drawLine(ctx, bb.dn, hexA(C.accent, 0.75), 1);
+      }
+    }
+
+    /* ---- drawings ---- */
+    function drawList() { return S.drawings[S.sym] || (S.drawings[S.sym] = []); }
+    function drawDrawings(ctx) {
+      var list = drawList(), dec = curSO().dec;
+      ctx.font = "11px 'IBM Plex Sans', sans-serif";
+      list.forEach(function (d, di) {
+        var sel = di === S.selected;
+        ctx.strokeStyle = sel ? C.warn : C.accent;
+        ctx.fillStyle = sel ? C.warn : C.accent;
+        ctx.lineWidth = sel ? 2 : 1.4;
+        if (d.kind === "hline") {
+          var y = yFor(d.p);
+          ctx.setLineDash([7, 4]); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(V.plotW, y); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = sel ? C.warn : C.accent;
+          var label = fmt(d.p, dec), tw = ctx.measureText(label).width + 10;
+          ctx.fillRect(V.plotW - tw - 4, y - 10, tw, 20);
+          ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillText(label, V.plotW - tw / 2 - 4, y);
+        } else if (d.kind === "trend") {
+          ctx.beginPath(); ctx.moveTo(xFor(d.i1), yFor(d.p1)); ctx.lineTo(xFor(d.i2), yFor(d.p2)); ctx.stroke();
+          handle(ctx, xFor(d.i1), yFor(d.p1)); handle(ctx, xFor(d.i2), yFor(d.p2));
+        } else if (d.kind === "rect") {
+          var x1 = xFor(d.i1), x2 = xFor(d.i2), y1 = yFor(d.p1), y2 = yFor(d.p2);
+          ctx.fillStyle = hexA(C.accent, 0.13); ctx.fillRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+          ctx.strokeRect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+          if (sel) { handle(ctx, x1, y1); handle(ctx, x2, y2); }
+        } else if (d.kind === "fib") {
+          var levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+          var fx1 = Math.min(xFor(d.i1), xFor(d.i2)), fx2 = Math.max(xFor(d.i1), xFor(d.i2));
+          ctx.font = "10.5px 'IBM Plex Mono', monospace";
+          levels.forEach(function (lv) {
+            var p = d.p1 + (d.p2 - d.p1) * lv, y = yFor(p);
+            ctx.strokeStyle = hexA(C.accent, lv === 0 || lv === 1 ? 0.9 : 0.5);
+            ctx.beginPath(); ctx.moveTo(fx1, y); ctx.lineTo(fx2, y); ctx.stroke();
+            ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+            ctx.fillText(lv.toFixed(3).replace(/0+$/, "").replace(/\.$/, ".0") + "  " + fmt(p, dec), fx1 + 3, y - 2);
+          });
+          ctx.font = "11px 'IBM Plex Sans', sans-serif";
+          if (sel) { handle(ctx, xFor(d.i1), yFor(d.p1)); handle(ctx, xFor(d.i2), yFor(d.p2)); }
+        } else if (d.kind === "text") {
+          ctx.font = "600 12.5px 'IBM Plex Sans', sans-serif";
+          var tx = xFor(d.i), ty = yFor(d.p);
+          var wT = ctx.measureText(d.text).width + 12;
+          ctx.fillStyle = hexA(C.accent, 0.9); roundRect(ctx, tx, ty - 22, wT, 20, 5); ctx.fill();
+          ctx.fillStyle = "#fff"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+          ctx.fillText(d.text, tx + 6, ty - 12);
+          ctx.font = "11px 'IBM Plex Sans', sans-serif";
+        }
+        ctx.lineWidth = 1;
+      });
+      // pending preview
+      if (pending && pending.i2 !== undefined) {
+        ctx.strokeStyle = C.warn; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4;
+        var px1 = xFor(pending.i1), py1 = yFor(pending.p1), px2 = xFor(pending.i2), py2 = yFor(pending.p2);
+        if (pending.kind === "trend" || pending.kind === "fib") { ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(px2, py2); ctx.stroke(); }
+        else if (pending.kind === "rect") ctx.strokeRect(Math.min(px1, px2), Math.min(py1, py2), Math.abs(px2 - px1), Math.abs(py2 - py1));
+        ctx.setLineDash([]); ctx.lineWidth = 1;
+      }
+    }
+    function handle(ctx, x, y) {
+      ctx.save(); ctx.fillStyle = "#fff"; ctx.strokeStyle = C.accent; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(x, y, 4.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+
+    function drawLastPrice(ctx) {
+      var i = V.i1, b = bars[i]; if (!b) return;
+      var prev = bars[Math.max(0, i - 1)];
+      var col = b.c >= prev.c ? C.up : C.down;
+      var y = yFor(b.c);
+      if (y < -8 || y > V.plotH + 8) return;
+      ctx.strokeStyle = col; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(V.plotW, y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = col; roundRect(ctx, V.plotW + 1, y - 10, AXIS_W - 2, 20, 4); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = "600 11px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(fmt(b.c, curSO().dec), V.plotW + AXIS_W / 2, y + 0.5);
+      ctx.font = "11px 'IBM Plex Mono', monospace";
+    }
+
+    function drawCrosshair(ctx) {
+      if (!S.cross || S.hoverBar < 0) return;
+      var x = S.cross.x, y = S.cross.y;
+      if (x > V.plotW || y > V.plotH) return;
+      var bx = xFor(S.hoverBar);
+      ctx.strokeStyle = C.muted; ctx.setLineDash([5, 5]); ctx.globalAlpha = 0.75;
+      ctx.beginPath(); ctx.moveTo(bx, 0); ctx.lineTo(bx, V.plotH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(V.plotW, y); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.setLineDash([]);
+      // price tag
+      ctx.fillStyle = C.muted; roundRect(ctx, V.plotW + 1, y - 10, AXIS_W - 2, 20, 4); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = "11px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(fmt(priceAt(y), curSO().dec), V.plotW + AXIS_W / 2, y + 0.5);
+      // time tag
+      var label = fmtTimeFull(dispBars[S.hoverBar].t, S.tf);
+      ctx.font = "11px 'IBM Plex Mono', monospace";
+      var tw = ctx.measureText(label).width + 14;
+      ctx.fillStyle = C.muted; roundRect(ctx, Math.max(2, Math.min(V.plotW - tw - 2, bx - tw / 2)), V.plotH + 1, tw, TIME_H - 2, 4); ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.fillText(label, Math.max(2, Math.min(V.plotW - tw - 2, bx - tw / 2)) + tw / 2, V.plotH + TIME_H / 2 + 0.5);
+      ctx.font = "11px 'IBM Plex Mono', monospace";
+    }
+
+    function drawMain() {
+      var f = fitCanvas(mainCv);
+      computeView(f.w, f.h);
+      var ctx = f.ctx;
+      drawGridAndAxes(ctx);
+      drawVolume(ctx);
+      drawSeries(ctx);
+      drawOverlays(ctx);
+      drawDrawings(ctx);
+      drawLastPrice(ctx);
+      drawCrosshair(ctx);
+      updateLegend();
+    }
+
+    /* ---- oscillator panes ---- */
+    function drawPane(kind) {
+      var cv = document.getElementById("canvas-" + kind);
+      var f = fitCanvas(cv), ctx = f.ctx;
+      var plotW = f.w - AXIS_W, plotH = f.h;
+      ctx.fillStyle = C.bg; ctx.fillRect(0, 0, f.w, f.h);
+      if (!V) return;
+      var i, x;
+      function px(idx) { return (idx - V.startI + 0.5) * S.spacing; }
+      ctx.font = "10.5px 'IBM Plex Mono', monospace"; ctx.textBaseline = "middle";
+      if (kind === "rsi") {
+        var rsi = getInd("rsi");
+        var yOf = function (v) { return plotH - (v / 100) * plotH; };
+        [30, 50, 70].forEach(function (lv) {
+          ctx.strokeStyle = C.grid; ctx.setLineDash(lv === 50 ? [] : [4, 4]);
+          ctx.beginPath(); ctx.moveTo(0, yOf(lv)); ctx.lineTo(plotW, yOf(lv)); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = C.muted; ctx.textAlign = "left"; ctx.fillText(String(lv), plotW + 7, yOf(lv));
+        });
+        ctx.fillStyle = hexA("#7e57c2", 0.1);
+        ctx.fillRect(0, yOf(70), plotW, yOf(30) - yOf(70));
+        ctx.beginPath(); var st = false;
+        for (i = V.i0; i <= V.i1; i++) { if (rsi[i] === null) { st = false; continue; } x = px(i); if (!st) { ctx.moveTo(x, yOf(rsi[i])); st = true; } else ctx.lineTo(x, yOf(rsi[i])); }
+        ctx.strokeStyle = "#7e57c2"; ctx.lineWidth = 1.5; ctx.stroke(); ctx.lineWidth = 1;
+        var hv = (S.hoverBar >= 0 && rsi[S.hoverBar] !== null) ? rsi[S.hoverBar] : rsi[V.i1];
+        document.getElementById("val-rsi").textContent = hv !== null && hv !== undefined ? hv.toFixed(1) : "—";
+      } else if (kind === "macd") {
+        var m = getInd("macd");
+        var mn = Infinity, mx = -Infinity;
+        for (i = V.i0; i <= V.i1; i++) {
+          [m.line[i], m.signal[i], m.hist[i]].forEach(function (v) { if (v !== null && v !== undefined) { if (v < mn) mn = v; if (v > mx) mx = v; } });
+        }
+        if (!isFinite(mn)) { mn = -1; mx = 1; }
+        var pad = (mx - mn) * 0.12 || 1; mn -= pad; mx += pad;
+        var yOf2 = function (v) { return (mx - v) / (mx - mn) * plotH; };
+        ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(0, yOf2(0)); ctx.lineTo(plotW, yOf2(0)); ctx.stroke();
+        ctx.fillStyle = C.muted; ctx.textAlign = "left";
+        ctx.fillText(fmt(mx, curSO().dec), plotW + 7, 8);
+        ctx.fillText(fmt(mn, curSO().dec), plotW + 7, plotH - 8);
+        var bw = Math.max(1, S.spacing * 0.66);
+        for (i = V.i0; i <= V.i1; i++) {
+          if (m.hist[i] === null) continue;
+          ctx.fillStyle = m.hist[i] >= 0 ? hexA(C.up, 0.55) : hexA(C.down, 0.55);
+          var y0 = yOf2(0), y1 = yOf2(m.hist[i]);
+          ctx.fillRect(px(i) - bw / 2, Math.min(y0, y1), bw, Math.max(1, Math.abs(y1 - y0)));
+        }
+        function mLine(arr, color) {
+          ctx.beginPath(); var st2 = false;
+          for (var j = V.i0; j <= V.i1; j++) { if (arr[j] === null) { st2 = false; continue; } var xx = px(j); if (!st2) { ctx.moveTo(xx, yOf2(arr[j])); st2 = true; } else ctx.lineTo(xx, yOf2(arr[j])); }
+          ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.stroke(); ctx.lineWidth = 1;
+        }
+        mLine(m.line, "#2962ff"); mLine(m.signal, "#ff6d00");
+        var hi = (S.hoverBar >= 0) ? S.hoverBar : V.i1;
+        var dec = curSO().dec;
+        document.getElementById("val-macd").textContent =
+          (m.line[hi] !== null ? fmt(m.line[hi], dec) : "—") + " · " +
+          (m.signal[hi] !== null ? fmt(m.signal[hi], dec) : "—") + " · " +
+          (m.hist[hi] !== null ? fmtSigned(m.hist[hi], dec) : "—");
+      }
+      ctx.strokeStyle = C.border; ctx.beginPath(); ctx.moveTo(plotW + 0.5, 0); ctx.lineTo(plotW + 0.5, f.h); ctx.stroke();
+    }
+
+    function drawAll() {
+      drawMain();
+      if (S.ind.rsi) drawPane("rsi");
+      if (S.ind.macd) drawPane("macd");
+    }
+    (function loop() {
+      if (needDraw) { needDraw = false; drawAll(); }
+      requestAnimationFrame(loop);
+    })();
+
+    /* ---------------- Legend ---------------- */
+    var legendEl = document.getElementById("legend");
+    function updateLegend() {
+      var i = (S.cross && S.hoverBar >= 0) ? S.hoverBar : V.i1;
+      var b = bars[i], db = dispBars[i]; if (!b) return;
+      var dec = curSO().dec;
+      var chg = b.c - b.o, pct = (chg / b.o) * 100;
+      var cls = chg >= 0 ? "up" : "down";
+      var html = '<div class="l-title">' + S.sym + " · " + S.tf + ' <span>' + curSO().name + (S.replay.on ? ' · <span style="color:var(--warn);font-weight:700">REPLAY</span>' : "") + "</span></div>";
+      html += '<div class="l-ohlc ' + cls + '">O ' + fmt(db.o, dec) + "  H " + fmt(db.h, dec) + "  L " + fmt(db.l, dec) + "  C " + fmt(db.c, dec) + "  " + fmtSigned(chg, dec) + " (" + (pct >= 0 ? "+" : "−") + Math.abs(pct).toFixed(2) + "%)</div>";
+      var inds = [];
+      if (S.ind.sma) { var s = getInd("sma"); if (s[i] !== null) inds.push('<span style="color:#f0b90b">SMA 20: ' + fmt(s[i], dec) + "</span>"); }
+      if (S.ind.ema) { var e = getInd("ema"); if (e[i] !== null) inds.push('<span style="color:#e91e63">EMA 50: ' + fmt(e[i], dec) + "</span>"); }
+      if (S.ind.bb) { var bb = getInd("bb"); if (bb.mid[i] !== null) inds.push('<span style="color:var(--accent)">BB 20: ' + fmt(bb.dn[i], dec) + " · " + fmt(bb.up[i], dec) + "</span>"); }
+      if (inds.length) html += '<div class="l-ind">' + inds.join("   ") + "</div>";
+      legendEl.innerHTML = html;
+      document.getElementById("barInfo").textContent = fmtTimeFull(b.t, S.tf) + "  ·  Vol " + b.v.toLocaleString("en-US");
+    }
+
+    /* ============================================================
+       INTERACTION — pan / zoom / crosshair / drawings
+       ============================================================ */
+    var drag = null, pending = null, pinch = null;
+    var pointers = {};
+
+    function evPos(e) {
+      var r = mainCv.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+    function snapPrice(i, p) {
+      if (!S.magnet || !dispBars[i]) return p;
+      var b = dispBars[i], cands = [b.o, b.h, b.l, b.c], best = p, bd = Infinity;
+      cands.forEach(function (c) { var d = Math.abs(c - p); if (d < bd) { bd = d; best = c; } });
+      return best;
+    }
+    function hitDrawing(x, y) {
+      var list = drawList();
+      for (var di = list.length - 1; di >= 0; di--) {
+        var d = list[di];
+        if (d.kind === "hline") { if (Math.abs(yFor(d.p) - y) < 7) return di; }
+        else if (d.kind === "trend" || d.kind === "fib") {
+          if (distSeg(x, y, xFor(d.i1), yFor(d.p1), xFor(d.i2), yFor(d.p2)) < 8) return di;
+        } else if (d.kind === "rect") {
+          var x1 = Math.min(xFor(d.i1), xFor(d.i2)), x2 = Math.max(xFor(d.i1), xFor(d.i2));
+          var y1 = Math.min(yFor(d.p1), yFor(d.p2)), y2 = Math.max(yFor(d.p1), yFor(d.p2));
+          if (x >= x1 - 4 && x <= x2 + 4 && y >= y1 - 4 && y <= y2 + 4) return di;
+        } else if (d.kind === "text") {
+          if (Math.abs(xFor(d.i) - x) < 46 && Math.abs(yFor(d.p) - 12 - y) < 14) return di;
+        }
+      }
+      return -1;
+    }
+    function distSeg(px, py, x1, y1, x2, y2) {
+      var dx = x2 - x1, dy = y2 - y1, len2 = dx * dx + dy * dy;
+      var t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / len2));
+      var cx = x1 + t * dx, cy = y1 + t * dy;
+      return Math.hypot(px - cx, py - cy);
+    }
+
+    mainCv.addEventListener("pointerdown", function (e) {
+      mainCv.setPointerCapture(e.pointerId);
+      pointers[e.pointerId] = evPos(e);
+      if (Object.keys(pointers).length === 2) {
+        var pts = Object.values(pointers);
+        pinch = { d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), spacing: S.spacing };
+        drag = null; return;
+      }
+      var p = evPos(e);
+      hideMenus();
+      if (p.x > V.plotW) { // price-axis drag = scale
+        drag = { mode: "scale", y: p.y, factor: S.pFactor, center: (V.min + V.max) / 2 };
+        return;
+      }
+      if (p.y > V.plotH) return;
+      var i = Math.max(0, Math.min(dispBars.length - 1, idxAt(p.x)));
+      var price = snapPrice(i, priceAt(p.y));
+      if (S.tool === "cursor") {
+        var hit = hitDrawing(p.x, p.y);
+        S.selected = hit;
+        if (hit >= 0) {
+          var d = drawList()[hit];
+          drag = { mode: "move", idx: hit, startI: i, startP: priceAt(p.y), orig: JSON.parse(JSON.stringify(d)) };
+        } else {
+          drag = { mode: "pan", x: p.x, y: p.y, offset: S.offset, factor: S.pFactor, center: (V.min + V.max) / 2 };
+        }
+        requestDraw(); return;
+      }
+      if (S.tool === "hline") {
+        drawList().push({ kind: "hline", p: price });
+        S.selected = drawList().length - 1;
+        setTool("cursor"); requestDraw(); return;
+      }
+      if (S.tool === "text") {
+        showTextInput(p, i, price); return;
+      }
+      // two-point tools
+      pending = { kind: S.tool, i1: i, p1: price, i2: i, p2: price };
+      drag = { mode: "draw" };
+    });
+
+    mainCv.addEventListener("pointermove", function (e) {
+      var p = evPos(e);
+      if (pointers[e.pointerId]) pointers[e.pointerId] = p;
+      if (pinch && Object.keys(pointers).length === 2) {
+        var pts = Object.values(pointers);
+        var d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        if (pinch.d > 0) { S.spacing = Math.max(2.5, Math.min(46, pinch.spacing * (d / pinch.d))); requestDraw(); }
+        return;
+      }
+      S.cross = p;
+      S.hoverBar = Math.max(V.i0, Math.min(V.i1, idxAt(p.x)));
+      if (!drag) { requestDraw(); return; }
+      if (drag.mode === "pan") {
+        var di = Math.round((p.x - drag.x) / S.spacing);
+        var maxOff = Math.max(0, bars.length - 12);
+        S.offset = Math.max(0, Math.min(maxOff, drag.offset + di));
+        var dyF = (p.y - drag.y) / V.plotH;
+        if (Math.abs(dyF) > 0.02) {
+          var range = (V.max - V.min);
+          var shift = dyF * range;
+          S.pCenter = drag.center + shift; S.pFactor = drag.factor === 1 ? currentFactor() : drag.factor;
+          if (S.pFactor === 1) S.pFactor = 1.0001; // engage manual mode while vertical-panning
+        }
+      } else if (drag.mode === "scale") {
+        var f = drag.factor * (1 + (p.y - drag.y) * 0.005);
+        S.pFactor = Math.max(0.25, Math.min(4, f)); S.pCenter = drag.center;
+      } else if (drag.mode === "draw" && pending) {
+        var i2 = Math.max(0, Math.min(dispBars.length - 1, idxAt(p.x)));
+        pending.i2 = i2; pending.p2 = snapPrice(i2, priceAt(p.y));
+      } else if (drag.mode === "move") {
+        var dI = Math.max(0, Math.min(dispBars.length - 1, idxAt(p.x))) - drag.startI;
+        var dP = priceAt(p.y) - drag.startP;
+        var d = drawList()[drag.idx], o = drag.orig;
+        if (d.kind === "hline") d.p = o.p + dP;
+        else if (d.kind === "text") { d.i = o.i + dI; d.p = o.p + dP; }
+        else { d.i1 = o.i1 + dI; d.i2 = o.i2 + dI; d.p1 = o.p1 + dP; d.p2 = o.p2 + dP; }
+      }
+      requestDraw();
+    });
+    function currentFactor() { return S.pFactor; }
+
+    function endPointer(e) {
+      delete pointers[e.pointerId];
+      if (Object.keys(pointers).length < 2) pinch = null;
+      if (drag && drag.mode === "draw" && pending) {
+        if (pending.i1 !== pending.i2 || pending.p1 !== pending.p2) {
+          drawList().push({ kind: pending.kind, i1: pending.i1, p1: pending.p1, i2: pending.i2, p2: pending.p2 });
+          S.selected = drawList().length - 1;
+        }
+        pending = null;
+        setTool("cursor");
+      }
+      drag = null;
+      requestDraw();
+    }
+    mainCv.addEventListener("pointerup", endPointer);
+    mainCv.addEventListener("pointercancel", endPointer);
+    mainCv.addEventListener("pointerleave", function () { if (!drag) { S.cross = null; S.hoverBar = -1; requestDraw(); } });
+    mainCv.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var p = evPos(e);
+      var factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+      if (e.ctrlKey || e.metaKey) { // price zoom
+        S.pCenter = (V.min + V.max) / 2;
+        S.pFactor = Math.max(0.25, Math.min(4, S.pFactor / factor));
+      } else {
+        var anchorI = idxAt(p.x);
+        var old = S.spacing;
+        S.spacing = Math.max(2.5, Math.min(46, S.spacing * factor));
+        // keep the bar under the cursor roughly in place
+        var shiftBars = Math.round((anchorI - V.startI) * (1 - old / S.spacing));
+        S.offset = Math.max(0, S.offset + 0); // offset anchoring kept simple; spacing zoom is centred on latest bars
+        void shiftBars;
+      }
+      requestDraw();
+    }, { passive: false });
+    mainCv.addEventListener("dblclick", function () { resetView(); });
+
+    function resetView() {
+      S.offset = 0; S.spacing = 9; S.pFactor = 1; S.pCenter = null; requestDraw();
+    }
+    document.getElementById("zoomInBtn").addEventListener("click", function () { S.spacing = Math.min(46, S.spacing * 1.25); requestDraw(); });
+    document.getElementById("zoomOutBtn").addEventListener("click", function () { S.spacing = Math.max(2.5, S.spacing / 1.25); requestDraw(); });
+    document.getElementById("resetViewBtn").addEventListener("click", resetView);
+
+    document.addEventListener("keydown", function (e) {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
+      if ((e.key === "Delete" || e.key === "Backspace") && S.selected >= 0) {
+        drawList().splice(S.selected, 1); S.selected = -1; requestDraw();
+      }
+      if (e.key === "Escape") { pending = null; setTool("cursor"); closeSymModal(); hideMenus(); requestDraw(); }
+      if (S.replay.on && e.key === " ") { e.preventDefault(); toggleReplayPlay(); }
+      if (S.replay.on && e.key === "ArrowRight") stepReplay(1);
+      if (S.replay.on && e.key === "ArrowLeft") stepReplay(-1);
+    });
+
+    /* ---- text note input ---- */
+    var textInput = document.getElementById("textInput");
+    var textAnchor = null;
+    function showTextInput(p, i, price) {
+      textAnchor = { i: i, p: price };
+      textInput.style.display = "block";
+      textInput.style.left = Math.min(p.x, mainWrap.clientWidth - 180) + "px";
+      textInput.style.top = Math.max(4, p.y - 30) + "px";
+      textInput.value = "";
+      setTimeout(function () { textInput.focus(); }, 10);
+    }
+    textInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        var v = textInput.value.trim();
+        if (v && textAnchor) { drawList().push({ kind: "text", i: textAnchor.i, p: textAnchor.p, text: v }); S.selected = drawList().length - 1; }
+        textInput.style.display = "none"; textAnchor = null; setTool("cursor"); requestDraw();
+      }
+      if (e.key === "Escape") { textInput.style.display = "none"; textAnchor = null; setTool("cursor"); }
+      e.stopPropagation();
+    });
+    textInput.addEventListener("blur", function () { textInput.style.display = "none"; textAnchor = null; });
+
+    /* ---- tool rail ---- */
+    function setTool(t) {
+      S.tool = t; pending = null;
+      document.querySelectorAll(".rail-btn[data-tool]").forEach(function (b) {
+        b.classList.toggle("active", b.dataset.tool === t);
+      });
+      mainCv.style.cursor = t === "cursor" ? "crosshair" : "cell";
+    }
+    document.querySelectorAll(".rail-btn[data-tool]").forEach(function (b) {
+      b.addEventListener("click", function () { setTool(b.dataset.tool); });
+    });
+    document.getElementById("magnetBtn").addEventListener("click", function () {
+      S.magnet = !S.magnet; this.classList.toggle("active", S.magnet);
+    });
+    document.getElementById("clearDrawBtn").addEventListener("click", function () {
+      S.drawings[S.sym] = []; S.selected = -1; requestDraw();
+    });
+    document.getElementById("undoDrawBtn").addEventListener("click", function () {
+      drawList().pop(); S.selected = -1; requestDraw();
+    });
+
+    /* ============================================================
+       BAR REPLAY
+       ============================================================ */
+    var replayBar = document.getElementById("replayBar");
+    var replayBtn = document.getElementById("replayBtn");
+    var rpPlayIcon = document.getElementById("rpPlayIcon");
+
+    function enterReplay() {
+      if (S.replay.on) return;
+      stopLive();
+      S.replay.on = true;
+      S.replay.playing = false;
+      // start 60% back through history so there is room to play forward
+      S.replay.idx = Math.max(30, Math.floor(bars.length * 0.45));
+      S.offset = 0;
+      replayBar.classList.add("on");
+      replayBtn.classList.add("active");
+      document.getElementById("feedStatus").textContent = "Replay mode · live feed paused";
+      updatePlayIcon();
+      requestDraw();
+      toast("Bar Replay", "Future candles are hidden. Press play or step forward bar by bar to practice. Click a point on the chart while in replay to jump there.");
+    }
+    function exitReplay() {
+      if (!S.replay.on) return;
+      stopReplayTimer();
+      S.replay.on = false; S.replay.playing = false;
+      replayBar.classList.remove("on");
+      replayBtn.classList.remove("active");
+      document.getElementById("feedStatus").textContent = "Live · simulated feed";
+      startLive();
+      requestDraw();
+    }
+    function updatePlayIcon() {
+      rpPlayIcon.innerHTML = S.replay.playing
+        ? '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>'
+        : '<path d="M7 4l13 8-13 8z"/>';
+    }
+    function stopReplayTimer() { if (S.replay.timer) { clearInterval(S.replay.timer); S.replay.timer = null; } }
+    function toggleReplayPlay() {
+      if (!S.replay.on) return;
+      S.replay.playing = !S.replay.playing;
+      stopReplayTimer();
+      if (S.replay.playing) {
+        S.replay.timer = setInterval(function () {
+          if (S.replay.idx >= bars.length - 1) { toggleReplayPlay(); return; }
+          S.replay.idx++;
+          requestDraw();
+        }, S.replay.speed);
+      }
+      updatePlayIcon();
+    }
+    function stepReplay(d) {
+      if (!S.replay.on) return;
+      if (S.replay.playing) toggleReplayPlay();
+      S.replay.idx = Math.max(0, Math.min(bars.length - 1, S.replay.idx + d));
+      requestDraw();
+    }
+    replayBtn.addEventListener("click", function () { S.replay.on ? exitReplay() : enterReplay(); });
+    document.getElementById("rpPlay").addEventListener("click", toggleReplayPlay);
+    document.getElementById("rpFwd").addEventListener("click", function () { stepReplay(1); });
+    document.getElementById("rpBack").addEventListener("click", function () { stepReplay(-1); });
+    document.getElementById("rpStart").addEventListener("click", function () {
+      if (S.replay.playing) toggleReplayPlay();
+      S.replay.idx = 20; requestDraw();
+    });
+    document.getElementById("rpEnd").addEventListener("click", function () {
+      if (S.replay.playing) toggleReplayPlay();
+      S.replay.idx = bars.length - 1; requestDraw();
+    });
+    document.getElementById("rpExit").addEventListener("click", exitReplay);
+    document.getElementById("rpSpeed").addEventListener("change", function () {
+      S.replay.speed = parseInt(this.value, 10);
+      if (S.replay.playing) { toggleReplayPlay(); toggleReplayPlay(); }
+    });
+    // click-to-jump inside replay: with cursor tool & no drag movement, a tap on the chart sets the replay point
+    mainCv.addEventListener("click", function (e) {
+      if (!S.replay.on || S.tool !== "cursor") return;
+      var p = evPos(e);
+      if (p.x > V.plotW || p.y > V.plotH) return;
+      var i = Math.max(0, Math.min(bars.length - 1, idxAt(p.x)));
+      // only jump when the click lands on already-hidden/future area or user clicks a bar while holding Alt
+      if (e.altKey || i > S.replay.idx) { S.replay.idx = i; requestDraw(); }
+    });
+
+    /* ============================================================
+       LIVE SIMULATED FEED
+       ============================================================ */
+    var liveTimer = null, tickCount = 0;
+    var feedRnd = mulberry32(hashStr("feed::" + Date.now()));
+    function tick() {
+      tickCount++;
+      var so = curSO(), tf = curTF();
+      var last = bars[bars.length - 1];
+      if (last) {
+        var prevWl = wlState[S.sym].price;
+        var mv = (feedRnd() - 0.5) * 2 * so.vol * 0.55 + Math.sin(tickCount / 9) * so.vol * 0.08;
+        last.c = last.c * (1 + mv);
+        if (last.c > last.h) last.h = last.c;
+        if (last.c < last.l) last.l = last.c;
+        last.v += Math.round(so.volBase * feedRnd() * 0.05);
+        wlState[S.sym].price = last.c;
+        checkAlerts(S.sym, prevWl, last.c);
+        if (tickCount % 14 === 0) { // roll a new bar
+          bars.push({ t: last.t + tf.sec, o: last.c, h: last.c, l: last.c, c: last.c, v: Math.round(so.volBase * 0.3) });
+          if (bars.length > 900) bars.shift();
+          indCache = {};
+        }
+        dispBars = (S.type === "ha") ? heikinAshi(bars) : bars;
+      }
+      // drift the rest of the watchlist
+      SYMBOLS.forEach(function (s2) {
+        if (s2.sym === S.sym) return;
+        var w = wlState[s2.sym];
+        w.price = w.price * (1 + (feedRnd() - 0.5) * 2 * s2.vol * 0.4);
+      });
+      renderWatchlist(true);
+      requestDraw();
+    }
+    function startLive() { if (!liveTimer) liveTimer = setInterval(tick, 900); }
+    function stopLive() { if (liveTimer) { clearInterval(liveTimer); liveTimer = null; } }
+
+    /* ============================================================
+       WATCHLIST + ALERTS
+       ============================================================ */
+    var wlList = document.getElementById("wlList");
+    var wlRows = {};
+    function buildWatchlist() {
+      wlList.innerHTML = ""; wlRows = {};
+      SYMBOLS.forEach(function (so) {
+        var b = document.createElement("button");
+        b.className = "wl-row" + (so.sym === S.sym ? " active" : "");
+        b.innerHTML = '<span><span class="wl-sym">' + so.sym + '</span><br><span class="wl-name">' + so.name + '</span></span>' +
+          '<span><span class="wl-price mono">—</span><br><span class="wl-chg mono">—</span></span>';
+        b.addEventListener("click", function () { switchSymbol(so.sym); document.getElementById("sidePanel").classList.remove("open"); });
+        wlList.appendChild(b);
+        wlRows[so.sym] = { row: b, price: b.querySelector(".wl-price"), chg: b.querySelector(".wl-chg"), last: null };
+      });
+      renderWatchlist(false);
+    }
+    function renderWatchlist(flash) {
+      SYMBOLS.forEach(function (so) {
+        var w = wlState[so.sym], r = wlRows[so.sym]; if (!r) return;
+        var chg = (w.price - w.dayOpen) / w.dayOpen * 100;
+        r.price.textContent = fmt(w.price, so.dec);
+        r.chg.textContent = (chg >= 0 ? "+" : "−") + Math.abs(chg).toFixed(2) + "%";
+        r.chg.className = "wl-chg mono " + (chg >= 0 ? "up" : "down");
+        if (flash && r.last !== null && r.last !== w.price) {
+          r.price.classList.remove("flash-up", "flash-down"); void r.price.offsetWidth;
+          r.price.classList.add(w.price > r.last ? "flash-up" : "flash-down");
+        }
+        r.last = w.price;
+      });
+    }
+    function switchSymbol(sym) {
+      if (S.replay.on) exitReplay();
+      S.sym = sym; S.selected = -1; S.offset = 0; S.pFactor = 1; S.pCenter = null;
+      loadSeries();
+      document.getElementById("symLabel").textContent = sym;
+      document.getElementById("symNameLabel").textContent = curSO().name;
+      document.getElementById("alertSymLabel").textContent = sym;
+      document.querySelectorAll(".wl-row").forEach(function (r, i) { r.classList.toggle("active", SYMBOLS[i].sym === sym); });
+      requestDraw();
+    }
+
+    function checkAlerts(sym, prev, now) {
+      S.alerts.forEach(function (a) {
+        if (a.sym !== sym || a.triggered) return;
+        var crossed = (a.dir === "above" && prev < a.price && now >= a.price) ||
+                      (a.dir === "below" && prev > a.price && now <= a.price);
+        if (crossed) {
+          a.triggered = true;
+          toast("Price alert · " + sym, sym + " crossed " + fmt(a.price, symObj(sym).dec) + " — now " + fmt(now, symObj(sym).dec) + ".");
+          renderAlerts();
+        }
+      });
+    }
+    var alertList = document.getElementById("alertList");
+    function renderAlerts() {
+      alertList.innerHTML = "";
+      var mine = S.alerts.map(function (a, i) { return { a: a, i: i }; }).filter(function (x) { return x.a.sym === S.sym; });
+      if (!mine.length) {
+        alertList.innerHTML = '<p class="empty-note">No alerts for ' + S.sym + ' yet. Add one above — it triggers when the simulated price crosses your level.</p>';
+        return;
+      }
+      mine.forEach(function (x) {
+        var a = x.a;
+        var div = document.createElement("div");
+        div.className = "alert-item" + (a.triggered ? " triggered" : "");
+        div.innerHTML = '<span class="a-price">' + fmt(a.price, curSO().dec) + '</span>' +
+          '<span class="a-state">' + (a.triggered ? "Triggered" : "Watching · " + a.dir + " · current " + fmt(wlState[S.sym].price, curSO().dec)) + "</span>";
+        var del = document.createElement("button");
+        del.className = "a-del"; del.textContent = "✕"; del.title = "Delete alert";
+        del.addEventListener("click", function () { S.alerts.splice(x.i, 1); renderAlerts(); });
+        div.appendChild(del);
+        alertList.appendChild(div);
+      });
+    }
+    document.getElementById("alertForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var inp = document.getElementById("alertPrice");
+      var p = parseFloat(inp.value);
+      if (!isFinite(p) || p <= 0) return;
+      var cur = wlState[S.sym].price;
+      S.alerts.push({ sym: S.sym, price: p, dir: p >= cur ? "above" : "below", triggered: false });
+      inp.value = "";
+      renderAlerts();
+    });
+
+    function toast(title, body) {
+      var box = document.getElementById("toasts");
+      var t = document.createElement("div");
+      t.className = "toast";
+      t.innerHTML = "<b></b><span></span>";
+      t.querySelector("b").textContent = title;
+      t.querySelector("span").textContent = body;
+      box.appendChild(t);
+      setTimeout(function () { t.style.opacity = "0"; t.style.transition = "opacity .4s"; setTimeout(function () { t.remove(); }, 420); }, 5200);
+    }
+
+    /* ============================================================
+       TOP BAR CONTROLS
+       ============================================================ */
+    // timeframes
+    var tfGroup = document.getElementById("tfGroup");
+    TFS.forEach(function (tf) {
+      var b = document.createElement("button");
+      b.className = "tf-btn" + (tf.k === S.tf ? " active" : "");
+      b.textContent = tf.k; b.dataset.tf = tf.k;
+      b.addEventListener("click", function () {
+        if (S.replay.on) exitReplay();
+        S.tf = tf.k; S.offset = 0; S.pFactor = 1; S.pCenter = null;
+        loadSeries();
+        tfGroup.querySelectorAll(".tf-btn").forEach(function (x) { x.classList.toggle("active", x.dataset.tf === S.tf); });
+        requestDraw();
+      });
+      tfGroup.appendChild(b);
+    });
+
+    // chart type menu
+    var typeMenu = document.getElementById("typeMenu");
+    CHART_TYPES.forEach(function (ct) {
+      var b = document.createElement("button");
+      b.className = "menu-item"; b.dataset.type = ct.k;
+      b.innerHTML = ct.label + (ct.k === S.type ? '<span class="check">✓</span>' : "");
+      b.addEventListener("click", function () {
+        S.type = ct.k;
+        document.getElementById("typeLabel").textContent = ct.label;
+        typeMenu.querySelectorAll(".menu-item").forEach(function (x) {
+          var c = x.querySelector(".check"); if (c) c.remove();
+          if (x.dataset.type === S.type) x.insertAdjacentHTML("beforeend", '<span class="check">✓</span>');
+        });
+        dispBars = (S.type === "ha") ? heikinAshi(bars) : bars;
+        hideMenus(); requestDraw();
+      });
+      typeMenu.appendChild(b);
+    });
+
+    // indicators menu
+    var IND_DEFS = [
+      { k: "sma", label: "SMA", period: "20", color: "#f0b90b", group: "indOverlays" },
+      { k: "ema", label: "EMA", period: "50", color: "#e91e63", group: "indOverlays" },
+      { k: "bb", label: "Bollinger Bands", period: "20 · 2σ", color: "#2962ff", group: "indOverlays" },
+      { k: "volume", label: "Volume", period: "", color: "#78909c", group: "indOverlays" },
+      { k: "rsi", label: "RSI", period: "14", color: "#7e57c2", group: "indPanels" },
+      { k: "macd", label: "MACD", period: "12 · 26 · 9", color: "#ff6d00", group: "indPanels" }
+    ];
+    IND_DEFS.forEach(function (d) {
+      var b = document.createElement("button");
+      b.className = "toggle-row"; b.dataset.ind = d.k;
+      b.setAttribute("aria-pressed", S.ind[d.k] ? "true" : "false");
+      b.innerHTML = '<span class="swatch" style="background:' + d.color + '"></span>' + d.label +
+        (d.period ? ' <span class="period">' + d.period + "</span>" : "") + '<span class="sw"></span>';
+      b.addEventListener("click", function () {
+        S.ind[d.k] = !S.ind[d.k];
+        b.setAttribute("aria-pressed", S.ind[d.k] ? "true" : "false");
+        syncPanes(); requestDraw();
+      });
+      document.getElementById(d.group).appendChild(b);
+    });
+    function syncPanes() {
+      document.getElementById("pane-rsi").classList.toggle("on", S.ind.rsi);
+      document.getElementById("pane-macd").classList.toggle("on", S.ind.macd);
+      requestDraw();
+    }
+    document.querySelectorAll(".pane-close").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var k = b.dataset.close;
+        S.ind[k] = false;
+        var row = document.querySelector('.toggle-row[data-ind="' + k + '"]');
+        if (row) row.setAttribute("aria-pressed", "false");
+        syncPanes();
+      });
+    });
+
+    // menus open/close
+    function hideMenus() { document.querySelectorAll(".menu.open").forEach(function (m) { m.classList.remove("open"); }); }
+    function wireMenu(btnId, menuId) {
+      var btn = document.getElementById(btnId), menu = document.getElementById(menuId);
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var was = menu.classList.contains("open");
+        hideMenus();
+        if (!was) menu.classList.add("open");
+      });
+      menu.addEventListener("click", function (e) { e.stopPropagation(); });
+    }
+    wireMenu("typeBtn", "typeMenu");
+    wireMenu("indBtn", "indMenu");
+    document.addEventListener("click", hideMenus);
+
+    // sidebar tabs
+    document.querySelectorAll(".side-tab").forEach(function (t) {
+      t.addEventListener("click", function () {
+        S.tab = t.dataset.tab;
+        document.querySelectorAll(".side-tab").forEach(function (x) { x.classList.toggle("active", x === t); });
+        document.getElementById("tab-watchlist").style.display = S.tab === "watchlist" ? "" : "none";
+        document.getElementById("tab-alerts").style.display = S.tab === "alerts" ? "" : "none";
+        if (S.tab === "alerts") renderAlerts();
+      });
+    });
+    document.getElementById("wlToggle").addEventListener("click", function () {
+      document.getElementById("sidePanel").classList.toggle("open");
+    });
+
+    // theme
+    document.getElementById("themeBtn").addEventListener("click", function () {
+      var html = document.documentElement;
+      var next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      html.setAttribute("data-theme", next);
+      refreshColors(); requestDraw();
+    });
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    // snapshot + CSV export
+    document.getElementById("shotBtn").addEventListener("click", function () {
+      drawAll();
+      mainCv.toBlob(function (blob) {
+        if (!blob) return;
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = S.sym + "-" + S.tf + "-chart.png";
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      }, "image/png");
+    });
+    document.getElementById("csvBtn").addEventListener("click", function () {
+      var rows = ["time,open,high,low,close,volume"];
+      var upto = S.replay.on ? S.replay.idx + 1 : bars.length;
+      for (var i = 0; i < upto; i++) {
+        var b = bars[i];
+        rows.push(new Date(b.t * 1000).toISOString() + "," + b.o + "," + b.h + "," + b.l + "," + b.c + "," + b.v);
+      }
+      var blob = new Blob([rows.join("\n")], { type: "text/csv" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = S.sym + "-" + S.tf + ".csv";
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    });
+
+    /* ---- symbol search modal ---- */
+    var symModal = document.getElementById("symModal");
+    var symSearch = document.getElementById("symSearch");
+    var symList = document.getElementById("symList");
+    function renderSymList(filter) {
+      symList.innerHTML = "";
+      var q = (filter || "").toLowerCase();
+      SYMBOLS.forEach(function (so) {
+        if (q && so.sym.toLowerCase().indexOf(q) < 0 && so.name.toLowerCase().indexOf(q) < 0) return;
+        var w = wlState[so.sym];
+        var chg = (w.price - w.dayOpen) / w.dayOpen * 100;
+        var b = document.createElement("button");
+        b.className = "modal-row";
+        b.innerHTML = '<span><span class="m-sym">' + so.sym + '</span><br><span class="m-name">' + so.name + "</span></span>" +
+          '<span><span class="m-price">' + fmt(w.price, so.dec) + '</span><br><span class="m-chg ' + (chg >= 0 ? "up" : "down") + '">' + (chg >= 0 ? "+" : "−") + Math.abs(chg).toFixed(2) + "%</span></span>";
+        b.addEventListener("click", function () { switchSymbol(so.sym); closeSymModal(); });
+        symList.appendChild(b);
+      });
+      if (!symList.children.length) symList.innerHTML = '<p class="empty-note">No symbols match your search.</p>';
+    }
+    function openSymModal() { renderSymList(""); symModal.classList.add("open"); symSearch.value = ""; setTimeout(function () { symSearch.focus(); }, 30); }
+    function closeSymModal() { symModal.classList.remove("open"); }
+    document.getElementById("symBtn").addEventListener("click", openSymModal);
+    symModal.addEventListener("click", function (e) { if (e.target === symModal) closeSymModal(); });
+    symSearch.addEventListener("input", function () { renderSymList(symSearch.value); });
+    symSearch.addEventListener("keydown", function (e) { e.stopPropagation(); if (e.key === "Escape") closeSymModal(); });
+
+    /* ---- clocks ---- */
+    function clocks() {
+      var now = new Date();
+      document.getElementById("clockLocal").textContent = "Local " + now.toLocaleTimeString("en-GB");
+      document.getElementById("clockUTC").textContent = "UTC " + now.toUTCString().slice(17, 25);
+    }
+    setInterval(clocks, 1000); clocks();
+
+    /* ---- resize ---- */
+    var ro = new ResizeObserver(function () { requestDraw(); });
+    ro.observe(mainWrap);
+    ro.observe(document.getElementById("pane-rsi"));
+    ro.observe(document.getElementById("pane-macd"));
+    window.addEventListener("resize", requestDraw);
+
+    /* ---- boot ---- */
+    refreshColors();
+    loadSeries();
+    buildWatchlist();
+    renderAlerts();
+    syncPanes();
+    setTool("cursor");
+    mainCv.style.cursor = "crosshair";
+    startLive();
+    requestDraw();
+    </script>
+  </body>
+</html>
